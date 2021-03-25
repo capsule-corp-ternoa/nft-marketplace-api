@@ -1,6 +1,8 @@
+import fetch from "node-fetch";
+
 import L from "../../common/logger";
 import { request, gql } from "graphql-request";
-import { INFT, NFTListResponse } from "src/interfaces/graphQL";
+import { ICompleteNFT, INFT, NFTListResponse } from "src/interfaces/graphQL";
 
 export class NFTService {
   /**
@@ -27,7 +29,9 @@ export class NFTService {
         "https://indexer.chaos.ternoa.com/",
         query
       );
-      return result.nftEntities.nodes;
+
+      const NFTs = result.nftEntities.nodes;
+      return Promise.all(NFTs.map(async (NFT) => this.populateNFTUri(NFT)));
     } catch (err) {
       throw new Error("Couldn't get NFTs");
     }
@@ -57,13 +61,15 @@ export class NFTService {
           }
         }
       `;
-      /* finding nft based on id, temporary method */
       const result: NFTListResponse = await request(
         "https://indexer.chaos.ternoa.com/",
         query
       );
-      const NFT = result.nftEntities.nodes[0];
+      let NFT = result.nftEntities.nodes[0];
       if (!NFT) throw new Error();
+
+      NFT = await this.populateNFTUri(NFT);
+
       return NFT;
     } catch (err) {
       throw new Error("Couldn't get NFT");
@@ -99,9 +105,26 @@ export class NFTService {
         "https://indexer.chaos.ternoa.com/",
         query
       );
-      return result.nftEntities.nodes;
+
+      const NFTs = result.nftEntities.nodes;
+      return Promise.all(NFTs.map(async (NFT) => this.populateNFTUri(NFT)));
     } catch (err) {
       throw new Error("Couldn't get user's NFTs");
+    }
+  }
+
+  /**
+   * Populates an NFT object with data from its URI JSON
+   * @param NFT NFT object with uri field
+   * @returns NFT object with new fields, if uri was valid, object stays untouched otherwise
+   */
+  async populateNFTUri(NFT: INFT): Promise<ICompleteNFT | INFT> {
+    try {
+      const info = await (await fetch(NFT.uri)).json();
+      return { ...NFT, ...info };
+    } catch (err) {
+      L.error({ err }, "invalid NFT uri");
+      return NFT;
     }
   }
 }

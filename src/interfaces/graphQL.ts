@@ -6,6 +6,12 @@ export interface INFT {
   uri?: string;
 }
 
+export interface ICompleteNFT extends INFT {
+  name: string;
+  media: { url: string };
+  cryptedMedia: { url: string };
+}
+
 export interface NFTListResponse {
   nftEntities: {
     nodes: INFT[];
