@@ -17,3 +17,21 @@ export interface NFTListResponse {
     nodes: INFT[];
   };
 }
+
+export interface NFTListPaginatedResponse {
+  nftEntities: {
+    totalCount: number;
+    pageInfo: {
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
+    };
+    nodes: INFT[];
+  };
+}
+
+export interface PaginationResponse<DataType> {
+  totalCount: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  data: DataType;
+}

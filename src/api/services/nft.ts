@@ -1,8 +1,15 @@
 import fetch from "node-fetch";
 
 import L from "../../common/logger";
-import { request, gql } from "graphql-request";
-import { ICompleteNFT, INFT, NFTListResponse } from "src/interfaces/graphQL";
+import { request } from "graphql-request";
+import {
+  ICompleteNFT,
+  INFT,
+  NFTListPaginatedResponse,
+  NFTListResponse,
+  PaginationResponse,
+} from "src/interfaces/graphQL";
+import QueriesBuilder from "./gqlQueriesBuilder";
 
 export class NFTService {
   /**
@@ -11,20 +18,7 @@ export class NFTService {
    */
   async getAllNFTs(): Promise<INFT[]> {
     try {
-      const query = gql`
-        {
-          nftEntities {
-            nodes {
-              id
-              owner
-              creator
-              listed
-              timestampList
-              uri
-            }
-          }
-        }
-      `;
+      const query = QueriesBuilder.allNFTs();
       const result: NFTListResponse = await request(
         "https://indexer.chaos.ternoa.com/",
         query
@@ -38,29 +32,45 @@ export class NFTService {
   }
 
   /**
+   * Returns a limited amount of all NFTs
+   * @param page - Page number
+   * @param limit - Number of elements per page
+   * @throws Will throw an error if can't request indexer
+   * @returns - A paginated array of nfts
+   */
+  async getPaginatedNFTs(
+    page: number = 1,
+    limit: number = 10
+  ): Promise<PaginationResponse<INFT[]>> {
+    try {
+      const query = QueriesBuilder.allNFTsPaginated(limit, (page - 1) * limit);
+      const result: NFTListPaginatedResponse = await request(
+        "https://indexer.chaos.ternoa.com/",
+        query
+      );
+
+      const ret: PaginationResponse<INFT[]> = {
+        data: await Promise.all(
+          result.nftEntities.nodes.map(async (NFT) => this.populateNFTUri(NFT))
+        ),
+        hasNextPage: result.nftEntities.pageInfo.hasNextPage,
+        hasPreviousPage: result.nftEntities.pageInfo.hasPreviousPage,
+        totalCount: result.nftEntities.totalCount,
+      };
+      return ret;
+    } catch (err) {
+      throw new Error("Couldn't get NFTs");
+    }
+  }
+
+  /**
    * Requests a single NFT from the blockchain
    * @param id - the NFT's id
    * @throws Will throw an error if the NFT can't be found
    */
   async getNFT(id: string): Promise<INFT> {
     try {
-      const query = gql`
-        {
-          nftEntities(
-            orderBy: ID_ASC
-            condition: { id: "${id}" }
-          ) {
-            nodes {
-              id
-              owner
-              creator
-              listed
-              timestampList
-              uri
-            }
-          }
-        }
-      `;
+      const query = QueriesBuilder.NFTfromId(id);
       const result: NFTListResponse = await request(
         "https://indexer.chaos.ternoa.com/",
         query
@@ -83,24 +93,7 @@ export class NFTService {
    */
   async getNFTsFromOwner(ownerId: string): Promise<INFT[]> {
     try {
-      const query = gql`
-        {
-          nftEntities(
-            orderBy: OWNER_ASC
-            condition: { owner: "${ownerId}" }
-          ) {
-            totalCount
-            nodes {
-              id
-              owner
-              creator
-              listed
-              timestampList
-              uri
-            }
-          }
-        }
-      `;
+      const query = QueriesBuilder.NFTsFromOwnerId(ownerId);
       const result: NFTListResponse = await request(
         "https://indexer.chaos.ternoa.com/",
         query
@@ -108,6 +101,44 @@ export class NFTService {
 
       const NFTs = result.nftEntities.nodes;
       return Promise.all(NFTs.map(async (NFT) => this.populateNFTUri(NFT)));
+    } catch (err) {
+      throw new Error("Couldn't get user's NFTs");
+    }
+  }
+
+  /**
+   * Returns a limited amount of user's NFTs
+   * @param ownerId - The user's blockchain id
+   * @param page - Page number
+   * @param limit - Number of elements per page
+   * @throws Will throw an error if can't request indexer
+   * @returns - A paginated array of nfts
+   */
+  async getPaginatedNFTsFromOwner(
+    ownerId: string,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<PaginationResponse<INFT[]>> {
+    try {
+      const query = QueriesBuilder.NFTsFromOwnerIdPaginated(
+        ownerId,
+        limit,
+        (page - 1) * limit
+      );
+      const result: NFTListPaginatedResponse = await request(
+        "https://indexer.chaos.ternoa.com/",
+        query
+      );
+
+      const ret: PaginationResponse<INFT[]> = {
+        data: await Promise.all(
+          result.nftEntities.nodes.map(async (NFT) => this.populateNFTUri(NFT))
+        ),
+        hasNextPage: result.nftEntities.pageInfo.hasNextPage,
+        hasPreviousPage: result.nftEntities.pageInfo.hasPreviousPage,
+        totalCount: result.nftEntities.totalCount,
+      };
+      return ret;
     } catch (err) {
       throw new Error("Couldn't get user's NFTs");
     }
