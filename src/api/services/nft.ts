@@ -64,6 +64,41 @@ export class NFTService {
       throw new Error("Couldn't get NFT");
     }
   }
+
+  /**
+   * Gets all NFTs owned by a user
+   * @param ownerId - The user's blockchain id
+   * @throws Will throw an error if can't request indexer
+   */
+  async getNFTsFromOwner(ownerId: string): Promise<INFT[]> {
+    try {
+      const query = gql`
+        {
+          nftEntities(
+            orderBy: OWNER_ASC
+            condition: { owner: "${ownerId}" }
+          ) {
+            totalCount
+            nodes {
+              id
+              owner
+              creator
+              listed
+              timestampList
+              uri
+            }
+          }
+        }
+      `;
+      const result: NFTListResponse = await request(
+        "https://indexer.chaos.ternoa.com/",
+        query
+      );
+      return result.nftEntities.nodes;
+    } catch (err) {
+      throw new Error("Couldn't get user's NFTs");
+    }
+  }
 }
 
 export default new NFTService();
