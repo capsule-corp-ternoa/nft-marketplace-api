@@ -3,6 +3,10 @@ import { request, gql } from "graphql-request";
 import { INFT, NFTListResponse } from "src/interfaces/graphQL";
 
 export class NFTService {
+  /**
+   * Requests all NFTs from the blockchain
+   * @throws Will throw an error if can't request indexer
+   */
   async getAllNFTs(): Promise<INFT[]> {
     try {
       const query = gql`
@@ -29,6 +33,11 @@ export class NFTService {
     }
   }
 
+  /**
+   * Requests a single NFT from the blockchain
+   * @param id - the NFT's id
+   * @throws Will throw an error if can't request indexer
+   */
   async getNFT(id: string): Promise<INFT> {
     try {
       const query = gql`
