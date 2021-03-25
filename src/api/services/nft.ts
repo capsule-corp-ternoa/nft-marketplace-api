@@ -36,13 +36,16 @@ export class NFTService {
   /**
    * Requests a single NFT from the blockchain
    * @param id - the NFT's id
-   * @throws Will throw an error if can't request indexer
+   * @throws Will throw an error if the NFT can't be found
    */
   async getNFT(id: string): Promise<INFT> {
     try {
       const query = gql`
         {
-          nftEntities {
+          nftEntities(
+            orderBy: ID_ASC
+            condition: { id: "${id}" }
+          ) {
             nodes {
               id
               owner
@@ -59,7 +62,9 @@ export class NFTService {
         "https://indexer.chaos.ternoa.com/",
         query
       );
-      return result.nftEntities.nodes.find((node) => node.id === id);
+      const NFT = result.nftEntities.nodes[0];
+      if (!NFT) throw new Error();
+      return NFT;
     } catch (err) {
       throw new Error("Couldn't get NFT");
     }
