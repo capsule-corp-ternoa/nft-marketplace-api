@@ -1,6 +1,7 @@
 import express, { Application } from "express";
 import mongoose from "mongoose";
 import http from "http";
+import cors from "cors";
 import os from "os";
 import L from "./logger";
 
@@ -10,6 +11,9 @@ const app = express();
 
 export default class ExpressServer {
   constructor() {
+    // CORS
+    app.use(cors());
+
     // express middlewares
     app.use(express.json({ limit: process.env.REQUEST_LIMIT || "100kb" }));
     app.use(
