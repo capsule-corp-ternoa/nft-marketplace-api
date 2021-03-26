@@ -25,7 +25,7 @@ export default class ExpressServer {
     app.use(express.text({ limit: process.env.REQUEST_LIMIT || "100kb" }));
 
     // mongo connection
-    /*
+
     mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -34,7 +34,7 @@ export default class ExpressServer {
     db.on("error", (err) => L.error({ err }, "db connection error"));
     db.once("open", () => {
       L.info("db connection successfull");
-    }); */
+    });
   }
 
   router(routes: (app: Application) => void): ExpressServer {

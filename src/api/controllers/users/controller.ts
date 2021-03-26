@@ -11,8 +11,12 @@ export class Controller {
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    const user = await UserService.createUser(req.body).catch(next);
-    res.json(user);
+    try {
+      const user = await UserService.createUser(req.body);
+      res.json(user);
+    } catch (err) {
+      next(err);
+    }
   }
 
   async getUser(
@@ -20,7 +24,12 @@ export class Controller {
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    res.json(await UserService.findUser(req.params.id).catch(next));
+    try {
+      const user = await UserService.findUser(req.params.id, true);
+      res.json(user);
+    } catch (err) {
+      next(err);
+    }
   }
 }
 export default new Controller();

@@ -40,13 +40,14 @@ export class UserService {
   /**
    * Finds a user in DB
    * @param walletId - User's wallet ID
+   * @param incViews - Should increase views counter
    * @throws Will throw an error if wallet ID doesn't exist
    */
-  async findUser(walletId: string): Promise<IUser> {
+  async findUser(walletId: string, incViews: boolean = false): Promise<IUser> {
     try {
       const user = await UserModel.findOneAndUpdate(
         { walletId },
-        { $inc: { views: 1 } },
+        incViews ? { $inc: { views: 1 } } : undefined,
         { new: true }
       );
       if (!user) throw new Error();

@@ -1,14 +1,11 @@
-import fetch from "node-fetch";
-
-import L from "../../common/logger";
 import { request } from "graphql-request";
 import {
-  ICompleteNFT,
   INFT,
   NFTListPaginatedResponse,
   NFTListResponse,
   PaginationResponse,
 } from "src/interfaces/graphQL";
+import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
 
 export class NFTService {
@@ -25,7 +22,7 @@ export class NFTService {
       );
 
       const NFTs = result.nftEntities.nodes;
-      return Promise.all(NFTs.map(async (NFT) => this.populateNFTUri(NFT)));
+      return Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)));
     } catch (err) {
       throw new Error("Couldn't get NFTs");
     }
@@ -51,7 +48,7 @@ export class NFTService {
 
       const ret: PaginationResponse<INFT[]> = {
         data: await Promise.all(
-          result.nftEntities.nodes.map(async (NFT) => this.populateNFTUri(NFT))
+          result.nftEntities.nodes.map(async (NFT) => populateNFT(NFT))
         ),
         hasNextPage: result.nftEntities.pageInfo.hasNextPage,
         hasPreviousPage: result.nftEntities.pageInfo.hasPreviousPage,
@@ -78,7 +75,7 @@ export class NFTService {
       let NFT = result.nftEntities.nodes[0];
       if (!NFT) throw new Error();
 
-      NFT = await this.populateNFTUri(NFT);
+      NFT = await populateNFT(NFT);
 
       return NFT;
     } catch (err) {
@@ -100,7 +97,7 @@ export class NFTService {
       );
 
       const NFTs = result.nftEntities.nodes;
-      return Promise.all(NFTs.map(async (NFT) => this.populateNFTUri(NFT)));
+      return Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)));
     } catch (err) {
       throw new Error("Couldn't get user's NFTs");
     }
@@ -132,7 +129,7 @@ export class NFTService {
 
       const ret: PaginationResponse<INFT[]> = {
         data: await Promise.all(
-          result.nftEntities.nodes.map(async (NFT) => this.populateNFTUri(NFT))
+          result.nftEntities.nodes.map(async (NFT) => populateNFT(NFT))
         ),
         hasNextPage: result.nftEntities.pageInfo.hasNextPage,
         hasPreviousPage: result.nftEntities.pageInfo.hasPreviousPage,
@@ -141,21 +138,6 @@ export class NFTService {
       return ret;
     } catch (err) {
       throw new Error("Couldn't get user's NFTs");
-    }
-  }
-
-  /**
-   * Populates an NFT object with data from its URI JSON
-   * @param NFT NFT object with uri field
-   * @returns NFT object with new fields, if uri was valid, object stays untouched otherwise
-   */
-  async populateNFTUri(NFT: INFT): Promise<ICompleteNFT | INFT> {
-    try {
-      const info = await (await fetch(NFT.uri)).json();
-      return { ...NFT, ...info };
-    } catch (err) {
-      L.error({ err }, "invalid NFT uri");
-      return NFT;
     }
   }
 }

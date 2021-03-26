@@ -1,3 +1,5 @@
+import { IUser } from "./IUser";
+
 export interface INFT {
   id: string;
   owner: string;
@@ -10,6 +12,7 @@ export interface ICompleteNFT extends INFT {
   name: string;
   media: { url: string };
   cryptedMedia: { url: string };
+  ownerData: IUser;
 }
 
 export interface NFTListResponse {
