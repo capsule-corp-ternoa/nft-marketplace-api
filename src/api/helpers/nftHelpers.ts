@@ -10,9 +10,28 @@ import fetch from "node-fetch";
  */
 export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
   let retNFT: INFT = NFT;
+  retNFT = await this.populateNFTCreator(retNFT);
   retNFT = await this.populateNFTOwner(retNFT);
   retNFT = await this.populateNFTUri(retNFT);
   return retNFT;
+}
+
+/**
+ * Pulls owner from database and adds creator's info to NFT object
+ * @param NFT - NFT object with creator field
+ * @returns NFT object with new creactorData field, if creator's id was valid, object stays untouched otherwise
+ */
+export async function populateNFTCreator(
+  NFT: INFT
+): Promise<ICompleteNFT | INFT> {
+  try {
+    const { creator } = NFT;
+    const creatorData = await UserService.findUser(creator);
+    return { ...NFT, creatorData };
+  } catch (err) {
+    L.error({ err }, "NFT creator id not in database");
+    return NFT;
+  }
 }
 
 /**
