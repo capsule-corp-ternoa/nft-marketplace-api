@@ -7,6 +7,7 @@ export interface INFT {
   listed: number;
   timeStampList?: string | string[];
   uri?: string;
+  price: string;
 }
 
 export interface ICompleteNFT extends INFT {

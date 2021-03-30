@@ -8,6 +8,7 @@ const nodes = `
     listed
     timestampList
     uri
+    price
   }
 `;
 
