@@ -3,6 +3,9 @@ import L from "../../common/logger";
 import UserModel from "../../models/user";
 import crypto from "crypto";
 import { PaginateResult } from "mongoose";
+import NodeCache from "node-cache";
+
+const usersCache = new NodeCache({ stdTTL: 300 });
 
 export class UserService {
   /**
@@ -41,9 +44,18 @@ export class UserService {
    * Finds a user in DB
    * @param walletId - User's wallet ID
    * @param incViews - Should increase views counter
+   * @param ignoreCache - Should fetch directly from database and ignore cache
    * @throws Will throw an error if wallet ID doesn't exist
    */
-  async findUser(walletId: string, incViews: boolean = false): Promise<IUser> {
+  async findUser(
+    walletId: string,
+    incViews: boolean = false,
+    ignoreCache: boolean = false
+  ): Promise<IUser> {
+    if (!ignoreCache && !incViews) {
+      const user = usersCache.get(walletId) as IUser | undefined;
+      if (user !== undefined) return user;
+    }
     try {
       const user = await UserModel.findOneAndUpdate(
         { walletId },
@@ -51,6 +63,8 @@ export class UserService {
         { new: true }
       );
       if (!user) throw new Error();
+      if (!usersCache.has(walletId)) usersCache.set(walletId, user);
+
       return user;
     } catch (err) {
       throw new Error("User can't be found");
