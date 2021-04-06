@@ -38,6 +38,12 @@ const User = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  picture: {
+    type: String,
+  },
+  banner: {
+    type: String,
+  },
 });
 
 User.plugin(mongoosePaginate);
