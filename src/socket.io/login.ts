@@ -26,16 +26,19 @@ export default (io: Namespace) => {
           else if (io.adapter.rooms.get(`${session}`).size < 2)
             callback({ error: "410", msg: "No listener for this session" });
           else {
-            let user;
-            // if user exists, retrieve it, otherwise create a new one, return error if it fails
-            try {
-              user = await UserService.findUser(walletId);
-            } catch (err) {
+            // filter out test wallet ids
+            if (walletId.length && walletId.length > 30) {
+              let user;
+              // if user exists, retrieve it, otherwise create a new one, return error if it fails
               try {
-                user = await UserService.createUser({ walletId });
+                user = await UserService.findUser(walletId);
               } catch (err) {
-                callback({ error: "500", msg: "Something went wrong" });
-                return;
+                try {
+                  user = await UserService.createUser({ walletId });
+                } catch (err) {
+                  callback({ error: "500", msg: "Something went wrong" });
+                  return;
+                }
               }
             }
             socket.to(`${sessionArg}`).emit("RECEIVE_WALLET_ID", { walletId });
