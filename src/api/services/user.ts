@@ -19,7 +19,7 @@ export class UserService {
     limit: number = 15
   ): Promise<PaginateResult<IUser>> {
     try {
-      return await UserModel.paginate({}, { page, limit });
+      return await UserModel.paginate({ artist: true }, { page, limit });
     } catch (err) {
       throw new Error("Users can't be fetched");
     }

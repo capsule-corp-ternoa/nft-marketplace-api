@@ -26,6 +26,10 @@ const User = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  artist: {
+    type: Boolean,
+    default: false,
+  },
   nbFollowers: {
     type: Number,
     default: 0,
