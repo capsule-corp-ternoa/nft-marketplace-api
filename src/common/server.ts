@@ -1,6 +1,7 @@
 import express, { Application } from "express";
 import mongoose from "mongoose";
 import http from "http";
+import { Server } from "socket.io";
 import cors from "cors";
 import os from "os";
 import L from "./logger";
@@ -43,7 +44,7 @@ export default class ExpressServer {
     return this;
   }
 
-  listen(port: number): Application {
+  listen(port: number, socketInit: (s: Server) => void): Application {
     const welcome = (portNmbr: number) => (): void =>
       L.info(
         `up and running in ${
@@ -51,7 +52,18 @@ export default class ExpressServer {
         } @: ${os.hostname()} on port: ${portNmbr}}`
       );
 
-    http.createServer(app).listen(port, welcome(port));
+    // creates http server
+    const httpServer = http.createServer(app);
+
+    // creates socket io server
+    const io = new Server(httpServer, {
+      // TODO: handle CORS
+      cors: { origin: "*" },
+    });
+
+    socketInit(io);
+
+    httpServer.listen(port, welcome(port));
 
     return app;
   }
