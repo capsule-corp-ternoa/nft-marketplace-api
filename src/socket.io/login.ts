@@ -27,20 +27,17 @@ export default (io: Namespace) => {
           validCallback &&
             callback({ error: "410", msg: "No listener for this session" });
         else {
-          // filter out test wallet ids
-          if (walletId.length && walletId.length > 30) {
-            let user;
-            // if user exists, retrieve it, otherwise create a new one, return error if it fails
+          let user;
+          // if user exists, retrieve it, otherwise create a new one, return error if it fails
+          try {
+            user = await UserService.findUser(walletId);
+          } catch (err) {
             try {
-              user = await UserService.findUser(walletId);
+              user = await UserService.createUser({ walletId });
             } catch (err) {
-              try {
-                user = await UserService.createUser({ walletId });
-              } catch (err) {
-                validCallback &&
-                  callback({ error: "500", msg: "Something went wrong" });
-                return;
-              }
+              validCallback &&
+                callback({ error: "500", msg: "Something went wrong" });
+              return;
             }
           }
           socket.to(`${session}`).emit("RECEIVE_WALLET_ID", { walletId });
