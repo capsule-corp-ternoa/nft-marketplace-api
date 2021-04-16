@@ -15,6 +15,9 @@ const User = new mongoose.Schema({
   },
   name: {
     type: String,
+    default() {
+      return "Ternoa #" + this.walletId.slice(0, 5);
+    },
   },
   bio: {
     type: String,
