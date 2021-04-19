@@ -8,6 +8,9 @@ import {
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
 
+const indexerUrl =
+  process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
+
 export class NFTService {
   /**
    * Requests all NFTs from the blockchain
@@ -16,10 +19,7 @@ export class NFTService {
   async getAllNFTs(): Promise<INFT[]> {
     try {
       const query = QueriesBuilder.allNFTs();
-      const result: NFTListResponse = await request(
-        "https://indexer.chaos.ternoa.com/",
-        query
-      );
+      const result: NFTListResponse = await request(indexerUrl, query);
 
       const NFTs = result.nftEntities.nodes;
       return Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)));
@@ -41,10 +41,7 @@ export class NFTService {
   ): Promise<PaginationResponse<INFT[]>> {
     try {
       const query = QueriesBuilder.allNFTsPaginated(limit, (page - 1) * limit);
-      const result: NFTListPaginatedResponse = await request(
-        "https://indexer.chaos.ternoa.com/",
-        query
-      );
+      const result: NFTListPaginatedResponse = await request(indexerUrl, query);
 
       const ret: PaginationResponse<INFT[]> = {
         data: await Promise.all(
@@ -68,10 +65,7 @@ export class NFTService {
   async getNFT(id: string): Promise<INFT> {
     try {
       const query = QueriesBuilder.NFTfromId(id);
-      const result: NFTListResponse = await request(
-        "https://indexer.chaos.ternoa.com/",
-        query
-      );
+      const result: NFTListResponse = await request(indexerUrl, query);
       let NFT = result.nftEntities.nodes[0];
       if (!NFT) throw new Error();
 
@@ -91,10 +85,7 @@ export class NFTService {
   async getNFTsFromOwner(ownerId: string): Promise<INFT[]> {
     try {
       const query = QueriesBuilder.NFTsFromOwnerId(ownerId);
-      const result: NFTListResponse = await request(
-        "https://indexer.chaos.ternoa.com/",
-        query
-      );
+      const result: NFTListResponse = await request(indexerUrl, query);
 
       const NFTs = result.nftEntities.nodes;
       return Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)));
@@ -122,10 +113,7 @@ export class NFTService {
         limit,
         (page - 1) * limit
       );
-      const result: NFTListPaginatedResponse = await request(
-        "https://indexer.chaos.ternoa.com/",
-        query
-      );
+      const result: NFTListPaginatedResponse = await request(indexerUrl, query);
 
       const ret: PaginationResponse<INFT[]> = {
         data: await Promise.all(
