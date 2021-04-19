@@ -5,12 +5,14 @@ import { Namespace, Socket } from "socket.io";
 export default (io: Namespace) => {
   io.on("connection", (socket: Socket) => {
     const { session } = socket.handshake.query;
-    // if session arg not provided, return error
-    if (!session)
+
+    // if session arg not provided, return error and refuse connection
+    if (!session || session === "undefined" || session === "") {
       io.to(socket.id).emit("CONNECTION_FAILURE", {
         msg: "Missing session argument",
       });
-    else {
+      socket.disconnect();
+    } else {
       socket.join(session);
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",
