@@ -5,7 +5,7 @@ export interface INFT {
   owner: string;
   creator: string;
   listed: number;
-  timeStampList?: string | string[];
+  timestampList?: string | null;
   uri?: string;
   price: string;
 }
