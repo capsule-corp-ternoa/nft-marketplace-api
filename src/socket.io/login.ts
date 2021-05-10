@@ -6,6 +6,7 @@ import L from "../common/logger";
 
 export default (io: Namespace) => {
   io.on("connection", (socket: Socket) => {
+
     const { session } = socket.handshake.query;
 
     // if session arg not provided, return error and refuse connection
@@ -16,6 +17,9 @@ export default (io: Namespace) => {
       socket.disconnect();
     } else {
       socket.join(session);
+      socket.on('disconnect', () => {
+        L.info(`Login socket disconnected in room ${session} with${socket.id}`);
+      });
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",
       });
