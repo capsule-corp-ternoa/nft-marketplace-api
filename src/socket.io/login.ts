@@ -2,6 +2,7 @@
 
 import { Namespace, Socket } from "socket.io";
 import UserService from "../api/services/user";
+import L from "../common/logger";
 
 export default (io: Namespace) => {
   io.on("connection", (socket: Socket) => {
@@ -21,12 +22,15 @@ export default (io: Namespace) => {
 
       socket.on("SEND_WALLET_ID", async ({ walletId }, callback) => {
         const validCallback = callback && typeof callback === "function";
+        const socketCount = io.sockets.size;
         if (!walletId)
           validCallback &&
             callback({ error: "400", msg: "Missing walletId argument" });
-        else if (io.adapter.rooms.get(`${session}`).size < 2)
+        else if (socketCount < 2) {
+          L.info(`Not enough joins (${socketCount} )in room ${session}`);
           validCallback &&
             callback({ error: "410", msg: "No listener for this session" });
+        }
         else {
           let user;
           // if user exists, retrieve it, otherwise create a new one, return error if it fails
