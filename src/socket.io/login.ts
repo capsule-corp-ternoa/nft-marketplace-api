@@ -16,9 +16,11 @@ export default (io: Namespace) => {
       });
       socket.disconnect();
     } else {
+      L.info(`Login socket CONNECTED in room ${session} for id ${socket.id} at ${new Date()}`);
       socket.join(session);
+      L.info(`Login socket JOIN room ${session} for id ${socket.id} at ${new Date()}`);
       socket.on('disconnect', () => {
-        L.info(`Login socket disconnected in room ${session} for id ${socket.id}`);
+        L.info(`Login socket DISCONNECTED in room ${session} for id ${socket.id} at ${new Date()}`);
       });
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",
