@@ -26,7 +26,7 @@ export default (io: Namespace) => {
 
       socket.on("SEND_WALLET_ID", async ({ walletId }, callback) => {
         const validCallback = callback && typeof callback === "function";
-        const socketCount = io.sockets.size;
+        const socketCount = io.adapter.rooms.get(<string> session).size;
         if (!walletId)
           validCallback &&
             callback({ error: "400", msg: "Missing walletId argument" });
