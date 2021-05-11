@@ -5,7 +5,7 @@ import UserService from "../api/services/user";
 import L from "../common/logger";
 
 export default (io: Namespace) => {
-  io.on("connection", (socket: Socket) => {
+  io.on("connection", async (socket: Socket) => {
     const emitWalletId = async (_walletId: string, _session: string, callback: (args: any) => void | null = null) => {
       const validCallback = callback && typeof callback === "function";
       const socketCount = io.adapter.rooms.get(<string>_session)?.size || 0;
@@ -51,13 +51,6 @@ export default (io: Namespace) => {
     } else {
       L.info(`Login socket CONNECTED in room ${session} for id ${socket.id} at ${new Date()}`);
       L.info(`Login socket JOIN room ${session} for id ${socket.id} at ${new Date()}`);
-      socket.on('disconnect', () => {
-        L.info(`Login socket DISCONNECTED in room ${session} for id ${socket.id} at ${new Date()}`);
-      });
-      io.to(socket.id).emit("CONNECTION_SUCCESS", {
-        msg: "Connection successful",
-      });
-      socket.join(session);
       io.adapter.on("join-room", (room, id) => {
         L.info(`socket ${id} has joined room ${room}`);
         if (walletId) {
@@ -72,6 +65,13 @@ export default (io: Namespace) => {
       });
       io.adapter.on("leave-room", (room, id) => {
         L.info(`socket ${id} has left room ${room}`);
+      });
+      await socket.join(session);
+      socket.on('disconnect', () => {
+        L.info(`Login socket DISCONNECTED in room ${session} for id ${socket.id} at ${new Date()}`);
+      });
+      io.to(socket.id).emit("CONNECTION_SUCCESS", {
+        msg: "Connection successful",
       });
     }
   });
