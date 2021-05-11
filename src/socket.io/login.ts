@@ -3,12 +3,12 @@
 import { Namespace, Socket } from "socket.io";
 import UserService from "../api/services/user";
 import L from "../common/logger";
-
+const roomSockets: { string: string[] } | any = {}
 export default (io: Namespace) => {
   io.on("connection", async (socket: Socket) => {
     const emitWalletId = async (_walletId: string, _session: string, callback: (args: any) => void | null = null) => {
       const validCallback = callback && typeof callback === "function";
-      const socketCount = io.adapter.rooms.get(<string>_session)?.size || 0;
+      const socketCount = roomSockets[_session]?.length || 0;
       L.info(`emitWalletId?  socketCount = ${socketCount} - session: ${_session}`);
       if (!_walletId) {
         L.info(`Missing walletId argument for room ${_session}`);
@@ -53,6 +53,11 @@ export default (io: Namespace) => {
       L.info(`Login socket JOIN room ${session} for id ${socket.id} at ${new Date()}`);
       io.adapter.once("join-room", (room, id) => {
         L.info(`socket ${id} has joined room ${room}`);
+        if (!roomSockets[room]) {
+          roomSockets[room] = []
+        }
+        roomSockets[room].push(id);
+        L.info(`roomSocket update`, roomSockets[room]);
         if (walletId) {
           L.info(`emitWalletId ${walletId} given on login by mobil for session ${session}`);
           emitWalletId(<string>walletId, <string>session);
@@ -65,6 +70,9 @@ export default (io: Namespace) => {
       });
       io.adapter.once("leave-room", (room, id) => {
         L.info(`socket ${id} has left room ${room}`);
+        const index = roomSockets[room].indexOf(id)
+        roomSockets[room].splice(index, 1);
+        L.info(`roomSocket update`, roomSockets[room]);
       });
       await socket.join(session);
       socket.on('disconnect', () => {
