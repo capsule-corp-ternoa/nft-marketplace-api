@@ -46,8 +46,6 @@ export default (io: Namespace) => {
         });
       });
       await socket.join(session);
-      socket.on('disconnect', () => {
-      });
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",
       });
