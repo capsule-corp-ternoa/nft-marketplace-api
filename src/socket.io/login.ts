@@ -58,13 +58,13 @@ export default (io: Namespace) => {
       });
       socket.disconnect();
     } else {
-      await socket.join(session);
       socket.on("SEND_WALLET_ID", async ({ walletId }, callback) => {
         emitWalletId(walletId, <string>session, callback);
       });
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",
       });
+      await socket.join(session);
     }
   });
 };
