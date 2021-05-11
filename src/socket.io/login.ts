@@ -6,7 +6,6 @@ import L from "../common/logger";
 export default (io: Namespace) => {
   io.on("connection", async (socket: Socket) => {
     const emitWalletId = async (walletId: string, _session: string, callback: (args: any) => void | null = null) => {
-      L.info('emitWalletId: ' + walletId);
       const validCallback = callback && typeof callback === "function";
       if (!walletId) {
         L.error(`Missing walletId argument for room ${_session}`);
@@ -28,11 +27,7 @@ export default (io: Namespace) => {
           }
         }
         socket.to(`${_session}`).emit("RECEIVE_WALLET_ID", { walletId });
-        L.info('emitted RECEIVE_WALLET_ID: ' + walletId);
-        if (validCallback) {
-          callback({ ok: true });
-          L.info('callbacked done');
-        }
+        if (validCallback) callback({ ok: true });
       }
     }
     const emitWalletIdReceived = async (walletId: string, _session: string, callback: (args: any) => void | null = null) => {
@@ -60,10 +55,9 @@ export default (io: Namespace) => {
       socket.on("SEND_WALLET_ID", async ({ walletId }, callback) => {
         emitWalletId(walletId, <string>session, callback);
       });
-      /*       socket.on('RECEIVED_WALLET_ID', ({ walletId }, callback) => {
-              emitWalletIdReceived(walletId, <string>session, callback);
-            });
-       */
+      socket.on('RECEIVED_WALLET_ID', ({ walletId }, callback) => {
+        emitWalletIdReceived(walletId, <string>session, callback);
+      });
       await socket.join(session);
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",
