@@ -3,8 +3,8 @@
 import { Namespace, Socket } from "socket.io";
 import UserService from "../api/services/user";
 import L from "../common/logger";
-const roomSockets: { string: string[] } | any = {}
 export default (io: Namespace) => {
+  const roomSockets: { string: string[] } | any = {}
   io.on("connection", async (socket: Socket) => {
     const emitWalletId = async (_walletId: string, _session: string, callback: (args: any) => void | null = null) => {
       const validCallback = callback && typeof callback === "function";
@@ -54,11 +54,13 @@ export default (io: Namespace) => {
       L.info(`Login socket JOIN room ${session} for id ${socket.id} at ${new Date()}`);
       io.adapter.once("join-room", (room, id) => {
         L.info(`socket ${id} has joined room ${room}`);
+        L.info(`After join - (bef) roomSocket update len=` + (roomSockets[room]?.length || 0));
+        L.info(`roomSocket=` + JSON.stringify(roomSockets[room]));
         if (!roomSockets[room]) {
           roomSockets[room] = []
         }
         roomSockets[room].push(id);
-        L.info(`After join - roomSocket update len=` + (roomSockets[room]?.length || 0));
+        L.info(`After join - (aft) roomSocket update len=` + (roomSockets[room]?.length || 0));
         L.info(`roomSocket=` + JSON.stringify(roomSockets[room]));
         if (walletId) {
           L.info(`emitWalletId ${walletId} given on login by mobil for session ${session}`);
