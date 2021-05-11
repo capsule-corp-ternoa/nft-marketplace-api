@@ -27,9 +27,8 @@ export default (io: Namespace) => {
             return;
           }
         }
-        socket.to(`${_session}`).emit("RECEIVED_WALLET_ID", { walletId });
-        L.info('emit RECEIVED_WALLET_ID: ' + walletId);
-        L.info('callback: ' + validCallback);
+        socket.to(`${_session}`).emit("RECEIVE_WALLET_ID", { walletId });
+        L.info('emit RECEIVE_WALLET_ID: ' + walletId);
         if (validCallback) callback({ ok: true });
       }
     }
