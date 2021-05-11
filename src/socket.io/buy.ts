@@ -3,7 +3,7 @@
 import { Namespace, Socket } from "socket.io";
 
 export default (io: Namespace) => {
-  io.on("connection", (socket: Socket) => {
+  io.on("connection", async (socket: Socket) => {
     const { session } = socket.handshake.query;
 
     // if session arg not provided, return error and refuse connection
@@ -13,7 +13,7 @@ export default (io: Namespace) => {
       });
       socket.disconnect();
     } else {
-      socket.join(session);
+      await socket.join(session);
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",
       });
@@ -22,6 +22,11 @@ export default (io: Namespace) => {
         // send mobile app response to nft marketplace
         socket.to(`${session}`).emit("NFT_BUY", data);
         // confirm success to mobile app
+        validCallback && callback({ ok: true });
+      });
+      socket.on('NFT_BUY_RECEIVED', (data, callback) => {
+        const validCallback = callback && typeof callback === "function";
+        socket.to(`${session}`).emit("NFT_BUY_RECEIVED", data);
         validCallback && callback({ ok: true });
       });
     }
