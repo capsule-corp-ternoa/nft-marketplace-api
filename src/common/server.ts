@@ -47,8 +47,7 @@ export default class ExpressServer {
   listen(port: number, socketInit: (s: Server) => void): Application {
     const welcome = (portNmbr: number) => (): void =>
       L.info(
-        `up and running in ${
-          process.env.NODE_ENV || "development"
+        `up and running in ${process.env.NODE_ENV || "development"
         } @: ${os.hostname()} on port: ${portNmbr}}`
       );
 
@@ -59,6 +58,7 @@ export default class ExpressServer {
     const io = new Server(httpServer, {
       // TODO: handle CORS
       cors: { origin: "*" },
+      transports: ['websocket']
     });
 
     socketInit(io);
