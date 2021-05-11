@@ -58,8 +58,8 @@ export default (io: Namespace) => {
         emitWalletId(<string>walletId);
         socket.to(`${session}`).emit("RECEIVE_WALLET_ID", { walletId });
       }
-      socket.on("SEND_WALLET_ID", async ({ walletId }, callback) => {
-        emitWalletId(walletId, callback);
+      socket.on("SEND_WALLET_ID", async ({ walletId: walltId }, callback) => {
+        emitWalletId(walltId, callback);
       });
     }
   });
