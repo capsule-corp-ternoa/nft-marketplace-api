@@ -8,6 +8,7 @@ export default (io: Namespace) => {
   io.on("connection", async (socket: Socket) => {
     const emitWalletId = async (_walletId: string, _session: string, callback: (args: any) => void | null = null) => {
       const validCallback = callback && typeof callback === "function";
+      L.info(`roomSocket=` + JSON.stringify(roomSockets[_session]));
       const socketCount = roomSockets[_session]?.length || 0;
       L.info(`emitWalletId?  socketCount = ${socketCount} - session: ${_session}`);
       if (!_walletId) {
@@ -57,7 +58,8 @@ export default (io: Namespace) => {
           roomSockets[room] = []
         }
         roomSockets[room].push(id);
-        L.info(`roomSocket update len=` + (roomSockets[room]?.length || 0));
+        L.info(`After join - roomSocket update len=` + (roomSockets[room]?.length || 0));
+        L.info(`roomSocket=` + JSON.stringify(roomSockets[room]));
         if (walletId) {
           L.info(`emitWalletId ${walletId} given on login by mobil for session ${session}`);
           emitWalletId(<string>walletId, <string>session);
@@ -74,7 +76,8 @@ export default (io: Namespace) => {
         if (index >= 0) {
           roomSockets[room].splice(index, 1);
         }
-        L.info(`roomSocket update len=` + (roomSockets[room]?.length || 0));
+        L.info(`After left - roomSocket update len=` + (roomSockets[room]?.length || 0));
+        L.info(`roomSocket=` + JSON.stringify(roomSockets[room]));
       });
       await socket.join(session);
       socket.on('disconnect', () => {
