@@ -55,7 +55,7 @@ export default (io: Namespace) => {
       });
       socket.join(session);
       io.adapter.on("join-room", (room, id) => {
-        console.log(`socket ${id} has joined room ${room}`);
+        L.info(`socket ${id} has joined room ${room}`);
         if (walletId) {
           emitWalletId(<string>walletId);
           socket.to(`${session}`).emit("RECEIVE_WALLET_ID", { walletId });
@@ -65,7 +65,7 @@ export default (io: Namespace) => {
         });  
       });    
       io.adapter.on("leave-room", (room, id) => {
-        console.log(`socket ${id} has left room ${room}`);
+        L.info(`socket ${id} has left room ${room}`);
       });      
     }
   });
