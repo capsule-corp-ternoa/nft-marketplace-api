@@ -16,13 +16,13 @@ export default (io: Namespace) => {
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",
       });
-      await socket.join(session);
       socket.on("MINTING_NFT", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("MINTING_NFT", data);
         // confirm success to mobile app
         validCallback && callback({ ok: true });
       });
+      await socket.join(session);
     }
   });
 };

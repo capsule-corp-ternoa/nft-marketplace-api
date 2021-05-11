@@ -13,7 +13,6 @@ export default (io: Namespace) => {
       });
       socket.disconnect();
     } else {
-      await socket.join(session);
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",
       });
@@ -29,6 +28,7 @@ export default (io: Namespace) => {
         socket.to(`${session}`).emit("NFT_BUY_RECEIVED", data);
         validCallback && callback({ ok: true });
       });
+      await socket.join(session);
     }
   });
 };
