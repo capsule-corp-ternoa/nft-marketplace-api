@@ -8,8 +8,8 @@ export default (io: Namespace) => {
   io.on("connection", (socket: Socket) => {
     const emitWalletId = async (_walletId: string, _session: string, callback: (args: any) => void | null = null) => {
       const validCallback = callback && typeof callback === "function";
-      const socketCount = io.adapter.rooms.get(<string>_session).size;
-      L.info(`emitWalletId?  socketCount = ${socketCount}`);
+      const socketCount = io.adapter.rooms.get(<string>_session)?.size || 0;
+      L.info(`emitWalletId?  socketCount = ${socketCount} - session: ${_session}`);
       if (!_walletId)
         validCallback &&
           callback({ error: "400", msg: "Missing walletId argument" });
@@ -58,10 +58,12 @@ export default (io: Namespace) => {
       io.adapter.on("join-room", (room, id) => {
         L.info(`socket ${id} has joined room ${room}`);
         if (walletId) {
+          L.info(`emitWalletId given on login`);
           emitWalletId(<string>walletId, <string> session);
           socket.to(`${session}`).emit("RECEIVE_WALLET_ID", { walletId });
         }
         socket.on("SEND_WALLET_ID", async ({ walletId: walltId }, callback) => {
+          L.info(`emitWalletId given on event SEND_WALLET_ID`);
           emitWalletId(walltId, <string> session, callback);
         });  
       });    
