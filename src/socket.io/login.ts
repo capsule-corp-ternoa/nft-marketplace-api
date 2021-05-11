@@ -53,6 +53,7 @@ export default (io: Namespace) => {
       });
       socket.disconnect();
     } else {
+      await socket.join(session);
       socket.on("SEND_WALLET_ID", async ({ walletId }, callback) => {
         emitWalletId(walletId, <string>session, callback);
       });
@@ -61,7 +62,6 @@ export default (io: Namespace) => {
         emitWalletIdReceived(walletId, <string>session, callback);
       });
       */
-      await socket.join(session);
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",
       });
