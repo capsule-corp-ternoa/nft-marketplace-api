@@ -6,6 +6,7 @@ import L from "../common/logger";
 export default (io: Namespace) => {
   io.on("connection", async (socket: Socket) => {
     const emitWalletId = async (walletId: string, _session: string, callback: (args: any) => void | null = null) => {
+      L.info('emitWalletId: ' + walletId);
       const validCallback = callback && typeof callback === "function";
       if (!walletId) {
         L.error(`Missing walletId argument for room ${_session}`);
@@ -27,6 +28,8 @@ export default (io: Namespace) => {
           }
         }
         socket.to(`${_session}`).emit("RECEIVED_WALLET_ID", { walletId });
+        L.info('emit RECEIVED_WALLET_ID: ' + walletId);
+        L.info('callback: ' + validCallback);
         if (validCallback) callback({ ok: true });
       }
     }
