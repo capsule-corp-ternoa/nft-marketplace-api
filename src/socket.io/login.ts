@@ -51,7 +51,7 @@ export default (io: Namespace) => {
     } else {
       L.info(`Login socket CONNECTED in room ${session} for id ${socket.id} at ${new Date()}`);
       L.info(`Login socket JOIN room ${session} for id ${socket.id} at ${new Date()}`);
-      io.adapter.on("join-room", (room, id) => {
+      io.adapter.once("join-room", (room, id) => {
         L.info(`socket ${id} has joined room ${room}`);
         if (walletId) {
           L.info(`emitWalletId ${walletId} given on login by mobil for session ${session}`);
@@ -63,7 +63,7 @@ export default (io: Namespace) => {
           emitWalletId(walltId, <string>session, callback);
         });
       });
-      io.adapter.on("leave-room", (room, id) => {
+      io.adapter.once("leave-room", (room, id) => {
         L.info(`socket ${id} has left room ${room}`);
       });
       await socket.join(session);
