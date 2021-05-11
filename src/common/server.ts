@@ -7,6 +7,8 @@ import os from "os";
 import L from "./logger";
 
 import errorHandler from "../api/middlewares/error.handler";
+import { RedisClient } from 'redis';
+import { createAdapter } from "socket.io-redis";
 
 const app = express();
 
@@ -55,11 +57,13 @@ export default class ExpressServer {
     const httpServer = http.createServer(app);
 
     // creates socket io server
+    const pubClient = new RedisClient({ host: 'localhost', port: 6379 });
+    const subClient = pubClient.duplicate();
     const io = new Server(httpServer, {
       // TODO: handle CORS
       cors: { origin: "*" },
       transports: ['websocket']
-    });
+    }).adapter(createAdapter({ pubClient, subClient }));
 
     socketInit(io);
 
