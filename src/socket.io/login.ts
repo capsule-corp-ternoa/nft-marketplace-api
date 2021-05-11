@@ -9,6 +9,7 @@ export default (io: Namespace) => {
     const emitWalletId = async (_walletId: string, _session: string, callback: (args: any) => void | null = null) => {
       const validCallback = callback && typeof callback === "function";
       const socketCount = io.adapter.rooms.get(<string>_session).size;
+      L.info(`emitWalletId?  socketCount = ${socketCount}`);
       if (!walletId)
         validCallback &&
           callback({ error: "400", msg: "Missing walletId argument" });
