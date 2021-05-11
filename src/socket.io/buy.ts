@@ -19,16 +19,10 @@ export default (io: Namespace) => {
       });
       socket.on("NFT_BUY", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
-        // if marketplace is not listening, inform mobile app
-        if (io.adapter.rooms.get(`${session}`).size < 2)
-          validCallback &&
-            callback({ error: "410", msg: "No listener for this session" });
-        else {
-          // send mobile app response to nft marketplace
-          socket.to(`${session}`).emit("NFT_BUY", data);
-          // confirm success to mobile app
-          validCallback && callback({ ok: true });
-        }
+        // send mobile app response to nft marketplace
+        socket.to(`${session}`).emit("NFT_BUY", data);
+        // confirm success to mobile app
+        validCallback && callback({ ok: true });
       });
     }
   });
