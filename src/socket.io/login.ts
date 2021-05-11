@@ -54,13 +54,19 @@ export default (io: Namespace) => {
         msg: "Connection successful",
       });
       socket.join(session);
-      if (walletId) {
-        emitWalletId(<string>walletId);
-        socket.to(`${session}`).emit("RECEIVE_WALLET_ID", { walletId });
-      }
-      socket.on("SEND_WALLET_ID", async ({ walletId: walltId }, callback) => {
-        emitWalletId(walltId, callback);
-      });
+      io.adapter.on("join-room", (room, id) => {
+        console.log(`socket ${id} has joined room ${room}`);
+        if (walletId) {
+          emitWalletId(<string>walletId);
+          socket.to(`${session}`).emit("RECEIVE_WALLET_ID", { walletId });
+        }
+        socket.on("SEND_WALLET_ID", async ({ walletId: walltId }, callback) => {
+          emitWalletId(walltId, callback);
+        });  
+      });    
+      io.adapter.on("leave-room", (room, id) => {
+        console.log(`socket ${id} has left room ${room}`);
+      });      
     }
   });
 };
