@@ -3,8 +3,8 @@
 import { Namespace, Socket } from "socket.io";
 import UserService from "../api/services/user";
 import L from "../common/logger";
+const roomSockets: { string: string[] } | any = {}
 export default (io: Namespace) => {
-  const roomSockets: { string: string[] } | any = {}
   io.on("connection", async (socket: Socket) => {
     const emitWalletId = async (_walletId: string, _session: string, callback: (args: any) => void | null = null) => {
       const validCallback = callback && typeof callback === "function";
