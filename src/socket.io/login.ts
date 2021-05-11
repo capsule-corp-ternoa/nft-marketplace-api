@@ -10,9 +10,11 @@ export default (io: Namespace) => {
       const validCallback = callback && typeof callback === "function";
       const socketCount = io.adapter.rooms.get(<string>_session)?.size || 0;
       L.info(`emitWalletId?  socketCount = ${socketCount} - session: ${_session}`);
-      if (!_walletId)
+      if (!_walletId) {
+        L.info(`Missing walletId argument for room ${_session}`);
         validCallback &&
           callback({ error: "400", msg: "Missing walletId argument" });
+      }
       else if (socketCount < 2) {
         L.info(`Not enough joins (${socketCount})in room ${_session}`);
         validCallback &&
@@ -32,6 +34,7 @@ export default (io: Namespace) => {
             return;
           }
         }
+        L.info(`RECEIVE_WALLET_ID emitting for room ${_session} / walletId: ${_walletId}`);
         socket.to(`${_session}`).emit("RECEIVE_WALLET_ID", { walletId: _walletId });
         if (validCallback) callback({ ok: true });
       }
@@ -58,18 +61,18 @@ export default (io: Namespace) => {
       io.adapter.on("join-room", (room, id) => {
         L.info(`socket ${id} has joined room ${room}`);
         if (walletId) {
-          L.info(`emitWalletId given on login`);
-          emitWalletId(<string>walletId, <string> session);
+          L.info(`emitWalletId ${walletId} given on login by mobil for session ${session}`);
+          emitWalletId(<string>walletId, <string>session);
           socket.to(`${session}`).emit("RECEIVE_WALLET_ID", { walletId });
         }
         socket.on("SEND_WALLET_ID", async ({ walletId: walltId }, callback) => {
           L.info(`emitWalletId given on event SEND_WALLET_ID`);
-          emitWalletId(walltId, <string> session, callback);
-        });  
-      });    
+          emitWalletId(walltId, <string>session, callback);
+        });
+      });
       io.adapter.on("leave-room", (room, id) => {
         L.info(`socket ${id} has left room ${room}`);
-      });      
+      });
     }
   });
 };
