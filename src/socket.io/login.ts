@@ -6,14 +6,14 @@ import L from "../common/logger";
 
 export default (io: Namespace) => {
   io.on("connection", (socket: Socket) => {
-    const emitWalletId = async (_walletId: string, callback: (args: any) => void | null = null) => {
+    const emitWalletId = async (_walletId: string, _session: string, callback: (args: any) => void | null = null) => {
       const validCallback = callback && typeof callback === "function";
-      const socketCount = io.adapter.rooms.get(<string>session).size;
+      const socketCount = io.adapter.rooms.get(<string>_session).size;
       if (!walletId)
         validCallback &&
           callback({ error: "400", msg: "Missing walletId argument" });
       else if (socketCount < 2) {
-        L.info(`Not enough joins (${socketCount})in room ${session}`);
+        L.info(`Not enough joins (${socketCount})in room ${_session}`);
         validCallback &&
           callback({ error: "410", msg: "No listener for this session" });
       }
@@ -31,7 +31,7 @@ export default (io: Namespace) => {
             return;
           }
         }
-        socket.to(`${session}`).emit("RECEIVE_WALLET_ID", { walletId: _walletId });
+        socket.to(`${_session}`).emit("RECEIVE_WALLET_ID", { walletId: _walletId });
         if (validCallback) callback({ ok: true });
       }
     }
@@ -57,11 +57,11 @@ export default (io: Namespace) => {
       io.adapter.on("join-room", (room, id) => {
         L.info(`socket ${id} has joined room ${room}`);
         if (walletId) {
-          emitWalletId(<string>walletId);
+          emitWalletId(<string>walletId, <string> session);
           socket.to(`${session}`).emit("RECEIVE_WALLET_ID", { walletId });
         }
         socket.on("SEND_WALLET_ID", async ({ walletId: walltId }, callback) => {
-          emitWalletId(walltId, callback);
+          emitWalletId(walltId, <string> session, callback);
         });  
       });    
       io.adapter.on("leave-room", (room, id) => {
