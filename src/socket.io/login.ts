@@ -6,7 +6,7 @@ import L from "../common/logger";
 
 export default (io: Namespace) => {
   io.on("connection", (socket: Socket) => {
-    const emitWalletId = async (walletId: string, callback: Function | null = null) => {
+    const emitWalletId = async (walletId: string, callback: (args: any) => void | null = null) => {
       const validCallback = callback && typeof callback === "function";
       const socketCount = io.adapter.rooms.get(<string>session).size;
       if (!walletId)
