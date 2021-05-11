@@ -6,8 +6,37 @@ import L from "../common/logger";
 
 export default (io: Namespace) => {
   io.on("connection", (socket: Socket) => {
+    const emitWalletId = async (walletId: string, callback: Function | null = null) => {
+      const validCallback = callback && typeof callback === "function";
+      const socketCount = io.adapter.rooms.get(<string>session).size;
+      if (!walletId)
+        validCallback &&
+          callback({ error: "400", msg: "Missing walletId argument" });
+      else if (socketCount < 2) {
+        L.info(`Not enough joins (${socketCount})in room ${session}`);
+        validCallback &&
+          callback({ error: "410", msg: "No listener for this session" });
+      }
+      else {
+        let user;
+        // if user exists, retrieve it, otherwise create a new one, return error if it fails
+        try {
+          user = await UserService.findUser(walletId);
+        } catch (err) {
+          try {
+            user = await UserService.createUser({ walletId });
+          } catch (err) {
+            validCallback &&
+              callback({ error: "500", msg: "Something went wrong" });
+            return;
+          }
+        }
+        socket.to(`${session}`).emit("RECEIVE_WALLET_ID", { walletId });
+        if (validCallback) callback({ ok: true });
+      }
+    }
 
-    const { session } = socket.handshake.query;
+    const { session, walletId } = socket.handshake.query;
 
     // if session arg not provided, return error and refuse connection
     if (!session || session === "undefined" || session === "") {
@@ -17,7 +46,6 @@ export default (io: Namespace) => {
       socket.disconnect();
     } else {
       L.info(`Login socket CONNECTED in room ${session} for id ${socket.id} at ${new Date()}`);
-      socket.join(session);
       L.info(`Login socket JOIN room ${session} for id ${socket.id} at ${new Date()}`);
       socket.on('disconnect', () => {
         L.info(`Login socket DISCONNECTED in room ${session} for id ${socket.id} at ${new Date()}`);
@@ -25,36 +53,15 @@ export default (io: Namespace) => {
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",
       });
-
+      socket.join(session);
+      if (walletId) {
+        emitWalletId(<string>walletId);
+        socket.to(`${session}`).emit("RECEIVE_WALLET_ID", { walletId });
+      }
       socket.on("SEND_WALLET_ID", async ({ walletId }, callback) => {
-        const validCallback = callback && typeof callback === "function";
-        const socketCount = io.adapter.rooms.get(<string> session).size;
-        if (!walletId)
-          validCallback &&
-            callback({ error: "400", msg: "Missing walletId argument" });
-        else if (socketCount < 2) {
-          L.info(`Not enough joins (${socketCount} )in room ${session}`);
-          validCallback &&
-            callback({ error: "410", msg: "No listener for this session" });
-        }
-        else {
-          let user;
-          // if user exists, retrieve it, otherwise create a new one, return error if it fails
-          try {
-            user = await UserService.findUser(walletId);
-          } catch (err) {
-            try {
-              user = await UserService.createUser({ walletId });
-            } catch (err) {
-              validCallback &&
-                callback({ error: "500", msg: "Something went wrong" });
-              return;
-            }
-          }
-          socket.to(`${session}`).emit("RECEIVE_WALLET_ID", { walletId });
-          if (validCallback) callback({ ok: true });
-        }
+        emitWalletId(walletId, callback);
       });
     }
+
   });
 };
