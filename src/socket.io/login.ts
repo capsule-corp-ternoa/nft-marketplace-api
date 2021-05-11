@@ -57,7 +57,7 @@ export default (io: Namespace) => {
           roomSockets[room] = []
         }
         roomSockets[room].push(id);
-        L.info(`roomSocket update`, roomSockets[room].length);
+        L.info(`roomSocket update len=` + roomSockets[room].length);
         if (walletId) {
           L.info(`emitWalletId ${walletId} given on login by mobil for session ${session}`);
           emitWalletId(<string>walletId, <string>session);
@@ -74,7 +74,7 @@ export default (io: Namespace) => {
         if (index >= 0) {
           roomSockets[room].splice(index, 1);
         }
-        L.info(`roomSocket update`, roomSockets[room].length);
+        L.info(`roomSocket update len=` + roomSockets[room].length);
       });
       await socket.join(session);
       socket.on('disconnect', () => {
