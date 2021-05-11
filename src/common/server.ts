@@ -57,7 +57,7 @@ export default class ExpressServer {
     const httpServer = http.createServer(app);
 
     // creates socket io server
-    const pubClient = new RedisClient({ host: 'localhost', port: 6379 });
+    const pubClient = new RedisClient({ host: '0.0.0.0', port: 6379 });
     const subClient = pubClient.duplicate();
     const io = new Server(httpServer, {
       // TODO: handle CORS
