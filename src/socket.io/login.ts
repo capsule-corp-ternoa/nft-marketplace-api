@@ -70,8 +70,10 @@ export default (io: Namespace) => {
       });
       io.adapter.once("leave-room", (room, id) => {
         L.info(`socket ${id} has left room ${room}`);
-        const index = roomSockets[room].indexOf(id)
-        roomSockets[room].splice(index, 1);
+        const index = roomSockets[room]?.indexOf(id)
+        if (index >= 0) {
+          roomSockets[room].splice(index, 1);
+        }
         L.info(`roomSocket update`, roomSockets[room]);
       });
       await socket.join(session);
