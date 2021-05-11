@@ -26,7 +26,19 @@ export default (io: Namespace) => {
             return;
           }
         }
-        socket.to(`${_session}`).emit("RECEIVE_WALLET_ID", { walletId });
+        socket.to(`${_session}`).emit("RECEIVED_WALLET_ID", { walletId });
+        if (validCallback) callback({ ok: true });
+      }
+    }
+    const emitWalletIdReceived = async (walletId: string, _session: string, callback: (args: any) => void | null = null) => {
+      const validCallback = callback && typeof callback === "function";
+      if (!walletId) {
+        L.error(`Missing walletId argument for room ${_session}`);
+        validCallback &&
+          callback({ error: "400", msg: "Missing walletId argument" });
+      }
+      else {
+        socket.to(`${_session}`).emit("RECEIVED_WALLET_ID", { walletId });
         if (validCallback) callback({ ok: true });
       }
     }
@@ -42,6 +54,9 @@ export default (io: Namespace) => {
     } else {
       socket.on("SEND_WALLET_ID", async ({ walletId }, callback) => {
         emitWalletId(walletId, <string>session, callback);
+      });
+      socket.on('RECEIVED_WALLET_ID', ({ walletId }, callback) => {
+        emitWalletIdReceived(walletId, <string>session, callback);
       });
       await socket.join(session);
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
