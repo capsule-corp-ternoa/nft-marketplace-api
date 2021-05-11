@@ -6,7 +6,7 @@ import L from "../common/logger";
 
 export default (io: Namespace) => {
   io.on("connection", (socket: Socket) => {
-    const emitWalletId = async (walletId: string, callback: (args: any) => void | null = null) => {
+    const emitWalletId = async (_walletId: string, callback: (args: any) => void | null = null) => {
       const validCallback = callback && typeof callback === "function";
       const socketCount = io.adapter.rooms.get(<string>session).size;
       if (!walletId)
@@ -21,17 +21,17 @@ export default (io: Namespace) => {
         let user;
         // if user exists, retrieve it, otherwise create a new one, return error if it fails
         try {
-          user = await UserService.findUser(walletId);
+          user = await UserService.findUser(_walletId);
         } catch (err) {
           try {
-            user = await UserService.createUser({ walletId });
+            user = await UserService.createUser({ walletId: _walletId });
           } catch (err) {
             validCallback &&
               callback({ error: "500", msg: "Something went wrong" });
             return;
           }
         }
-        socket.to(`${session}`).emit("RECEIVE_WALLET_ID", { walletId });
+        socket.to(`${session}`).emit("RECEIVE_WALLET_ID", { walletId: _walletId });
         if (validCallback) callback({ ok: true });
       }
     }
@@ -62,6 +62,5 @@ export default (io: Namespace) => {
         emitWalletId(walletId, callback);
       });
     }
-
   });
 };
