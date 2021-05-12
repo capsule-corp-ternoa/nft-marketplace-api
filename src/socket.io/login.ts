@@ -59,7 +59,7 @@ export default (io: Namespace) => {
       socket.disconnect();
     } else {
       socket.on("SEND_WALLET_ID", async ({ walletId }, callback) => {
-        emitWalletId(walletId, <string>session, callback);
+        emitWalletId(walletId, session as string, callback);
       });
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",

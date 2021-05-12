@@ -7,6 +7,8 @@ import os from "os";
 import L from "./logger";
 
 import errorHandler from "../api/middlewares/error.handler";
+import { RedisClient } from 'redis';
+import { createAdapter } from "socket.io-redis";
 
 const app = express();
 
@@ -47,8 +49,7 @@ export default class ExpressServer {
   listen(port: number, socketInit: (s: Server) => void): Application {
     const welcome = (portNmbr: number) => (): void =>
       L.info(
-        `up and running in ${
-          process.env.NODE_ENV || "development"
+        `up and running in ${process.env.NODE_ENV || "development"
         } @: ${os.hostname()} on port: ${portNmbr}}`
       );
 
@@ -56,10 +57,15 @@ export default class ExpressServer {
     const httpServer = http.createServer(app);
 
     // creates socket io server
+    const { REDIS_URL, REDIS_KEY } = process.env;
+    L.info('REDIS URL:' + REDIS_URL);
+    L.info('REDIS_KEY URL:' + REDIS_KEY);
+    const redisAdapter = createAdapter(REDIS_URL, { key: REDIS_KEY })
     const io = new Server(httpServer, {
       // TODO: handle CORS
       cors: { origin: "*" },
-    });
+      transports: ['websocket']
+    }).adapter(redisAdapter);
 
     socketInit(io);
 
