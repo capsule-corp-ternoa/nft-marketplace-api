@@ -57,14 +57,15 @@ export default class ExpressServer {
     const httpServer = http.createServer(app);
 
     // creates socket io server
-    L.info('REDIS URL:' + process.env.REDIS_URL);
-    const pubClient = new RedisClient({ url: process.env.REDIS_URL });
-    const subClient = pubClient.duplicate();
+    const { REDIS_URL, REDIS_KEY } = process.env;
+    L.info('REDIS URL:' + REDIS_URL);
+    L.info('REDIS_KEY URL:' + REDIS_KEY);
+    const redisAdapter = createAdapter(REDIS_URL, { key: REDIS_KEY })
     const io = new Server(httpServer, {
       // TODO: handle CORS
       cors: { origin: "*" },
       transports: ['websocket']
-    }).adapter(createAdapter({ pubClient, subClient }));
+    }).adapter(redisAdapter);
 
     socketInit(io);
 
