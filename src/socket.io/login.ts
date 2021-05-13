@@ -7,7 +7,7 @@ export default (io: Namespace) => {
   io.on("connection", async (socket: Socket) => {
     const emitWalletId = async (walletId: string, _session: string, callback: (args: any) => void | null = null) => {
       const validCallback = callback && typeof callback === "function";
-      if (!walletId) {
+      if (!walletId || walletId === "undefined") {
         L.error(`Missing walletId argument for room ${_session}`);
         validCallback &&
           callback({ error: "400", msg: "Missing walletId argument" });
@@ -38,7 +38,7 @@ export default (io: Namespace) => {
     }
     const emitWalletIdReceived = async (walletId: string, _session: string, callback: (args: any) => void | null = null) => {
       const validCallback = callback && typeof callback === "function";
-      if (!walletId) {
+      if (!walletId || walletId === "undefined") {
         L.error(`Missing walletId argument for room ${_session}`);
         validCallback &&
           callback({ error: "400", msg: "Missing walletId argument" });
