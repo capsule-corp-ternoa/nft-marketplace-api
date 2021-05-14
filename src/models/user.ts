@@ -8,6 +8,8 @@ const User = new mongoose.Schema({
     required: [true, "Please enter a walletId"],
     unique: true,
     index: true,
+    minlength: 48,
+    maxlength: 48,
   },
   nonce: {
     type: String,

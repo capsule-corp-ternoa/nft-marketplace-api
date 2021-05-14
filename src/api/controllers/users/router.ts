@@ -3,5 +3,5 @@ import controller from "./controller";
 export default express
   .Router()
   .get("/:id", controller.getUser)
-  // .post("/", controller.newUser)
+  .post("/create", controller.newUser)
   .get("/", controller.all);
