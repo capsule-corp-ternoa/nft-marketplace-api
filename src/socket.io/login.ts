@@ -27,7 +27,7 @@ export default (io: Namespace) => {
           }
         }
         socket.to(`${_session}`).emit("RECEIVE_WALLET_ID", { walletId });
-        L.info(`Emitted RECEIVE_WALLET_ID : wallet ${walletId} to ${_session} - room size = ${io.sockets.}`);
+        L.info(`Emitted RECEIVE_WALLET_ID : wallet ${walletId} to ${_session} - room size = ${io.adapter.rooms.get(_session).size}`);
         socket.on('RECEIVED_WALLET_ID', ({ walletId: _walletId }, _callback) => {
           L.info(`RECEIVED_WALLET_ID: wallet ${walletId}`);
           emitWalletIdReceived(_walletId, <string>session, _callback);
