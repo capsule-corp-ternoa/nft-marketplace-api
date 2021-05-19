@@ -27,7 +27,7 @@ export default (io: Namespace) => {
           }
         }
         socket.to(`${_session}`).emit("RECEIVE_WALLET_ID", { walletId });
-        L.info(`Emitted RECEIVE_WALLET_ID : wallet ${walletId} to ${_session}`);
+        L.info(`Emitted RECEIVE_WALLET_ID : wallet ${walletId} to ${_session} - room size = ${io.sockets.}`);
         socket.on('RECEIVED_WALLET_ID', ({ walletId: _walletId }, _callback) => {
           L.info(`RECEIVED_WALLET_ID: wallet ${walletId}`);
           emitWalletIdReceived(_walletId, <string>session, _callback);
@@ -54,17 +54,21 @@ export default (io: Namespace) => {
       io.to(socket.id).emit("CONNECTION_FAILURE", {
         msg: "Missing session argument",
       });
+      L.info('disconnecting socket');
       socket.disconnect();
     } else {
+      await socket.join(session);
+      L.info('socked joined to session ' + session);
       socket.on("SEND_WALLET_ID", async ({ walletId }, callback) => {
-        L.info('SEND_WALLET_ID event :'+ walletId);
+        L.info('SEND_WALLET_ID event :' + walletId);
         emitWalletId(walletId, session as string, callback);
       });
-      await socket.join(session);
-      L.info('socked joined to session '+session);
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",
       });
+      socket.on('disconnect', (r) => {
+        L.info(`disconnecting socket id ${socket.id} - reason: ${r}`)
+      })
     }
   });
 };
