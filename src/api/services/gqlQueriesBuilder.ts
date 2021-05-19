@@ -9,6 +9,7 @@ const nodes = `
     timestampList
     uri
     price
+    serieId
   }
 `;
 
