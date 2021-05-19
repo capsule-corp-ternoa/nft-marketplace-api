@@ -58,10 +58,10 @@ export default (io: Namespace) => {
       socket.on("SEND_WALLET_ID", async ({ walletId }, callback) => {
         L.info('SEND_WALLET_ID event :' + walletId);
         emitWalletId(walletId, session as string, callback);
-      });
-      socket.on('RECEIVED_WALLET_ID', ({ walletId }, _callback) => {
-        L.info(`RECEIVED_WALLET_ID: wallet ${walletId}`);
-        emitWalletIdReceived(walletId, <string>session, _callback);
+        socket.on('RECEIVED_WALLET_ID', ({ walletId }) => {
+          L.info(`RECEIVED_WALLET_ID: wallet ${walletId}`);
+          emitWalletIdReceived(walletId, <string>session, callback);
+        });  
       });
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",
