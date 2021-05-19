@@ -60,7 +60,7 @@ export default (io: Namespace) => {
         emitWalletId(walletId, session as string, callback);
       });
       await socket.join(session);
-      L.info('socked joined to session');
+      L.info('socked joined to session '+session);
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",
       });
