@@ -56,7 +56,7 @@ export default (io: Namespace) => {
       socket.disconnect();
     } else {
       socket.on("SEND_WALLET_ID", async ({ walletId }, callback) => {
-        L.info('SEND_WALLET_ID event', walletId);
+        L.info('SEND_WALLET_ID event :'+ walletId);
         emitWalletId(walletId, session as string, callback);
       });
       await socket.join(session);
