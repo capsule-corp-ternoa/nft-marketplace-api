@@ -65,8 +65,7 @@ export default class ExpressServer {
       // TODO: handle CORS
       cors: { origin: "*" },
       transports: ['websocket']
-    })
-    //.adapter(redisAdapter);
+    }).adapter(redisAdapter);
 
     socketInit(io);
 
