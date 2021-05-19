@@ -55,12 +55,12 @@ export default (io: Namespace) => {
     } else {
       await socket.join(session);
       L.info('socked joined to session ' + session);
-      socket.on("SEND_WALLET_ID", async ({ walletId }, callback) => {
-        L.info('SEND_WALLET_ID event :' + walletId);
-        emitWalletId(walletId, session as string, callback);
-        socket.on('RECEIVED_WALLET_ID', ({ walletId }) => {
-          L.info(`RECEIVED_WALLET_ID: wallet ${walletId}`);
-          emitWalletIdReceived(walletId, <string>session, callback);
+      socket.on("SEND_WALLET_ID", async ({ walletId: sentWalledId }, callback) => {
+        L.info('SEND_WALLET_ID event :' + sentWalledId);
+        emitWalletId(sentWalledId, session as string, callback);
+        socket.on('RECEIVED_WALLET_ID', ({ walletId: receivedWalletId }) => {
+          L.info(`RECEIVED_WALLET_ID: wallet ${receivedWalletId}`);
+          emitWalletIdReceived(receivedWalletId, <string>session, callback);
         });  
       });
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
