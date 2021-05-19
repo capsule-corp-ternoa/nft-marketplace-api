@@ -39,6 +39,7 @@ export default (io: Namespace) => {
       }
       else {
         socket.to(`${_session}`).emit("RECEIVED_WALLET_ID", { walletId });
+        L.info(`Emitted RECEIVED_WALLET_ID : wallet ${walletId} to ${_session} - room size = ${io.adapter.rooms.get(_session).size}`);
         if (validCallback) callback({ ok: true });
       }
     }
@@ -58,10 +59,10 @@ export default (io: Namespace) => {
       socket.on("SEND_WALLET_ID", async ({ walletId: sentWalledId }, callback) => {
         L.info('SEND_WALLET_ID event :' + sentWalledId);
         emitWalletId(sentWalledId, session as string, callback);
-        socket.on('RECEIVED_WALLET_ID', ({ walletId: receivedWalletId }) => {
-          L.info(`RECEIVED_WALLET_ID: wallet ${receivedWalletId}`);
-          emitWalletIdReceived(receivedWalletId, <string>session, callback);
-        });  
+      });
+      socket.on('RECEIVED_WALLET_ID', ({ walletId: receivedWalletId }, callback) => {
+        L.info(`RECEIVED_WALLET_ID: wallet ${receivedWalletId}`);
+        emitWalletIdReceived(receivedWalletId, <string>session, callback);
       });
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",
