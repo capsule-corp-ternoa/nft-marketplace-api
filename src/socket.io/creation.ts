@@ -22,6 +22,12 @@ export default (io: Namespace) => {
         // confirm success to mobile app
         validCallback && callback({ ok: true });
       });
+      socket.on("MINTING_NFT_RECEIVED", (data, callback) => {
+        const validCallback = callback && typeof callback === "function";
+        socket.to(`${session}`).emit("MINTING_NFT_RECEIVED", data);
+        // confirm success to mobile app
+        validCallback && callback({ ok: true });
+      });
       socket.on("MINTED_NFT", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("MINTED_NFT", data);
