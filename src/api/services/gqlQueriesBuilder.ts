@@ -16,7 +16,7 @@ const nodes = `
 export class GQLQueriesBuilder {
   allNFTs = () => gql`
     {
-      nftEntities(orderBy: TIMESTAMP_BURN_ASC, condition: { timestampBurn: null }) {
+      nftEntities(orderBy: TIMESTAMP_BURN_ASC, filter: { timestampBurn: { isNull: true } }) {
         ${nodes}
       }
     }
@@ -28,7 +28,7 @@ export class GQLQueriesBuilder {
         orderBy: TIMESTAMP_BURN_ASC
         first: ${first}
         offset: ${offset}
-        condition: { timestampBurn: null }
+        filter: { timestampBurn: { isNull: true } }
       ) {
         totalCount
         pageInfo {
@@ -44,7 +44,12 @@ export class GQLQueriesBuilder {
     {
       nftEntities(
         orderBy: ID_ASC
-        condition: { id: "${id}", timestampBurn: null }
+        filter: { 
+          and: [
+            { id: { equalTo: "${id}" } }
+            { timestampBurn: { isNull: true } }
+          ]
+        }
       ) {
         ${nodes}
       }
@@ -55,7 +60,12 @@ export class GQLQueriesBuilder {
     {
       nftEntities(
         orderBy: OWNER_ASC
-        condition: { owner: "${id}", timestampBurn: null }
+        filter: {
+          and: [
+            { owner: { equalTo: "${id}" } }
+            { timestampBurn: { isNull: true } }
+          ]
+        }
       ) {
         totalCount
         ${nodes}
@@ -67,7 +77,12 @@ export class GQLQueriesBuilder {
     {
       nftEntities(
         orderBy: OWNER_ASC
-        condition: { owner: "${id}", timestampBurn: null }
+        filter: {
+          and: [
+            { owner: { equalTo: "${id}" } }
+            { timestampBurn: { isNull: true } }
+          ]
+        }
         first: ${first}
         offset: ${offset}
       ) {
