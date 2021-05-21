@@ -60,13 +60,13 @@ export default class ExpressServer {
     const { REDIS_URL, REDIS_KEY, REDIS_ENABLED } = process.env;
     L.info('REDIS URL:' + REDIS_URL);
     L.info('REDIS_KEY URL:' + REDIS_KEY);
-    L.info('REDIS_ENABLED URL:' + REDIS_ENABLED);
+    L.info('REDIS_ENABLED:' + REDIS_ENABLED);
     let io = new Server(httpServer, {
       // TODO: handle CORS
       cors: { origin: "*" },
       transports: ['websocket']
     });
-    if (REDIS_ENABLED) {
+    if (Boolean(REDIS_ENABLED) == true) {
       const redisAdapter = createAdapter(REDIS_URL, { key: REDIS_KEY })
       io = io.adapter(redisAdapter);
       L.info('REDIS Adapter added to IO ');
