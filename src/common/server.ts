@@ -69,6 +69,7 @@ export default class ExpressServer {
     if (REDIS_ENABLED) {
       const redisAdapter = createAdapter(REDIS_URL, { key: REDIS_KEY })
       io = io.adapter(redisAdapter);
+      L.info('REDIS Adapter added to IO ');
     }
 
     socketInit(io);
