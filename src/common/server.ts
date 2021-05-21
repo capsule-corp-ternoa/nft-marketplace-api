@@ -66,7 +66,7 @@ export default class ExpressServer {
       cors: { origin: "*" },
       transports: ['websocket']
     });
-    if (Boolean(REDIS_ENABLED) == true) {
+    if (Boolean(REDIS_ENABLED) === true) {
       const redisAdapter = createAdapter(REDIS_URL, { key: REDIS_KEY })
       io = io.adapter(redisAdapter);
       L.info('REDIS Adapter added to IO ');
