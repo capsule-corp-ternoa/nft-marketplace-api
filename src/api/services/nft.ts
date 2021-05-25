@@ -128,6 +128,60 @@ export class NFTService {
       throw new Error("Couldn't get user's NFTs");
     }
   }
+
+  /**
+   * Gets all NFTs created by a user
+   * @param creatorId - The user's blockchain id
+   * @throws Will throw an error if can't request indexer
+   */
+  async getNFTsFromCreator(creatorId: string): Promise<INFT[]> {
+    try {
+      const query = QueriesBuilder.NFTsFromCreatorId(creatorId);
+      const result: NFTListResponse = await request(indexerUrl, query);
+
+      const NFTs = result.nftEntities.nodes;
+      return (
+        await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
+      ).filter((n) => Number(n.id) !== 0);
+    } catch (err) {
+      throw new Error("Couldn't get creator's NFTs");
+    }
+  }
+
+  /**
+   * Returns a limited amount of creator's NFTs
+   * @param creatorId - The user's blockchain id
+   * @param page - Page number
+   * @param limit - Number of elements per page
+   * @throws Will throw an error if can't request indexer
+   * @returns - A paginated array of nfts
+   */
+  async getPaginatedNFTsFromCreator(
+    creatorId: string,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<PaginationResponse<INFT[]>> {
+    try {
+      const query = QueriesBuilder.NFTsFromCreatorIdPaginated(
+        creatorId,
+        limit,
+        (page - 1) * limit
+      );
+      const result: NFTListPaginatedResponse = await request(indexerUrl, query);
+
+      const ret: PaginationResponse<INFT[]> = {
+        data: await Promise.all(
+          result.nftEntities.nodes.map(async (NFT) => populateNFT(NFT))
+        ),
+        hasNextPage: result.nftEntities.pageInfo.hasNextPage,
+        hasPreviousPage: result.nftEntities.pageInfo.hasPreviousPage,
+        totalCount: result.nftEntities.totalCount,
+      };
+      return ret;
+    } catch (err) {
+      throw new Error("Couldn't get creator's NFTs");
+    }
+  }
 }
 
 export default new NFTService();
