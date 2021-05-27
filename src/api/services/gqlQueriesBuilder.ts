@@ -139,6 +139,20 @@ export class GQLQueriesBuilder {
       }
     }
   `;
+
+  capsBalanceFromId = (id: string) => gql`
+    {
+      accountEntities(
+        filter: {
+          id: { equalTo: "${id}" }
+        }
+      ) {
+        nodes {
+          capsAmount
+        }
+      }
+    }
+  `;
 }
 
 export default new GQLQueriesBuilder();
