@@ -73,11 +73,12 @@ export default class ExpressServer {
           rejectUnauthorized: false
         }
       });
+      L.info('REDIS client build allowing TLS unauth.');
       const redisAdapter = createAdapter({
         key: REDIS_KEY,
         pubClient: client,
         subClient: client.duplicate()
-      })
+      });
       io = io.adapter(redisAdapter);
       L.info('REDIS Adapter added to IO ');
     }
