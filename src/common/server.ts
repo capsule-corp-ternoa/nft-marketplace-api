@@ -7,7 +7,7 @@ import os from "os";
 import L from "./logger";
 
 import errorHandler from "../api/middlewares/error.handler";
-import { RedisClient } from 'redis';
+import redis from 'redis';
 import { createAdapter } from "socket.io-redis";
 
 const app = express();
@@ -67,12 +67,7 @@ export default class ExpressServer {
       transports: ['websocket']
     });
     if (+(REDIS_ENABLED) === 1) {
-      const client = new RedisClient({
-        url: REDIS_URL,
-        tls: {
-          rejectUnauthorized: false
-        }
-      });
+      const client = redis.createClient(REDIS_URL, { tls: { rejectUnauthorized: false } });
       L.info('REDIS client build allowing TLS unauth.');
       const redisAdapter = createAdapter({
         key: REDIS_KEY,
