@@ -31,5 +31,18 @@ export class Controller {
       next(err);
     }
   }
+
+  async getAccountBalance(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const balance = await UserService.getAccountBalance(req.params.id);
+      res.json(balance);
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 export default new Controller();

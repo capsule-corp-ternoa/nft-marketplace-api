@@ -1,9 +1,15 @@
+import { request } from "graphql-request";
 import { IUser, IUserDTO } from "src/interfaces/IUser";
 import L from "../../common/logger";
 import UserModel from "../../models/user";
+import QueriesBuilder from "./gqlQueriesBuilder";
 import crypto from "crypto";
 import { PaginateResult } from "mongoose";
+import { AccountResponse, Account } from "src/interfaces/graphQL";
 import NodeCache from "node-cache";
+
+const indexerUrl =
+  process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
 
 const usersCache = new NodeCache({ stdTTL: 300 });
 
@@ -83,6 +89,22 @@ export class UserService {
       return users;
     } catch (err) {
       throw new Error("Users can't be found");
+    }
+  }
+
+  /**
+   * Get amount of caps on wallet
+   * @param id - User's public address
+   * @throws Will throw an error if indexer can't be reached
+   * @return A promise that resolves to the account
+   */
+  async getAccountBalance(id: string): Promise<Account> {
+    try {
+      const query = QueriesBuilder.capsBalanceFromId(id);
+      const result: AccountResponse = await request(indexerUrl, query);
+      return result.accountEntities.nodes[0];
+    } catch (err) {
+      throw new Error("Couldn't get caps balance");
     }
   }
 }
