@@ -59,7 +59,7 @@ export default class ExpressServer {
     // creates socket io server
     const { REDIS_URL, REDIS_KEY, REDIS_ENABLED } = process.env;
     L.info('REDIS URL:' + REDIS_URL);
-    L.info('REDIS_KEY URL:' + REDIS_KEY);
+    L.info('REDIS_KEY:' + REDIS_KEY);
     L.info('REDIS_ENABLED:' + REDIS_ENABLED);
     let io = new Server(httpServer, {
       // TODO: handle CORS
@@ -67,7 +67,17 @@ export default class ExpressServer {
       transports: ['websocket']
     });
     if (+(REDIS_ENABLED) === 1) {
-      const redisAdapter = createAdapter(REDIS_URL, { key: REDIS_KEY })
+      const client = new RedisClient({
+        url: REDIS_URL,
+        tls: {
+          rejectUnauthorized: false
+        }
+      });
+      const redisAdapter = createAdapter({
+        key: REDIS_KEY,
+        pubClient: client,
+        subClient: client.duplicate()
+      })
       io = io.adapter(redisAdapter);
       L.info('REDIS Adapter added to IO ');
     }
