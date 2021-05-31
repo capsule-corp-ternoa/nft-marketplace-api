@@ -1,6 +1,7 @@
 // tslint:disable: no-unused-expression
 
 import { Namespace, Socket } from "socket.io";
+import L from "../common/logger";
 
 export default (io: Namespace) => {
   io.on("connection", async (socket: Socket) => {
@@ -14,6 +15,7 @@ export default (io: Namespace) => {
       socket.disconnect();
     } else {
       await socket.join(session);
+      L.info('socked ' + socket.id + ' joined to session ' + session) + ' room size='+io.adapter.rooms.get(<string> session).size;
       socket.on("NFT_BUY", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         // send mobile app response to nft marketplace
