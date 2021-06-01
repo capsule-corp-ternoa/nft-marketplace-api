@@ -55,7 +55,7 @@ export default (io: Namespace) => {
       socket.disconnect();
     } else {
       await socket.join(session);
-      L.info('socked ' + socket.id + ' joined to session ' + session);
+      L.info('socked ' + socket.id + ' joined to session ' + session) + ' room size='+io.adapter.rooms.get(<string> session).size;
       socket.on("SEND_WALLET_ID", async ({ walletId: sentWalledId }, callback) => {
         L.info('SEND_WALLET_ID event :' + sentWalledId);
         emitWalletId(sentWalledId, session as string, callback);
@@ -64,12 +64,12 @@ export default (io: Namespace) => {
         L.info(`RECEIVED_WALLET_ID: wallet ${receivedWalletId}`);
         emitWalletIdReceived(receivedWalletId, <string>session, callback);
       });
-      io.to(socket.id).emit("CONNECTION_SUCCESS", {
-        msg: "Connection successful",
-      });
       socket.on('disconnect', (r) => {
         L.info(`disconnecting socket id ${socket.id} - reason: ${r}`)
       })
+      io.to(socket.id).emit("CONNECTION_SUCCESS", {
+        msg: "Connection successful",
+      });
     }
   });
 };

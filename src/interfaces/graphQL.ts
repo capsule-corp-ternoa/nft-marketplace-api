@@ -35,6 +35,17 @@ export interface NFTListPaginatedResponse {
   };
 }
 
+export interface Account {
+  capsAmount: string;
+  id?: string;
+}
+
+export interface AccountResponse {
+  accountEntities: {
+    nodes: Account[];
+  };
+}
+
 export interface PaginationResponse<DataType> {
   totalCount: number;
   hasNextPage: boolean;
