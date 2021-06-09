@@ -101,6 +101,27 @@ export class Controller {
     }
   }
 
+  async getCategoryNFTs(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    if (!req.params.code) next(new Error("code param is needed"));
+    const { page, limit } = req.query;
+    if (page === undefined || limit === undefined)
+      res.json(await NFTService.getNFTsFromCategory(req.params.code));
+    else {
+      const pageNumber = Number(page);
+      const limitNumber = Number(limit);
+      if (isNaN(pageNumber) || pageNumber < 1)
+        throw new Error("Page argument is invalid");
+      if (isNaN(limitNumber) || limitNumber < 1 || limitNumber > LIMIT_MAX)
+        throw new Error("Limit argument is invalid");
+
+      // TODO: paginated category
+    }
+  }
+
   async createNFT(
     req: Request,
     res: Response,

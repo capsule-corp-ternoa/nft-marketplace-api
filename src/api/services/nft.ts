@@ -186,6 +186,42 @@ export class NFTService {
   }
 
   /**
+   * Returns several nfts from array of ids
+   * @param ids - The nfts blockchain ids
+   * @throws Will throw an error if can't request indexer
+   */
+  async getNFTsFromIds(ids: string[]): Promise<INFT[]> {
+    try {
+      const query = QueriesBuilder.NFTsFromIds(ids);
+      const result: NFTListResponse = await request(indexerUrl, query);
+
+      const NFTs = result.nftEntities.nodes;
+      return (
+        await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
+      ).filter((n) => Number(n.id) !== 0);
+    } catch (err) {
+      throw new Error("Couldn't get NFTs");
+    }
+  }
+
+  /**
+   * Gets all NFTs from a category
+   * @param categoryCode - The code of the category
+   * @throws Will throw an error if can't reach database
+   */
+  async getNFTsFromCategory(code: string): Promise<INFT[]> {
+    try {
+      const mongoNfts = await NftModel.find({ categories: code });
+      const nfts = await this.getNFTsFromIds(
+        mongoNfts.map((nft) => nft.chainId)
+      );
+      return nfts;
+    } catch (err) {
+      throw new Error("Couldn't get NFTs in this category");
+    }
+  }
+
+  /**
    * Creates a new nft document in DB
    * @param nftDTO - NFT data
    * @throws Will throw an error if can't create NFT document

@@ -140,6 +140,22 @@ export class GQLQueriesBuilder {
     }
   `;
 
+  NFTsFromIds = (ids: string[]) => gql`
+    {
+      nftEntities(
+        orderBy: ID_ASC
+        filter: {
+          and: [
+            { creator: { in: ${JSON.stringify(ids)} } }
+            { timestampBurn: { isNull: true } }
+          ]
+        }
+      ) {
+        ${nodes}
+      }
+    }
+  `;
+
   capsBalanceFromId = (id: string) => gql`
     {
       accountEntities(
