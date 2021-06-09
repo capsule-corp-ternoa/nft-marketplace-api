@@ -222,6 +222,32 @@ export class NFTService {
   }
 
   /**
+   * Gets a fixed amount of NFTs from a category
+   * @param categoryCode - The code of the category
+   * @param page - Page number
+   * @param limit - Number of elements per page
+   * @throws Will throw an error if can't reach database
+   */
+  async getPaginatedNFTsFromCategory(
+    code: string,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<INFT[]> {
+    try {
+      const mongoNfts = await NftModel.paginate(
+        { categories: code },
+        { page, limit }
+      );
+      const nfts = await this.getNFTsFromIds(
+        mongoNfts.docs.map((nft) => nft.chainId)
+      );
+      return nfts;
+    } catch (err) {
+      throw new Error("Couldn't get NFTs in this category");
+    }
+  }
+
+  /**
    * Creates a new nft document in DB
    * @param nftDTO - NFT data
    * @throws Will throw an error if can't create NFT document
