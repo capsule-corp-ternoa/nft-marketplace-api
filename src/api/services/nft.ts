@@ -5,6 +5,8 @@ import {
   NFTListResponse,
   PaginationResponse,
 } from "src/interfaces/graphQL";
+import { IMongoNft, INftDto } from "../../interfaces/INft";
+import NftModel from "../../models/nft";
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
 
@@ -180,6 +182,24 @@ export class NFTService {
       return ret;
     } catch (err) {
       throw new Error("Couldn't get creator's NFTs");
+    }
+  }
+
+  async createNFT(nftDTO: INftDto): Promise<IMongoNft> {
+    try {
+      const newNft = new NftModel(nftDTO);
+      return await newNft.save();
+    } catch (err) {
+      throw new Error("User can't be created");
+    }
+  }
+
+  async findNftFromId(nftId: string): Promise<IMongoNft> {
+    try {
+      const nft = await NftModel.findOne({ chainId: nftId }).lean();
+      return (nft as unknown) as IMongoNft;
+    } catch (err) {
+      throw new Error("Couldn't get mongo NFT");
     }
   }
 }

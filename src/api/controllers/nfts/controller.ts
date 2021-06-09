@@ -100,6 +100,19 @@ export class Controller {
       next(err);
     }
   }
+
+  async createNFT(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const nft = NFTService.createNFT(req.body);
+      res.json(nft);
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export default new Controller();

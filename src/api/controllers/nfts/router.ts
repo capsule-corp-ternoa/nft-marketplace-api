@@ -5,4 +5,5 @@ export default express
   .get("/", controller.getAllNFTs)
   .get("/owner/:id", controller.getUsersNFTS)
   .get("/creator/:id", controller.getCreatorsNFTs)
-  .get("/:id", controller.getNFT);
+  .get("/:id", controller.getNFT)
+  .post("/new", controller.createNFT);

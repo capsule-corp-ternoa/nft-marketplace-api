@@ -1,7 +1,8 @@
-import { ICompleteNFT, INFT } from "src/interfaces/graphQL";
+import { ICompleteNFT, INFT } from "../../interfaces/graphQL";
 import UserService from "../services/user";
 import L from "../../common/logger";
 import fetch from "node-fetch";
+import NFTService from "../services/nft";
 
 /**
  * Adds information to NFT object from external sources
@@ -13,6 +14,7 @@ export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
   retNFT = await this.populateNFTCreator(retNFT);
   retNFT = await this.populateNFTOwner(retNFT);
   retNFT = await this.populateNFTUri(retNFT);
+  retNFT = await this.populateNFTCategories(retNFT);
   return retNFT;
 }
 
@@ -64,5 +66,28 @@ export async function populateNFTUri(NFT: INFT): Promise<ICompleteNFT | INFT> {
   } catch (err) {
     L.error({ err }, "invalid NFT uri");
     return NFT;
+  }
+}
+
+/**
+ * Populates an NFT obejct with categories from database
+ * @param NFT - NFT object with id field
+ * @returns NFT object with new categories field from db
+ */
+export async function populateNFTCategories(
+  NFT: INFT
+): Promise<ICompleteNFT | INFT> {
+  try {
+    const mongoNft = await NFTService.findNftFromId(NFT.id);
+    // tslint:disable-next-line: no-console
+    console.log(mongoNft);
+    const categoriesCodes = mongoNft.categories;
+    // tslint:disable-next-line: no-console
+    console.log(categoriesCodes, "categories codes.");
+    L.info(categoriesCodes + " categories codes");
+    return { ...NFT, categories: categoriesCodes };
+  } catch (err) {
+    L.error({ err }, "error retrieving nft's categories from mongo");
+    return { ...NFT, categories: [] };
   }
 }
