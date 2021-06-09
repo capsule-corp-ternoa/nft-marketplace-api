@@ -185,18 +185,29 @@ export class NFTService {
     }
   }
 
+  /**
+   * Creates a new nft document in DB
+   * @param nftDTO - NFT data
+   * @throws Will throw an error if can't create NFT document
+   */
   async createNFT(nftDTO: INftDto): Promise<IMongoNft> {
     try {
       const newNft = new NftModel(nftDTO);
       return await newNft.save();
     } catch (err) {
-      throw new Error("User can't be created");
+      throw new Error("NFT can't be created");
     }
   }
 
+  /**
+   * Finds a NFT in DB
+   * @param nftId - NFT's blockchain id
+   * @throws Will throw an error if nft ID doesn't exist
+   */
   async findNftFromId(nftId: string): Promise<IMongoNft> {
     try {
       const nft = await NftModel.findOne({ chainId: nftId }).lean();
+      if (!nft) throw new Error();
       return (nft as unknown) as IMongoNft;
     } catch (err) {
       throw new Error("Couldn't get mongo NFT");

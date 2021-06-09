@@ -79,12 +79,7 @@ export async function populateNFTCategories(
 ): Promise<ICompleteNFT | INFT> {
   try {
     const mongoNft = await NFTService.findNftFromId(NFT.id);
-    // tslint:disable-next-line: no-console
-    console.log(mongoNft);
     const categoriesCodes = mongoNft.categories;
-    // tslint:disable-next-line: no-console
-    console.log(categoriesCodes, "categories codes.");
-    L.info(categoriesCodes + " categories codes");
     return { ...NFT, categories: categoriesCodes };
   } catch (err) {
     L.error({ err }, "error retrieving nft's categories from mongo");
