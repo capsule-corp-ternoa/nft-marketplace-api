@@ -146,7 +146,7 @@ export class GQLQueriesBuilder {
         orderBy: ID_ASC
         filter: {
           and: [
-            { creator: { in: ${JSON.stringify(ids)} } }
+            { id: { in: ${JSON.stringify(ids)} } }
             { timestampBurn: { isNull: true } }
           ]
         }
