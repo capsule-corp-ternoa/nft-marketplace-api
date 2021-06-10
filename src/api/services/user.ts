@@ -102,7 +102,9 @@ export class UserService {
     try {
       const query = QueriesBuilder.capsBalanceFromId(id);
       const result: AccountResponse = await request(indexerUrl, query);
+      if(result && result.accountEntities && result.accountEntities.nodes && result.accountEntities.nodes.length)
       return result.accountEntities.nodes[0];
+      return {"capsAmount":"0"}
     } catch (err) {
       throw new Error("Couldn't get caps balance");
     }
