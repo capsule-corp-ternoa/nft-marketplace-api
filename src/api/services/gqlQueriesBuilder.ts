@@ -169,6 +169,23 @@ export class GQLQueriesBuilder {
       }
     }
   `;
+  
+  totalOnSaleCount = (serieId: string) => gql`
+    {
+      nftEntities(
+        filter: { 
+          and : [
+            { listed: { equalTo: 1 } },
+            { serieId:{ equalTo:"${serieId}" } }
+            { timestampBurn:{ isNull:true } }
+          ]
+        }
+      )
+      {
+        totalCount
+      }
+    }
+  `;
 }
 
 export default new GQLQueriesBuilder();
