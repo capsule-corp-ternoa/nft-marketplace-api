@@ -144,6 +144,19 @@ export class Controller {
       next(err);
     }
   }
+  
+  async getNFTTotalOnSaleCount(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    if (!req.params.serieId) next(new Error("serieId param is needed"));
+    try {
+      res.json(await NFTService.getNFTTotalOnSaleCount(req.params.serieId));
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export default new Controller();

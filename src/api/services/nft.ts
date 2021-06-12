@@ -275,6 +275,22 @@ export class NFTService {
       throw new Error("Couldn't get mongo NFT");
     }
   }
+
+  /**
+   * Gets the total number on sale for a NFT serie 
+   * @param serieId - NFT Serie id 
+   * @throws Will throw an error if can't request indexer
+   */
+  async getNFTTotalOnSaleCount(serieId: string): Promise<number> {
+    try {
+      const query = QueriesBuilder.totalOnSaleCount(serieId);
+      const result: NFTListPaginatedResponse = await request(indexerUrl, query);
+      const totalCount = result.nftEntities.totalCount;
+      return totalCount
+    } catch (err) {
+      throw new Error("Couldn't get total number on sale");
+    }
+  }
 }
 
 export default new NFTService();

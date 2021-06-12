@@ -15,7 +15,7 @@ export default (io: Namespace) => {
       socket.disconnect();
     } else {
       await socket.join(session);
-      L.info('socked ' + socket.id + ' joined to session ' + session) + ' room size='+io.adapter.rooms.get(<string> session).size;
+      L.info('socked ' + socket.id + ' joined to session ' + session) + ' room size='+io.adapter.rooms.get(session as string).size;
       socket.on("MINTING_NFT", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("MINTING_NFT", data);
