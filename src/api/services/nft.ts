@@ -5,6 +5,8 @@ import {
   NFTListResponse,
   PaginationResponse,
 } from "src/interfaces/graphQL";
+import { IMongoNft, INftDto } from "../../interfaces/INft";
+import NftModel from "../../models/nft";
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
 
@@ -180,6 +182,113 @@ export class NFTService {
       return ret;
     } catch (err) {
       throw new Error("Couldn't get creator's NFTs");
+    }
+  }
+
+  /**
+   * Returns several nfts from array of ids
+   * @param ids - The nfts blockchain ids
+   * @throws Will throw an error if can't request indexer
+   */
+  async getNFTsFromIds(ids: string[]): Promise<INFT[]> {
+    try {
+      const query = QueriesBuilder.NFTsFromIds(ids);
+      const result: NFTListResponse = await request(indexerUrl, query);
+
+      const NFTs = result.nftEntities.nodes;
+      return (
+        await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
+      ).filter((n) => Number(n.id) !== 0);
+    } catch (err) {
+      throw new Error("Couldn't get NFTs");
+    }
+  }
+
+  /**
+   * Gets all NFTs from a category
+   * @param categoryCode - The code of the category
+   * @throws Will throw an error if can't reach database
+   */
+  async getNFTsFromCategory(code: string): Promise<INFT[]> {
+    try {
+      const mongoNfts = await NftModel.find({ categories: code });
+      const nfts = await this.getNFTsFromIds(
+        mongoNfts.map((nft) => nft.chainId)
+      );
+      return nfts;
+    } catch (err) {
+      throw new Error("Couldn't get NFTs in this category");
+    }
+  }
+
+  /**
+   * Gets a fixed amount of NFTs from a category
+   * @param categoryCode - The code of the category
+   * @param page - Page number
+   * @param limit - Number of elements per page
+   * @throws Will throw an error if can't reach database
+   */
+  async getPaginatedNFTsFromCategory(
+    code: string,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<INFT[]> {
+    try {
+      const mongoNfts = await NftModel.paginate(
+        { categories: code },
+        { page, limit }
+      );
+      const nfts = await this.getNFTsFromIds(
+        mongoNfts.docs.map((nft) => nft.chainId)
+      );
+      return nfts;
+    } catch (err) {
+      throw new Error("Couldn't get NFTs in this category");
+    }
+  }
+
+  /**
+   * Creates a new nft document in DB
+   * @param nftDTO - NFT data
+   * @throws Will throw an error if can't create NFT document
+   */
+  async createNFT(nftDTO: INftDto): Promise<IMongoNft> {
+    try {
+      const newNft = new NftModel(nftDTO);
+      return await newNft.save();
+    } catch (err) {
+      throw new Error("NFT can't be created");
+    }
+  }
+
+  /**
+   * Finds a NFT in DB
+   * @param nftId - NFT's blockchain id
+   * @throws Will throw an error if nft ID doesn't exist
+   */
+  async findNftFromId(nftId: string): Promise<IMongoNft> {
+    try {
+      const nft = await NftModel.findOne({ chainId: nftId }).lean();
+      if (!nft) throw new Error();
+      return (nft as unknown) as IMongoNft;
+    } catch (err) {
+      throw new Error("Couldn't get mongo NFT");
+    }
+  }
+
+  /**
+   * Gets the total number on sale for a NFT serie 
+   * @param serieId - NFT Serie id 
+   * @throws Will throw an error if can't request indexer
+   */
+  async getNFTTotalOnSaleCount(serieId: string): Promise<number> {
+    try {
+      const query = QueriesBuilder.totalOnSaleCount(serieId);
+      const result: NFTListPaginatedResponse = await request(indexerUrl, query);
+      const totalCount = result.nftEntities.totalCount;
+      return totalCount
+    } catch (err) {
+      throw new Error("Couldn't get total number on sale");
     }
   }
 }

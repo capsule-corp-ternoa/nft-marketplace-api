@@ -140,6 +140,22 @@ export class GQLQueriesBuilder {
     }
   `;
 
+  NFTsFromIds = (ids: string[]) => gql`
+    {
+      nftEntities(
+        orderBy: ID_ASC
+        filter: {
+          and: [
+            { id: { in: ${JSON.stringify(ids)} } }
+            { timestampBurn: { isNull: true } }
+          ]
+        }
+      ) {
+        ${nodes}
+      }
+    }
+  `;
+
   capsBalanceFromId = (id: string) => gql`
     {
       accountEntities(
@@ -150,6 +166,23 @@ export class GQLQueriesBuilder {
         nodes {
           capsAmount
         }
+      }
+    }
+  `;
+  
+  totalOnSaleCount = (serieId: string) => gql`
+    {
+      nftEntities(
+        filter: { 
+          and : [
+            { listed: { equalTo: 1 } },
+            { serieId:{ equalTo:"${serieId}" } }
+            { timestampBurn:{ isNull:true } }
+          ]
+        }
+      )
+      {
+        totalCount
       }
     }
   `;

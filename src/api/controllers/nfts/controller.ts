@@ -100,6 +100,63 @@ export class Controller {
       next(err);
     }
   }
+
+  async getCategoryNFTs(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    if (!req.params.code) next(new Error("code param is needed"));
+    try {
+      const { page, limit } = req.query;
+      if (page === undefined || limit === undefined)
+        res.json(await NFTService.getNFTsFromCategory(req.params.code));
+      else {
+        const pageNumber = Number(page);
+        const limitNumber = Number(limit);
+        if (isNaN(pageNumber) || pageNumber < 1)
+          throw new Error("Page argument is invalid");
+        if (isNaN(limitNumber) || limitNumber < 1 || limitNumber > LIMIT_MAX)
+          throw new Error("Limit argument is invalid");
+
+        res.json(
+          await NFTService.getPaginatedNFTsFromCategory(
+            req.params.code,
+            pageNumber,
+            limitNumber
+          )
+        );
+      }
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async createNFT(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const nft = NFTService.createNFT(JSON.parse(req.body));
+      res.json(nft);
+    } catch (err) {
+      next(err);
+    }
+  }
+  
+  async getNFTTotalOnSaleCount(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    if (!req.params.serieId) next(new Error("serieId param is needed"));
+    try {
+      res.json(await NFTService.getNFTTotalOnSaleCount(req.params.serieId));
+    } catch (err) {
+      next(err);
+    }
+  }
 }
 
 export default new Controller();
