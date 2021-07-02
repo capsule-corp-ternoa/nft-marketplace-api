@@ -38,6 +38,7 @@ export interface NFTListPaginatedResponse {
 
 export interface Account {
   capsAmount: string;
+  tiimeAmount: string;
   id?: string;
 }
 
