@@ -9,6 +9,7 @@ const nodes = `
     timestampList
     uri
     price
+    priceTiime
     serieId
   }
 `;
@@ -165,6 +166,7 @@ export class GQLQueriesBuilder {
       ) {
         nodes {
           capsAmount
+          tiimeAmount
         }
       }
     }
