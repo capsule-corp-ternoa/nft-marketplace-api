@@ -16,10 +16,10 @@ const Nft = new mongoose.Schema({
 
 Nft.plugin(mongoosePaginate);
 
-const UserModel = mongoose.model<IMongoNft & mongoose.Document>(
+const NftModel = mongoose.model<IMongoNft & mongoose.Document>(
   "Nft",
   Nft,
   "nfts"
 ) as PaginateModel<IMongoNft & mongoose.Document>;
 
-export default UserModel;
+export default NftModel;
