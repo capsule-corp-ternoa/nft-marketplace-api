@@ -156,6 +156,45 @@ export class GQLQueriesBuilder {
     }
   `;
 
+  NFTsNotInIds = (ids: string[]) => gql`
+    {
+      nftEntities(
+        orderBy: ID_ASC
+        filter: {
+          and: [
+            { not: { id: { in: ${JSON.stringify(ids)} } } }
+            { timestampBurn: { isNull: true } }
+          ]
+        }
+      ) {
+        ${nodes}
+      }
+    }
+  `;
+
+  NFTsNotInIdsPaginated = (ids: string[], first: number, offset: number) => gql`
+    {
+      nftEntities(
+        orderBy: ID_ASC
+        first: ${first}
+        offset: ${offset}
+        filter: { 
+          and: [
+            { not: { id: { in: ${JSON.stringify(ids)} } } }
+            { timestampBurn: { isNull: true } }
+          ]
+        }
+      ) {
+        totalCount
+        pageInfo {
+          hasNextPage
+          hasPreviousPage
+        }
+        ${nodes}
+      }
+    }
+  `;
+
   capsBalanceFromId = (id: string) => gql`
     {
       accountEntities(
