@@ -258,7 +258,7 @@ export class NFTService {
   async getNFTsFromCategories(codes: string[] | null): Promise<INFT[]> {
     try {
       if (codes===null){
-        const query = {categories:{ $exists:true, $ne:[] as any[] }}
+        const query = {categories:{ $exists:true, $nin:[[] as any[], null ]} }
         const mongoNfts = await NftModel.find(query);
         const NFTs = await this.getNFTsNotInIds(
           mongoNfts.map((nft) => nft.chainId)
@@ -291,7 +291,7 @@ export class NFTService {
   ): Promise<INFT[] | PaginationResponse<INFT[]>> {
     try {
       if (codes===null){
-        const query = {categories:{ $exists:true, $ne:[] as any[] }}
+        const query = {categories:{ $exists:true, $nin:[[] as any[], null ]} }
         const mongoNfts = await NftModel.find(query);
         const NFTs = await this.getPaginatedNFTsNotInIds(
           mongoNfts.map((nft) => nft.chainId),
