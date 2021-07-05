@@ -1,5 +1,6 @@
 import { request } from "graphql-request";
 import {
+  ICompleteNFT,
   INFT,
   NFTListPaginatedResponse,
   NFTListResponse,
@@ -205,45 +206,112 @@ export class NFTService {
   }
 
   /**
-   * Gets all NFTs from a category
-   * @param categoryCode - The code of the category
+   * Returns nfts not in array of specified ids
+   * @param ids - The nfts blockchain ids
+   * @throws Will throw an error if can't request indexer
+   */
+     async getNFTsNotInIds(ids: string[]): Promise<INFT[]> {
+      try {
+        const query = QueriesBuilder.NFTsNotInIds(ids);
+        const result: NFTListResponse = await request(indexerUrl, query);
+  
+        const NFTs = result.nftEntities.nodes;
+        return (
+          await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
+        );
+      } catch (err) {
+        throw new Error("Couldn't get NFTs");
+      }
+    }
+
+  /**
+   * Returns a limited amount nfts not in array of specified ids
+   * @param ids - The nfts blockchain ids
+   * @param page - Page number
+   * @param limit - Number of elements per page
+   * @throws Will throw an error if can't request indexer
+   */
+   async getPaginatedNFTsNotInIds(ids: string[], page: number = 1, limit: number = 10): Promise<PaginationResponse<INFT[]>> {
+    try {
+      const query = QueriesBuilder.NFTsNotInIdsPaginated(ids, limit, (page - 1) * limit);
+      const result: NFTListPaginatedResponse = await request(indexerUrl, query);
+      
+      const ret: PaginationResponse<INFT[]> = {
+        data: await Promise.all(
+          result.nftEntities.nodes.map(async (NFT) => populateNFT(NFT))
+        ),
+        hasNextPage: result.nftEntities.pageInfo.hasNextPage,
+        hasPreviousPage: result.nftEntities.pageInfo.hasPreviousPage,
+        totalCount: result.nftEntities.totalCount,
+      };
+      return ret;
+    } catch (err) {
+      throw new Error("Couldn't get NFTs");
+    }
+  }
+
+  /**
+   * Gets all NFTs from one or many categories
+   * @param codes - The codes of the categories, if not given return all nfts without categories
    * @throws Will throw an error if can't reach database
    */
-  async getNFTsFromCategory(code: string): Promise<INFT[]> {
+  async getNFTsFromCategories(codes: string[] | null): Promise<INFT[]> {
     try {
-      const mongoNfts = await NftModel.find({ categories: code });
-      const nfts = await this.getNFTsFromIds(
-        mongoNfts.map((nft) => nft.chainId)
-      );
-      return nfts;
+      if (codes===null){
+        const query = {categories:{ $exists:true, $nin:[[] as any[], null ]} }
+        const mongoNfts = await NftModel.find(query);
+        const NFTs = await this.getNFTsNotInIds(
+          mongoNfts.map((nft) => nft.chainId)
+        );
+        return NFTs
+      }else{
+        const query = {categories: {$in: codes}}
+        const mongoNfts = await NftModel.find(query);
+        const NFTs = await this.getNFTsFromIds(
+          mongoNfts.map((nft) => nft.chainId)
+        );
+        return NFTs
+      }
     } catch (err) {
-      throw new Error("Couldn't get NFTs in this category");
+      throw new Error("Couldn't get NFTs");
     }
   }
 
   /**
    * Gets a fixed amount of NFTs from a category
-   * @param categoryCode - The code of the category
+   * @param codes - The codes of the categories, if not given return all nfts without categories
    * @param page - Page number
    * @param limit - Number of elements per page
    * @throws Will throw an error if can't reach database
    */
-  async getPaginatedNFTsFromCategory(
-    code: string,
+  async getPaginatedNFTsFromCategories(
+    codes: string[] | null,
     page: number = 1,
     limit: number = 10
-  ): Promise<INFT[]> {
+  ): Promise<INFT[] | PaginationResponse<INFT[]>> {
     try {
-      const mongoNfts = await NftModel.paginate(
-        { categories: code },
-        { page, limit }
-      );
-      const nfts = await this.getNFTsFromIds(
-        mongoNfts.docs.map((nft) => nft.chainId)
-      );
-      return nfts;
+      if (codes===null){
+        const query = {categories:{ $exists:true, $nin:[[] as any[], null ]} }
+        const mongoNfts = await NftModel.find(query);
+        const NFTs = await this.getPaginatedNFTsNotInIds(
+          mongoNfts.map((nft) => nft.chainId),
+          page,
+          limit
+        );
+        return NFTs
+      }else{
+        const query = {categories: {$in: codes}}
+        const mongoNfts = await NftModel.paginate(
+          query,
+          { page, limit }
+        );
+        const NFTs = await this.getNFTsFromIds(
+          mongoNfts.docs.map((nft) => nft.chainId)
+        );
+        return NFTs;
+      }
     } catch (err) {
-      throw new Error("Couldn't get NFTs in this category");
+      throw new Error("Couldn't get NFTs");
     }
   }
 

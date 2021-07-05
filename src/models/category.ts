@@ -20,10 +20,10 @@ const Category = new mongoose.Schema({
 
 Category.plugin(mongoosePaginate);
 
-const UserModel = mongoose.model<ICategory & mongoose.Document>(
+const CategoryModel = mongoose.model<ICategory & mongoose.Document>(
   "Category",
   Category,
   "nft-categories"
 ) as PaginateModel<ICategory & mongoose.Document>;
 
-export default UserModel;
+export default CategoryModel;

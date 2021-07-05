@@ -101,17 +101,17 @@ export class Controller {
     }
   }
 
-  async getCategoryNFTs(
+  async getCategoriesNFTs(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    if (!req.params.code) next(new Error("code param is needed"));
     try {
-      const { page, limit } = req.query;
-      if (page === undefined || limit === undefined)
-        res.json(await NFTService.getNFTsFromCategory(req.params.code));
-      else {
+      const { page, limit, codes } = req.query;
+      const categoriesCodes = codes === undefined ? null : (typeof codes==='string' ? [codes] : codes)
+      if (page === undefined || limit === undefined){
+        res.json(await NFTService.getNFTsFromCategories(categoriesCodes as string[] | null));
+      } else {
         const pageNumber = Number(page);
         const limitNumber = Number(limit);
         if (isNaN(pageNumber) || pageNumber < 1)
@@ -120,8 +120,8 @@ export class Controller {
           throw new Error("Limit argument is invalid");
 
         res.json(
-          await NFTService.getPaginatedNFTsFromCategory(
-            req.params.code,
+          await NFTService.getPaginatedNFTsFromCategories(
+            categoriesCodes as string[] | null,
             pageNumber,
             limitNumber
           )
