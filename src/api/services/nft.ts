@@ -1,6 +1,6 @@
 import { request } from "graphql-request";
+import mongoose from "mongoose";
 import {
-  ICompleteNFT,
   INFT,
   NFTListPaginatedResponse,
   NFTListResponse,
@@ -8,6 +8,7 @@ import {
 } from "src/interfaces/graphQL";
 import { IMongoNft, INftDto } from "../../interfaces/INft";
 import NftModel from "../../models/nft";
+import CategoryService from "./category"
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
 
@@ -199,7 +200,7 @@ export class NFTService {
       const NFTs = result.nftEntities.nodes;
       return (
         await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
-      ).filter((n) => Number(n.id) !== 0);
+      );
     } catch (err) {
       throw new Error("Couldn't get NFTs");
     }
@@ -253,7 +254,7 @@ export class NFTService {
   /**
    * Gets all NFTs from one or many categories
    * @param codes - The codes of the categories, if not given return all nfts without categories
-   * @throws Will throw an error if can't reach database
+   * @throws Will throw an error if can't reach database or if given category does not exist
    */
   async getNFTsFromCategories(codes: string[] | null): Promise<INFT[]> {
     try {
@@ -265,8 +266,16 @@ export class NFTService {
         );
         return NFTs
       }else{
-        const query = {categories: {$in: codes}}
-        const mongoNfts = await NftModel.find(query);
+        const categories = await Promise.all(
+          codes.map(async (x) => {
+            const category = await CategoryService.getCategoryByCode(x)
+            if (category) {
+              return mongoose.Types.ObjectId(category._id)
+            }
+          })
+        )
+        const query = {categories: {$in: categories} }
+        const mongoNfts = await NftModel.find(query)
         const NFTs = await this.getNFTsFromIds(
           mongoNfts.map((nft) => nft.chainId)
         );
@@ -282,7 +291,7 @@ export class NFTService {
    * @param codes - The codes of the categories, if not given return all nfts without categories
    * @param page - Page number
    * @param limit - Number of elements per page
-   * @throws Will throw an error if can't reach database
+   * @throws Will throw an error if can't reach database or if given category does not exist
    */
   async getPaginatedNFTsFromCategories(
     codes: string[] | null,
@@ -300,7 +309,15 @@ export class NFTService {
         );
         return NFTs
       }else{
-        const query = {categories: {$in: codes}}
+        const categories = await Promise.all(
+          codes.map(async (x) => {
+            const category = await CategoryService.getCategoryByCode(x)
+            if (category) {
+              return mongoose.Types.ObjectId(category._id)
+            }
+          })
+        )
+        const query = {categories: {$in: categories} }
         const mongoNfts = await NftModel.paginate(
           query,
           { page, limit }
@@ -322,7 +339,14 @@ export class NFTService {
    */
   async createNFT(nftDTO: INftDto): Promise<IMongoNft> {
     try {
-      const newNft = new NftModel(nftDTO);
+      const categories = await Promise.all(
+        nftDTO.categories.map(async (x) => CategoryService.getCategoryByCode(x))
+      )
+      const data = {
+          chainId: nftDTO.chainId,
+          categories
+      }
+      const newNft = new NftModel(data);
       return await newNft.save();
     } catch (err) {
       throw new Error("NFT can't be created");
@@ -336,9 +360,9 @@ export class NFTService {
    */
   async findNftFromId(nftId: string): Promise<IMongoNft> {
     try {
-      const nft = await NftModel.findOne({ chainId: nftId }).lean();
+      const nft = await NftModel.findOne({ chainId: nftId }).populate("categories");
       if (!nft) throw new Error();
-      return (nft as unknown) as IMongoNft;
+      return nft as IMongoNft;
     } catch (err) {
       throw new Error("Couldn't get mongo NFT");
     }

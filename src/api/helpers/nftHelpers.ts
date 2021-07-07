@@ -3,6 +3,7 @@ import UserService from "../services/user";
 import L from "../../common/logger";
 import NFTService from "../services/nft";
 import { fetchTimeout } from "../../utils";
+import { ICategory } from "../../interfaces/ICategory";
 
 /**
  * Adds information to NFT object from external sources
@@ -86,8 +87,8 @@ export async function populateNFTCategories(
 ): Promise<ICompleteNFT | INFT> {
   try {
     const mongoNft = await NFTService.findNftFromId(NFT.id);
-    const categoriesCodes = mongoNft.categories;
-    return { ...NFT, categories: categoriesCodes };
+    const categories = (mongoNft.categories) as ICategory[];
+    return { ...NFT, categories };
   } catch (err) {
     L.error({ err }, "error retrieving nft's categories from mongo");
     return { ...NFT, categories: [] };
