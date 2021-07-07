@@ -9,9 +9,10 @@ const Nft = new mongoose.Schema({
     unique: true,
     index: true,
   },
-  categories: {
-    type: [String],
-  },
+  categories: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category'
+  }],
 });
 
 Nft.plugin(mongoosePaginate);

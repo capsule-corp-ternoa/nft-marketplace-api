@@ -1,4 +1,5 @@
 import { IUser } from "./IUser";
+import { ICategory } from "./ICategory";
 
 export interface INFT {
   id: string;
@@ -16,7 +17,7 @@ export interface ICompleteNFT extends INFT {
   cryptedMedia?: { url: string };
   ownerData?: IUser;
   creatorData: IUser;
-  categories?: string[];
+  categories?: ICategory[];
 }
 
 export interface NFTListResponse {
