@@ -138,7 +138,7 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const nft = NFTService.createNFT(JSON.parse(req.body));
+      const nft = await NFTService.createNFT(JSON.parse(req.body));
       res.json(nft);
     } catch (err) {
       next(err);
