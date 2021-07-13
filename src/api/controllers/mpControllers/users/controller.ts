@@ -1,5 +1,5 @@
-import UserService from "../../services/user";
-import L from "../../../common/logger";
+import UserService from "../../../services/mpServices/user";
+import L from "../../../../common/logger";
 import { NextFunction, Request, Response } from "express";
 
 export class Controller {
