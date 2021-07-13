@@ -5,6 +5,13 @@ import NFTService from "../services/mpServices/nft";
 import { ICategory } from "../../interfaces/ICategory";
 import { fetchTimeout } from "../../utils";
 
+const ipfsGateways = {
+  ternoaPinataIpfsGateaway: `https://ternoa.mypinata.cloud/ipfs`,
+  cloudfareIpfsGateaway: `https://cloudflare-ipfs.com/ipfs`
+}
+const defaultIpfsGateway = ipfsGateways.cloudfareIpfsGateaway;
+const ipfsGatewayUri = process.env.IPFS_GATEWAY || defaultIpfsGateway;
+
 /**
  * Groups NFT with NFT.serieId-NFT.owner-NFT.price-NFT.priceTiime as a key
  * @param NFTs - NFTs array
@@ -37,13 +44,33 @@ export function groupNFTs(NFTs: INFT[]){
  * @returns - NFT object with new fields
  */
 export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
-  let retNFT: INFT = NFT;
+  let retNFT: INFT = parseRawNFT(NFT);
   retNFT = await this.populateNFTCreator(retNFT);
   retNFT = await this.populateNFTOwner(retNFT);
   retNFT = await this.populateNFTUri(retNFT);
   retNFT = await this.populateNFTCategories(retNFT);
   retNFT = await this.populateNFTSerieTotal(retNFT);
   return retNFT;
+}
+function extractHashFromGatewayUri(uri: string) {
+  const regex: RegExp = new RegExp('(http?s:\/\/.*\/)(.*)', 'gm');
+  const ipfsLinkParts = regex.exec(uri);
+  if (ipfsLinkParts?.length === 3) {
+    return ipfsLinkParts[2];
+  } else {
+    throw new Error("Invalid IPFS hash given: " + uri);
+  }
+}
+function overwriteDefaultIpfsGateway(uri: string): string {
+  const ipfsHash: string = extractHashFromGatewayUri(uri);
+  return `${ipfsGatewayUri}/${ipfsHash}`
+}
+function parseRawNFT(NFT: INFT): INFT {
+  const { uri } = NFT;
+  if (uri.indexOf(ipfsGateways.ternoaPinataIpfsGateaway) >= 0) {
+    NFT.uri = overwriteDefaultIpfsGateway(uri);
+  }
+  return NFT;
 }
 
 /**
@@ -94,6 +121,8 @@ export async function populateNFTUri(NFT: INFT): Promise<ICompleteNFT | INFT> {
     });
     if (response) {
       const info = await response.json();
+      info.media.url = overwriteDefaultIpfsGateway(info.media.url);
+      info.cryptedMedia.url = overwriteDefaultIpfsGateway(info.media.url);
       return { ...NFT, ...info };
     } else {
       return null;
