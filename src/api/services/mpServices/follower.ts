@@ -1,6 +1,5 @@
-import L from "../../common/logger";
-import FollowersModel from "../../models/followers";
-import { IUser } from "src/interfaces/IUser";
+import FollowersModel from "../../../models/followers";
+import { IUser } from "../../../interfaces/IUser";
 
 export class FollowerService {
   /**

@@ -1,5 +1,5 @@
 import mongoose, { PaginateModel } from "mongoose";
-import { IFollower } from "src/interfaces/IFollower";
+import { IFollower } from "../interfaces/IFollower";
 import mongoosePaginate from "mongoose-paginate-v2";
 
 /* based on socialite implementation https://github.com/mongodb-labs/socialite/blob/master/docs/graph.md */

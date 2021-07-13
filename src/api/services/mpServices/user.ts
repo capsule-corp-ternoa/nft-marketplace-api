@@ -1,11 +1,10 @@
 import { request } from "graphql-request";
-import { IUser, IUserDTO } from "src/interfaces/IUser";
-import L from "../../common/logger";
-import UserModel from "../../models/user";
-import QueriesBuilder from "./gqlQueriesBuilder";
+import { IUser, IUserDTO } from "../../../interfaces/IUser";
+import UserModel from "../../../models/user";
+import QueriesBuilder from "../gqlQueriesBuilder";
 import crypto from "crypto";
 import { PaginateResult } from "mongoose";
-import { AccountResponse, Account } from "src/interfaces/graphQL";
+import { AccountResponse, Account } from "../../../interfaces/graphQL";
 import NodeCache from "node-cache";
 
 const indexerUrl =
