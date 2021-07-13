@@ -4,6 +4,7 @@ import L from "../../common/logger";
 import NFTService from "../services/mpServices/nft";
 import { ICategory } from "../../interfaces/ICategory";
 import { fetchTimeout } from "../../utils";
+import { IUser } from "src/interfaces/IUser";
 
 const ipfsGateways = {
   ternoaPinataIpfsGateaway: `https://ternoa.mypinata.cloud/ipfs`,
@@ -19,10 +20,13 @@ const ipfsGatewayUri = process.env.IPFS_GATEWAY || defaultIpfsGateway;
  */
 export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
   let retNFT: INFT = parseRawNFT(NFT);
-  retNFT = await this.populateNFTCreator(retNFT);
-  retNFT = await this.populateNFTOwner(retNFT);
-  retNFT = await this.populateNFTUri(retNFT);
-  retNFT = await this.populateNFTCategories(retNFT);
+  const [creatorData, ownerData, info, categories] = await Promise.all([
+    populateNFTCreator(retNFT),
+    populateNFTOwner(retNFT),
+    populateNFTUri(retNFT),
+    populateNFTCategories(retNFT)
+  ]);
+  retNFT = { ...retNFT, ...creatorData, ...ownerData, ...info, ...categories };
   return retNFT;
 }
 function extractHashFromGatewayUri(uri: string) {
@@ -40,9 +44,9 @@ function overwriteDefaultIpfsGateway(uri: string): string {
 }
 function parseRawNFT(NFT: INFT): INFT {
   const { uri } = NFT;
-  if (uri.indexOf(ipfsGateways.ternoaPinataIpfsGateaway) >= 0) {
-    NFT.uri = overwriteDefaultIpfsGateway(uri);
-  }
+  // if (uri.indexOf(ipfsGateways.ternoaPinataIpfsGateaway) >= 0) {
+  NFT.uri = overwriteDefaultIpfsGateway(uri);
+  // }
   return NFT;
 }
 
@@ -53,14 +57,14 @@ function parseRawNFT(NFT: INFT): INFT {
  */
 export async function populateNFTCreator(
   NFT: INFT
-): Promise<ICompleteNFT | INFT> {
+): Promise<IUser> {
   try {
     const { creator } = NFT;
     const creatorData = await UserService.findUser(creator);
-    return { ...NFT, creatorData };
+    return creatorData;
   } catch (err) {
     L.error({ err }, "NFT creator id not in database");
-    return NFT;
+    return null;
   }
 }
 
@@ -71,14 +75,14 @@ export async function populateNFTCreator(
  */
 export async function populateNFTOwner(
   NFT: INFT
-): Promise<ICompleteNFT | INFT> {
+): Promise<IUser> {
   try {
     const { owner } = NFT;
     const ownerData = await UserService.findUser(owner);
-    return { ...NFT, ownerData };
+    return ownerData;
   } catch (err) {
     L.error({ err }, "NFT owner id not in database");
-    return NFT;
+    return null;
   }
 }
 
@@ -87,7 +91,7 @@ export async function populateNFTOwner(
  * @param NFT - NFT object with uri field
  * @returns NFT object with new fields, if uri was valid, object stays untouched otherwise
  */
-export async function populateNFTUri(NFT: INFT): Promise<ICompleteNFT | INFT> {
+export async function populateNFTUri(NFT: INFT): Promise<any> {
   try {
     const response = await fetchTimeout(NFT.uri, null, 5000).catch((_e) => {
       throw new Error('Could not retrieve NFT data from ' + NFT.uri)
@@ -96,13 +100,13 @@ export async function populateNFTUri(NFT: INFT): Promise<ICompleteNFT | INFT> {
       const info = await response.json();
       info.media.url = overwriteDefaultIpfsGateway(info.media.url);
       info.cryptedMedia.url = overwriteDefaultIpfsGateway(info.media.url);
-      return { ...NFT, ...info };
+      return info;
     } else {
       return null;
     }
   } catch (err) {
     L.error({ err }, "invalid NFT uri");
-    return NFT;
+    return null;
   }
 }
 
@@ -113,13 +117,13 @@ export async function populateNFTUri(NFT: INFT): Promise<ICompleteNFT | INFT> {
  */
 export async function populateNFTCategories(
   NFT: INFT
-): Promise<ICompleteNFT | INFT> {
+): Promise<ICategory[]> {
   try {
     const mongoNft = await NFTService.findNftFromId(NFT.id);
     const categories = (mongoNft.categories) as ICategory[];
-    return { ...NFT, categories };
+    return categories;
   } catch (err) {
     L.error({ err }, "error retrieving nft's categories from mongo");
-    return { ...NFT, categories: [] };
+    return [];
   }
 }
