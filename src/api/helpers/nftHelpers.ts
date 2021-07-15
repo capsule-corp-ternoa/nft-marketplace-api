@@ -2,7 +2,7 @@ import { ICompleteNFT, INFT } from "../../interfaces/graphQL";
 import UserService from "../services/user";
 import L from "../../common/logger";
 import NFTService from "../services/nft";
-import { fetchTimeout } from "src/utils";
+import { fetchTimeout } from "../../utils";
 
 /**
  * Adds information to NFT object from external sources
