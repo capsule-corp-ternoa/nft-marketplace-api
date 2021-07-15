@@ -4,6 +4,7 @@ import L from "../../common/logger";
 import fetch from "node-fetch";
 import NFTService from "../services/mpServices/nft";
 import { ICategory } from "../../interfaces/ICategory";
+import { fetchTimeout } from "src/utils";
 
 /**
  * Adds information to NFT object from external sources
@@ -62,8 +63,16 @@ export async function populateNFTOwner(
  */
 export async function populateNFTUri(NFT: INFT): Promise<ICompleteNFT | INFT> {
   try {
-    const info = await (await fetch(NFT.uri)).json();
-    return { ...NFT, ...info };
+    const response = await fetchTimeout(NFT.uri, 5000).catch((_e) => {
+      console.error('Could not retrieve NFT data from ' + NFT.uri);
+      throw new Error('Could not retrieve NFT data from ' + NFT.uri)
+    });
+    if (response) {
+      const info = await response.json();
+      return { ...NFT, ...info };
+    } else {
+      return null;
+    }
   } catch (err) {
     L.error({ err }, "invalid NFT uri");
     return NFT;
