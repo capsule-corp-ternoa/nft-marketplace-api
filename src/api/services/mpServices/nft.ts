@@ -146,7 +146,7 @@ export class NFTService {
       const NFTs = result.nftEntities.nodes;
       return (
         await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
-      ).filter((n) => Number(n.id) !== 0);
+      );
     } catch (err) {
       throw new Error("Couldn't get creator's NFTs");
     }
