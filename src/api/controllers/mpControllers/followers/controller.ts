@@ -1,5 +1,5 @@
-import FollowerService from "../../services/follower";
-import L from "../../../common/logger";
+import FollowerService from "../../../services/mpServices/follower";
+import L from "../../../../common/logger";
 import { NextFunction, Request, Response } from "express";
 
 export class Controller {

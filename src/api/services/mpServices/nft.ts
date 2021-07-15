@@ -5,12 +5,12 @@ import {
   NFTListPaginatedResponse,
   NFTListResponse,
   PaginationResponse,
-} from "src/interfaces/graphQL";
-import { IMongoNft, INftDto } from "../../interfaces/INft";
-import NftModel from "../../models/nft";
+} from "../../../interfaces/graphQL";
+import { IMongoNft, INftDto } from "../../../interfaces/INft";
+import NftModel from "../../../models/nft";
 import CategoryService from "./category"
-import { populateNFT } from "../helpers/nftHelpers";
-import QueriesBuilder from "./gqlQueriesBuilder";
+import { populateNFT } from "../../helpers/nftHelpers";
+import QueriesBuilder from "../gqlQueriesBuilder";
 
 const indexerUrl =
   process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";

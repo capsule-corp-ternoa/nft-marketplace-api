@@ -1,5 +1,5 @@
-import NFTService from "../../services/nft";
-import L from "../../../common/logger";
+import NFTService from "../../../services/mpServices/nft";
+import L from "../../../../common/logger";
 import { NextFunction, Request, Response } from "express";
 
 const LIMIT_MAX = 20;

@@ -1,9 +1,9 @@
 import { ICompleteNFT, INFT } from "../../interfaces/graphQL";
-import UserService from "../services/user";
+import UserService from "../services/mpServices/user";
 import L from "../../common/logger";
 import fetch from "node-fetch";
-import NFTService from "../services/nft";
-import { ICategory } from "src/interfaces/ICategory";
+import NFTService from "../services/mpServices/nft";
+import { ICategory } from "../../interfaces/ICategory";
 
 /**
  * Adds information to NFT object from external sources
