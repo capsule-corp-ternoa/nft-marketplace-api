@@ -17,9 +17,10 @@ export class NFTService {
    * @param ownerId - The user's blockchain id
    * @throws Will throw an error if can't request indexer
    */
-  async getNFTsFromOwner(ownerId: string): Promise<INFT[]> {
+  async getNFTsFromOwner(ownerId: string, listed?: string): Promise<INFT[]> {
     try {
-      const query = QueriesBuilder.NFTsFromOwnerId(ownerId);
+      const listedFilter= `${listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}`
+      const query = QueriesBuilder.NFTsFromOwnerId(ownerId, listedFilter);
       const result: NFTListResponse = await request(indexerUrl, query);
 
       const NFTs = result.nftEntities.nodes;
@@ -30,14 +31,17 @@ export class NFTService {
   }
   async getPaginatedNFTsFromOwner(
     ownerId: string,
+    listed?: string,
     page: number = 1,
     limit: number = 10
   ): Promise<PaginationResponse<INFT[]>> {
     try {
+      const listedFilter= `${listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}`
       const query = QueriesBuilder.NFTsFromOwnerIdPaginated(
         ownerId,
         limit,
-        (page - 1) * limit
+        (page - 1) * limit,
+        listedFilter,
       );
       const result: NFTListPaginatedResponse = await request(indexerUrl, query);
 
