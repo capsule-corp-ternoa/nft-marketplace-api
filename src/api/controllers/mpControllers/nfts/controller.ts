@@ -46,9 +46,9 @@ export class Controller {
   ): Promise<void> {
     if (!req.params.id) next(new Error("id param is needed"));
     try {
-      const { page, limit } = req.query;
+      const { listed, page, limit } = req.query;
       if (page === undefined || limit === undefined)
-        res.json(await NFTService.getNFTsFromOwner(req.params.id));
+        res.json(await NFTService.getNFTsFromOwner(req.params.id, listed as string));
       else {
         const pageNumber = Number(page);
         const limitNumber = Number(limit);
@@ -60,6 +60,7 @@ export class Controller {
         res.json(
           await NFTService.getPaginatedNFTsFromOwner(
             req.params.id,
+            listed as string,
             pageNumber,
             limitNumber
           )
