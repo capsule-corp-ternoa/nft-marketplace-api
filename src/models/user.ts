@@ -33,6 +33,10 @@ const User = new mongoose.Schema({
   personalUrl: {
     type: String,
   },
+  reviewCertification: {
+    type: Boolean,
+    default: false
+  },
   verified: {
     type: Boolean,
     default: false,

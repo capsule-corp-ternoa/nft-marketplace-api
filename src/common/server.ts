@@ -16,7 +16,6 @@ export default class ExpressServer {
   constructor() {
     // CORS
     app.use(cors());
-
     // express middlewares
     app.use(express.json({ limit: process.env.REQUEST_LIMIT || "100kb" }));
     app.use(

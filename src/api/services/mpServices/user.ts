@@ -46,6 +46,21 @@ export class UserService {
     }
   }
 
+
+  /**
+   * Creates a new user in DB
+   * @param userDTO - User data
+   * @throws Will throw an error if can't create user
+   */
+   async patchUser(userDTO: IUserDTO): Promise<any> {
+    const userData = new UserModel({ ...userDTO });
+    try {
+      return UserModel.findByIdAndUpdate(userData._id, userDTO)
+    } catch (err) {
+      throw new Error("User can't be updated");
+    }
+  }
+
   /**
    * Finds a user in DB
    * @param walletId - User's wallet ID
