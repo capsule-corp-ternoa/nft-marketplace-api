@@ -6,6 +6,7 @@ import crypto from "crypto";
 import { PaginateResult } from "mongoose";
 import { AccountResponse, Account } from "../../../interfaces/graphQL";
 import NodeCache from "node-cache";
+import logger from "src/common/logger";
 
 const indexerUrl =
   process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
@@ -42,6 +43,21 @@ export class UserService {
       return await newUser.save();
     } catch (err) {
       throw new Error("User can't be created");
+    }
+  }
+
+
+  /**
+   * Creates a new user in DB
+   * @param userDTO - User data
+   * @throws Will throw an error if can't create user
+   */
+   async patchUser(userDTO: IUserDTO): Promise<any> {
+    const userData = new UserModel({ ...userDTO });
+    try {
+      return UserModel.findByIdAndUpdate(userData._id, userDTO)
+    } catch (err) {
+      throw new Error("User can't be updated");
     }
   }
 

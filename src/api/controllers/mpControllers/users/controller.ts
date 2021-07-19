@@ -32,6 +32,19 @@ export class Controller {
     }
   }
 
+  async patchUser(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const user = await UserService.patchUser(req.body);
+      res.json(user);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async getAccountBalance(
     req: Request,
     res: Response,
