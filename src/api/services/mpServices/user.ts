@@ -6,6 +6,7 @@ import crypto from "crypto";
 import { PaginateResult } from "mongoose";
 import { AccountResponse, Account } from "../../../interfaces/graphQL";
 import NodeCache from "node-cache";
+import { isValidSignature, validateUrl, validateTwitter } from "../../../utils";
 
 const indexerUrl =
   process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
@@ -108,6 +109,31 @@ export class UserService {
       }
     } catch (err) {
       throw new Error("Couldn't get caps balance");
+    }
+  }
+
+  async updateUser(id: string, walletData: any): Promise<IUser> {
+    try{
+      const data = JSON.parse(walletData.data)
+      if (!isValidSignature(walletData.data, walletData.signedMessage, data.walletId)) throw new Error("Invalid signature")
+      let isError=false
+      const {name, customUrl, bio, twitterName, personalUrl, picture, banner} = data
+      if (typeof name !== "string" || name.length===0) isError=true
+      if (customUrl && (typeof customUrl !== "string" || !validateUrl(customUrl))) isError=true
+      if (bio && typeof bio !== "string") isError=true
+      if (twitterName && (typeof twitterName !== "string" || !validateTwitter(twitterName))) isError=true
+      if (personalUrl && (typeof personalUrl !== "string" || !validateUrl(personalUrl))) isError=true
+      if (picture && (typeof picture !== "string" || !validateUrl(picture))) isError=true
+      if (banner && (typeof banner !== "string" || !validateUrl(banner))) isError=true
+      if (isError) throw new Error("Couldn't update user")
+      const user = await UserModel.findOneAndUpdate(
+        { _id: id },
+        {name, customUrl, bio, twitterName, personalUrl, picture, banner},
+        {new: true}
+      );
+      return user
+    }catch(err){
+      throw err
     }
   }
 }
