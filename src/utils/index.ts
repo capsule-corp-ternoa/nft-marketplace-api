@@ -32,8 +32,8 @@ export const validateUrl = (url: string) => {
     return url.match(urlRegEx)
 }
 
-export const isValidSignature = (signedMessage: string, signature: string, address: string) => {
+export const isValidSignature = (plainData: string, signedData: string, address: string) => {
     const publicKey = decodeAddress(address);
     const hexPublicKey = u8aToHex(publicKey);
-    return signatureVerify(signedMessage, signature, hexPublicKey).isValid;
+    return signatureVerify(plainData, signedData, hexPublicKey).isValid;
 }
