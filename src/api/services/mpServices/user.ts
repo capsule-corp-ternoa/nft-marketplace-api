@@ -39,7 +39,7 @@ export class UserService {
   async createUser(userDTO: IUserDTO): Promise<IUser> {
     const nonce = crypto.randomBytes(16).toString("base64");
     try {
-      const newUser = new UserModel({ ...userDTO, nonce, createdAt: new Date() });
+      const newUser = new UserModel({ ...userDTO, nonce });
       return await newUser.save();
     } catch (err) {
       throw new Error("User can't be created");
