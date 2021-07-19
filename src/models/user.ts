@@ -61,20 +61,16 @@ const User = new mongoose.Schema({
   },
   createdAt : { 
     type: Date, 
+    default: Date.now()
   },
   updatedAt : { 
-    type: Date, 
+    type: Date,
   },
 });
 
 User.pre<any & mongoose.Document>('updateOne', function (next){
-  // tslint:disable-next-line:no-console
-  console.log(this)
-  const now = new Date()
+  const now = Date.now()
   this.set({updatedAt: now})
-  if (this.createdAt){
-    this.set({created_at: now})
-  }
   next()
 })
 
