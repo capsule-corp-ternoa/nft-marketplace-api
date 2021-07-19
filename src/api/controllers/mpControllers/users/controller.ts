@@ -51,7 +51,7 @@ export class Controller {
     next: NextFunction
   ): Promise<void>{
     try{
-      const user = await UserService.updateUser(req.params.id, req.body);
+      const user = await UserService.updateUser(req.params.walletId, req.body);
       res.json(user);
     }catch(err){
       next(err)

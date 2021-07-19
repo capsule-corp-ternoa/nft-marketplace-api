@@ -39,7 +39,7 @@ export class UserService {
   async createUser(userDTO: IUserDTO): Promise<IUser> {
     const nonce = crypto.randomBytes(16).toString("base64");
     try {
-      const newUser = new UserModel({ ...userDTO, nonce });
+      const newUser = new UserModel({ ...userDTO, nonce, createdAt: new Date() });
       return await newUser.save();
     } catch (err) {
       throw new Error("User can't be created");
@@ -112,7 +112,7 @@ export class UserService {
     }
   }
 
-  async updateUser(id: string, walletData: any): Promise<IUser> {
+  async updateUser(walletId: string, walletData: any): Promise<IUser> {
     try{
       const data = JSON.parse(walletData.data)
       try{
@@ -131,10 +131,10 @@ export class UserService {
       if (banner && (typeof banner !== "string" || !validateUrl(banner))) isError=true
       if (isError) throw new Error("Couldn't update user")
       await UserModel.updateOne(
-        { _id: id },
+        { walletId },
         {name, customUrl, bio, twitterName, personalUrl, picture, banner}
       );
-      const user = await UserModel.findOne({_id:id})
+      const user = await UserModel.findOne({walletId})
       return user
     }catch(err){
       throw err
