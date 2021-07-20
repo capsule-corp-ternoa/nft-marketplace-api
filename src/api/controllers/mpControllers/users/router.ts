@@ -6,4 +6,5 @@ export default express
   .patch("/patch", controller.patchUser)
   .get("/:id/caps", controller.getAccountBalance)
   .post("/create", controller.newUser)
-  .get("/", controller.all);
+  .get("/", controller.all)
+  .post("/:id", controller.updateUser);

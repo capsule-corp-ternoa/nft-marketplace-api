@@ -57,5 +57,19 @@ export class Controller {
       next(err);
     }
   }
+
+  async updateUser(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void>{
+    try{
+      const user = await UserService.updateUser(req.params.id, req.body);
+      res.json(user);
+    }catch(err){
+      next(err)
+    }
+  }
+  
 }
 export default new Controller();
