@@ -59,20 +59,7 @@ const User = new mongoose.Schema({
   banner: {
     type: String,
   },
-  createdAt : { 
-    type: Date, 
-    default: Date.now()
-  },
-  updatedAt : { 
-    type: Date,
-  },
-});
-
-User.pre<any & mongoose.Document>('updateOne', function (next){
-  const now = Date.now()
-  this.set({updatedAt: now})
-  next()
-})
+}, { timestamps: true });
 
 User.plugin(mongoosePaginate);
 
