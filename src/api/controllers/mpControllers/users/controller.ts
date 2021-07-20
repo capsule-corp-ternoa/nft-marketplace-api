@@ -32,13 +32,13 @@ export class Controller {
     }
   }
 
-  async patchUser(
+  async reviewRequested(
     req: Request,
     res: Response,
     next: NextFunction
-  ): Promise<void> {
+  ): Promise<any> {
     try {
-      const user = await UserService.patchUser(req.body);
+      const user = await UserService.reviewRequested(req.params.id);
       res.json(user);
     } catch (err) {
       next(err);

@@ -49,13 +49,12 @@ export class UserService {
 
   /**
    * Creates a new user in DB
-   * @param userDTO - User data
+   * @param walletId - wallet Id
    * @throws Will throw an error if can't create user
    */
-   async patchUser(userDTO: IUserDTO): Promise<any> {
-    const userData = new UserModel({ ...userDTO });
+   async reviewRequested(walletId: string): Promise<any> {
     try {
-      return UserModel.findByIdAndUpdate(userData._id, userDTO)
+      return UserModel.findOneAndUpdate({walletId}, {reviewRequested: true}, { new: true });
     } catch (err) {
       throw new Error("User can't be updated");
     }
