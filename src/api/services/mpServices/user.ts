@@ -6,7 +6,6 @@ import crypto from "crypto";
 import { PaginateResult } from "mongoose";
 import { AccountResponse, Account } from "../../../interfaces/graphQL";
 import NodeCache from "node-cache";
-import logger from "src/common/logger";
 
 const indexerUrl =
   process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";

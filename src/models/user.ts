@@ -27,7 +27,7 @@ const User = new mongoose.Schema({
   twitterName: {
     type: String,
   },
-  reviewCertification: {
+  reviewRequested: {
     type: Boolean,
     default: false
   },
