@@ -59,7 +59,7 @@ const User = new mongoose.Schema({
   banner: {
     type: String,
   },
-});
+}, { timestamps: true });
 
 User.plugin(mongoosePaginate);
 

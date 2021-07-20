@@ -6,4 +6,4 @@ export default express
   .get("/:id/caps", controller.getAccountBalance)
   .post("/create", controller.newUser)
   .get("/", controller.all)
-  .post("/:id", controller.updateUser);
+  .post("/:walletId", controller.updateUser);

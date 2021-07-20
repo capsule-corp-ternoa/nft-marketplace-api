@@ -112,10 +112,14 @@ export class UserService {
     }
   }
 
-  async updateUser(id: string, walletData: any): Promise<IUser> {
+  async updateUser(walletId: string, walletData: any): Promise<IUser> {
     try{
       const data = JSON.parse(walletData.data)
-      if (!isValidSignature(walletData.data, walletData.signedMessage, data.walletId)) throw new Error("Invalid signature")
+      try{
+        if (!isValidSignature(walletData.data, walletData.signedMessage, data.walletId)) throw new Error("Invalid signature")
+      }catch(err){
+        throw new Error("Invalid signature")
+      }
       let isError=false
       const {name, customUrl, bio, twitterName, personalUrl, picture, banner} = data
       if (typeof name !== "string" || name.length===0) isError=true
@@ -126,11 +130,11 @@ export class UserService {
       if (picture && (typeof picture !== "string" || !validateUrl(picture))) isError=true
       if (banner && (typeof banner !== "string" || !validateUrl(banner))) isError=true
       if (isError) throw new Error("Couldn't update user")
-      const user = await UserModel.findOneAndUpdate(
-        { _id: id },
-        {name, customUrl, bio, twitterName, personalUrl, picture, banner},
-        {new: true}
+      await UserModel.updateOne(
+        { walletId },
+        {name, customUrl, bio, twitterName, personalUrl, picture, banner}
       );
+      const user = await UserModel.findOne({walletId})
       return user
     }catch(err){
       throw err
