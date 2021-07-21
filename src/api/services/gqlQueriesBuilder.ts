@@ -169,6 +169,7 @@ export class GQLQueriesBuilder {
           and: [
             { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
             { id: { in: ${JSON.stringify(ids)} } }
+            { listed: { equalTo: 1 } },
             { timestampBurn: { isNull: true } }
           ]
         }
@@ -186,6 +187,7 @@ export class GQLQueriesBuilder {
           and: [
             { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
             { not: { id: { in: ${JSON.stringify(ids)} } } }
+            { listed: { equalTo: 1 } },
             { timestampBurn: { isNull: true } }
           ]
         }
@@ -205,6 +207,7 @@ export class GQLQueriesBuilder {
           and: [
             { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
             { not: { id: { in: ${JSON.stringify(ids)} } } }
+            { listed: { equalTo: 1 } },
             { timestampBurn: { isNull: true } }
           ]
         }
