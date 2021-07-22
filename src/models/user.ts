@@ -33,6 +33,10 @@ const User = new mongoose.Schema({
   twitterVerificationToken: {
     type: String,
   },
+  reviewRequested: {
+    type: Boolean,
+    default: false
+  },
   customUrl: {
     type: String,
   },

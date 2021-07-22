@@ -34,6 +34,19 @@ export class Controller {
     }
   }
 
+  async reviewRequested(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<any> {
+    try {
+      const user = await UserService.reviewRequested(req.params.id);
+      res.json(user);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async getAccountBalance(
     req: Request,
     res: Response,

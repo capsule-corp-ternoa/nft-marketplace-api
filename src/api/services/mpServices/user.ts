@@ -47,6 +47,19 @@ export class UserService {
   }
 
   /**
+   * Set the review requested field to true
+   * @param walletId - wallet Id
+   * @throws Will throw an error if can't find user
+   */
+   async reviewRequested(walletId: string): Promise<any> {
+    try {
+      return UserModel.findOneAndUpdate({walletId}, {reviewRequested: true}, { new: true });
+    } catch (err) {
+      throw new Error("User can't be updated");
+    }
+  }
+
+  /**
    * Finds a user in DB
    * @param walletId - User's wallet ID
    * @param incViews - Should increase views counter
