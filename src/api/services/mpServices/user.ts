@@ -46,6 +46,20 @@ export class UserService {
     }
   }
 
+
+  /**
+   * Creates a new user in DB
+   * @param walletId - wallet Id
+   * @throws Will throw an error if can't create user
+   */
+   async reviewRequested(walletId: string): Promise<any> {
+    try {
+      return UserModel.findOneAndUpdate({walletId}, {reviewRequested: true}, { new: true });
+    } catch (err) {
+      throw new Error("User can't be updated");
+    }
+  }
+
   /**
    * Finds a user in DB
    * @param walletId - User's wallet ID

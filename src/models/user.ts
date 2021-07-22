@@ -27,6 +27,10 @@ const User = new mongoose.Schema({
   twitterName: {
     type: String,
   },
+  reviewRequested: {
+    type: Boolean,
+    default: false
+  },
   customUrl: {
     type: String,
   },
