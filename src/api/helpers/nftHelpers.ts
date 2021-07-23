@@ -40,41 +40,6 @@ export function groupNFTs(NFTs: INFT[]){
   return NFTs
 }
 
-/**
- * Adds information to NFT object from external sources
- * @param NFT - NFT object
- * @returns - NFT object with new fields
- */
-export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
-  const retNFT: INFT = parseRawNFT(NFT);
-  const [creatorData, ownerData, info, categories, totalData] = await Promise.all([
-    populateNFTCreator(retNFT),
-    populateNFTOwner(retNFT),
-    populateNFTUri(retNFT),
-    populateNFTCategories(retNFT),
-    populateNFTSerieTotal(retNFT)
-  ]);
-  /*retNFT.creatorData = creatorData;
-  retNFT.ownerData = ownerData;
-  // info
-  if (info){
-    retNFT.internalId = info.internalId
-    retNFT.seriesId = info.seriesId
-    retNFT.name = info.name
-    retNFT.fileHash = info.fileHash
-    retNFT.description = info.description
-    retNFT.itemTotal = info.itemTotal
-    retNFT.itemId = info.itemId
-    retNFT.media = info.media
-    retNFT.cryptedMedia = info.cryptedMedia
-  }
-  // categories
-  retNFT.categories = categories;
-  // total groups
-  retNFT.totalListedNft = totalData.totalListedNft
-  retNFT.totalNft = totalData.totalNft*/
-  return {...retNFT, creatorData, ownerData, ...info, categories, ...totalData};
-}
 function extractHashFromGatewayUri(uri: string) {
   const regex: RegExp = new RegExp('(http?s:\/\/.*\/)(.*)', 'gm');
   const ipfsLinkParts = regex.exec(uri);
@@ -94,6 +59,23 @@ function parseRawNFT(NFT: INFT): INFT {
   NFT.uri = overwriteDefaultIpfsGateway(uri);
   // }
   return NFT;
+}
+
+/**
+ * Adds information to NFT object from external sources
+ * @param NFT - NFT object
+ * @returns - NFT object with new fields
+ */
+export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
+  const retNFT: INFT = parseRawNFT(NFT);
+  const [creatorData, ownerData, info, categories, totalData] = await Promise.all([
+    populateNFTCreator(retNFT),
+    populateNFTOwner(retNFT),
+    populateNFTUri(retNFT),
+    populateNFTCategories(retNFT),
+    populateNFTSerieTotal(retNFT)
+  ]);
+  return {...retNFT, creatorData, ownerData, ...info, categories, ...totalData};
 }
 
 /**
