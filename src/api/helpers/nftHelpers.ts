@@ -4,6 +4,15 @@ import L from "../../common/logger";
 import NFTService from "../services/mpServices/nft";
 import { ICategory } from "../../interfaces/ICategory";
 import { fetchTimeout } from "../../utils";
+import { IUser } from "src/interfaces/IUser";
+
+const ipfsGateways = {
+  ternoaPinataIpfsGateaway: `https://ternoa.mypinata.cloud/ipfs`,
+  cloudfareIpfsGateaway: `https://cloudflare-ipfs.com/ipfs`,
+  ternoaIpfsGateway: `https://ipfs.ternoa.dev/ipfs`,
+}
+const defaultIpfsGateway = ipfsGateways.ternoaIpfsGateway;
+const ipfsGatewayUri = process.env.IPFS_GATEWAY || defaultIpfsGateway;
 
 /**
  * Groups NFT with NFT.serieId-NFT.owner-NFT.price-NFT.priceTiime as a key
@@ -37,13 +46,54 @@ export function groupNFTs(NFTs: INFT[]){
  * @returns - NFT object with new fields
  */
 export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
-  let retNFT: INFT = NFT;
-  retNFT = await this.populateNFTCreator(retNFT);
-  retNFT = await this.populateNFTOwner(retNFT);
-  retNFT = await this.populateNFTUri(retNFT);
-  retNFT = await this.populateNFTCategories(retNFT);
-  retNFT = await this.populateNFTSerieTotal(retNFT);
-  return retNFT;
+  const retNFT: INFT = parseRawNFT(NFT);
+  const [creatorData, ownerData, info, categories, totalData] = await Promise.all([
+    populateNFTCreator(retNFT),
+    populateNFTOwner(retNFT),
+    populateNFTUri(retNFT),
+    populateNFTCategories(retNFT),
+    populateNFTSerieTotal(retNFT)
+  ]);
+  /*retNFT.creatorData = creatorData;
+  retNFT.ownerData = ownerData;
+  // info
+  if (info){
+    retNFT.internalId = info.internalId
+    retNFT.seriesId = info.seriesId
+    retNFT.name = info.name
+    retNFT.fileHash = info.fileHash
+    retNFT.description = info.description
+    retNFT.itemTotal = info.itemTotal
+    retNFT.itemId = info.itemId
+    retNFT.media = info.media
+    retNFT.cryptedMedia = info.cryptedMedia
+  }
+  // categories
+  retNFT.categories = categories;
+  // total groups
+  retNFT.totalListedNft = totalData.totalListedNft
+  retNFT.totalNft = totalData.totalNft*/
+  return {...retNFT, creatorData, ownerData, ...info, categories, ...totalData};
+}
+function extractHashFromGatewayUri(uri: string) {
+  const regex: RegExp = new RegExp('(http?s:\/\/.*\/)(.*)', 'gm');
+  const ipfsLinkParts = regex.exec(uri);
+  if (ipfsLinkParts?.length === 3) {
+    return ipfsLinkParts[2];
+  } else {
+    throw new Error("Invalid IPFS hash given: " + uri);
+  }
+}
+function overwriteDefaultIpfsGateway(uri: string): string {
+  const ipfsHash: string = extractHashFromGatewayUri(uri);
+  return `${ipfsGatewayUri}/${ipfsHash}`
+}
+function parseRawNFT(NFT: INFT): INFT {
+  const { uri } = NFT;
+  // if (uri.indexOf(ipfsGateways.ternoaPinataIpfsGateaway) >= 0) {
+  NFT.uri = overwriteDefaultIpfsGateway(uri);
+  // }
+  return NFT;
 }
 
 /**
@@ -53,14 +103,14 @@ export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
  */
 export async function populateNFTCreator(
   NFT: INFT
-): Promise<ICompleteNFT | INFT> {
+): Promise<IUser> {
   try {
     const { creator } = NFT;
     const creatorData = await UserService.findUser(creator);
-    return { ...NFT, creatorData };
+    return creatorData;
   } catch (err) {
     L.error({ err }, "NFT creator id not in database");
-    return NFT;
+    return null;
   }
 }
 
@@ -71,14 +121,14 @@ export async function populateNFTCreator(
  */
 export async function populateNFTOwner(
   NFT: INFT
-): Promise<ICompleteNFT | INFT> {
+): Promise<IUser> {
   try {
     const { owner } = NFT;
     const ownerData = await UserService.findUser(owner);
-    return { ...NFT, ownerData };
+    return ownerData;
   } catch (err) {
     L.error({ err }, "NFT owner id not in database");
-    return NFT;
+    return null;
   }
 }
 
@@ -87,20 +137,22 @@ export async function populateNFTOwner(
  * @param NFT - NFT object with uri field
  * @returns NFT object with new fields, if uri was valid, object stays untouched otherwise
  */
-export async function populateNFTUri(NFT: INFT): Promise<ICompleteNFT | INFT> {
+export async function populateNFTUri(NFT: INFT): Promise<any> {
   try {
-    const response = await fetchTimeout(NFT.uri, null, 5000).catch((_e) => {
+    const response = await fetchTimeout(NFT.uri, null, Number(process.env.IPFS_REQUEST_TIMEOUT) || 4000).catch((_e) => {
       throw new Error('Could not retrieve NFT data from ' + NFT.uri)
     });
     if (response) {
       const info = await response.json();
-      return { ...NFT, ...info };
+      info.media.url = overwriteDefaultIpfsGateway(info.media.url);
+      info.cryptedMedia.url = overwriteDefaultIpfsGateway(info.media.url);
+      return info;
     } else {
-      return null;
+      return {};
     }
   } catch (err) {
     L.error({ err }, "invalid NFT uri");
-    return NFT;
+    return {};
   }
 }
 
@@ -111,14 +163,14 @@ export async function populateNFTUri(NFT: INFT): Promise<ICompleteNFT | INFT> {
  */
 export async function populateNFTCategories(
   NFT: INFT
-): Promise<ICompleteNFT | INFT> {
+): Promise<ICategory[]> {
   try {
     const mongoNft = await NFTService.findMongoNftFromId(NFT.id);
     const categories = (mongoNft.categories) as ICategory[];
-    return { ...NFT, categories };
+    return categories;
   } catch (err) {
     L.error({ err }, "error retrieving nft's categories from mongo");
-    return { ...NFT, categories: [] };
+    return [];
   }
 }
 
@@ -129,16 +181,16 @@ export async function populateNFTCategories(
  */
  export async function populateNFTSerieTotal(
   NFT: INFT
-): Promise<ICompleteNFT | INFT> {
+): Promise<{totalNft?:number, totalListedNft?:number}> {
   try {
-    if (NFT.serieId === '0' || !NFT.owner) throw new Error()
+    if (NFT.serieId === '0' || !NFT.owner) return {}
     const result = await NFTService.getNFTsForSerieOwnerPrice(NFT)
     const totalNft = result.nftEntities.totalCount
     const totalListedNft = result.nftEntities.nodes.filter((x)=> x.listed===1).length
-    return { ...NFT, totalNft, totalListedNft };
+    return { totalNft, totalListedNft };
   } catch (err) {
     L.error({ err }, "error retrieving nft's serie total");
-    return NFT;
+    return {}
   }
 }
 

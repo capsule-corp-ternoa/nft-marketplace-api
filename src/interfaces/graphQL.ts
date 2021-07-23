@@ -20,8 +20,14 @@ export interface ICompleteNFT extends INFT {
   media?: { url: string };
   cryptedMedia?: { url: string };
   ownerData?: IUser;
-  creatorData: IUser;
+  creatorData?: IUser;
   categories?: ICategory[];
+  internalId?: string;
+  seriesId?: string;
+  fileHash?: string;
+  description?: string;
+  itemTotal?: number;
+  itemId?: number;
 }
 
 export interface NFTListResponse {
