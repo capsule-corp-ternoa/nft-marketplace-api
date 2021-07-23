@@ -8,9 +8,10 @@ import { IUser } from "src/interfaces/IUser";
 
 const ipfsGateways = {
   ternoaPinataIpfsGateaway: `https://ternoa.mypinata.cloud/ipfs`,
-  cloudfareIpfsGateaway: `https://cloudflare-ipfs.com/ipfs`
+  cloudfareIpfsGateaway: `https://cloudflare-ipfs.com/ipfs`,
+  ternoaIpfsGateway: `https://ipfs.ternoa.dev/ipfs`,
 }
-const defaultIpfsGateway = ipfsGateways.cloudfareIpfsGateaway;
+const defaultIpfsGateway = ipfsGateways.ternoaIpfsGateway;
 const ipfsGatewayUri = process.env.IPFS_GATEWAY || defaultIpfsGateway;
 
 /**
