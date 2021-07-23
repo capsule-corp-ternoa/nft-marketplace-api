@@ -97,7 +97,7 @@ export async function populateNFTOwner(
  */
 export async function populateNFTUri(NFT: INFT): Promise<any> {
   try {
-    const response = await fetchTimeout(NFT.uri, null, 5000).catch((_e) => {
+    const response = await fetchTimeout(NFT.uri, null, Number(process.env.IPFS_REQUEST_TIMEOUT) || 4000).catch((_e) => {
       throw new Error('Could not retrieve NFT data from ' + NFT.uri)
     });
     if (response) {
