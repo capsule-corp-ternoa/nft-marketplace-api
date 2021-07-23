@@ -6,7 +6,7 @@ import { ICategory } from "../../interfaces/ICategory";
 import { fetchTimeout } from "../../utils";
 
 /**
- * Groups NFT with NFT.serieId-NFT.owner-NFT.price as a key
+ * Groups NFT with NFT.serieId-NFT.owner-NFT.price-NFT.priceTiime as a key
  * @param NFTs - NFTs array
  * @returns - NFT array grouped
  */
@@ -18,7 +18,7 @@ export function groupNFTs(NFTs: INFT[]){
   // Get duplicate keys
   NFTs.forEach((NFT) =>{
     if (NFT.serieId !== '0'){
-      const key = `${NFT.serieId}-${NFT.owner}-${NFT.price}`
+      const key = `${NFT.serieId}-${NFT.owner}-${NFT.price}-${NFT.priceTiime}`
       if (uniqueKeys[key] === undefined){
         uniqueKeys[key] = true
       }else{
