@@ -20,7 +20,7 @@ export interface ICompleteNFT extends INFT {
   media?: { url: string };
   cryptedMedia?: { url: string };
   ownerData?: IUser;
-  creatorData: IUser;
+  creatorData?: IUser;
   categories?: ICategory[];
 }
 

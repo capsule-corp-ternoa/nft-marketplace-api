@@ -27,11 +27,7 @@ export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
     populateNFTUri(retNFT),
     populateNFTCategories(retNFT)
   ]);
-  retNFT.creatorData = creatorData;
-  retNFT.ownerData = ownerData;
-  retNFT.info = info;
-  retNFT.categories = categories;
-  return retNFT;
+  return {...retNFT, creatorData, ownerData, ...info, categories}
 }
 function extractHashFromGatewayUri(uri: string) {
   const regex: RegExp = new RegExp('(http?s:\/\/.*\/)(.*)', 'gm');
