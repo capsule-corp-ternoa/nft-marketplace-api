@@ -9,6 +9,10 @@ export interface INFT {
   timestampList?: string | null;
   uri?: string;
   price: string;
+  priceTiime: string;
+  serieId: string;
+  totalNft: number;
+  totalListedNft: number;
 }
 
 export interface ICompleteNFT extends INFT {
@@ -29,7 +33,7 @@ export interface NFTListResponse {
 export interface NFTListPaginatedResponse {
   nftEntities: {
     totalCount: number;
-    pageInfo: {
+    pageInfo?: {
       hasNextPage: boolean;
       hasPreviousPage: boolean;
     };
@@ -51,7 +55,7 @@ export interface AccountResponse {
 
 export interface PaginationResponse<DataType> {
   totalCount: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
   data: DataType;
 }

@@ -6,6 +6,32 @@ import { ICategory } from "../../interfaces/ICategory";
 import { fetchTimeout } from "../../utils";
 
 /**
+ * Groups NFT with NFT.serieId-NFT.owner-NFT.price as a key
+ * @param NFTs - NFTs array
+ * @returns - NFT array grouped
+ */
+export function groupNFTs(NFTs: INFT[]){
+  const removeIds: string[] = []
+  const uniqueKeys:any={}
+  // sort nft to get the listed id first
+  NFTs = NFTs.sort((a,b) => b.listed - a.listed)
+  // Get duplicate keys
+  NFTs.forEach((NFT) =>{
+    if (NFT.serieId !== '0'){
+      const key = `${NFT.serieId}-${NFT.owner}-${NFT.price}`
+      if (uniqueKeys[key] === undefined){
+        uniqueKeys[key] = true
+      }else{
+        removeIds.push(NFT.id)
+      }
+    }
+  })
+  // Remove duplicate keys
+  NFTs = NFTs.filter(x => !removeIds.includes(x.id))
+  return NFTs
+}
+
+/**
  * Adds information to NFT object from external sources
  * @param NFT - NFT object
  * @returns - NFT object with new fields
@@ -16,6 +42,7 @@ export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
   retNFT = await this.populateNFTOwner(retNFT);
   retNFT = await this.populateNFTUri(retNFT);
   retNFT = await this.populateNFTCategories(retNFT);
+  retNFT = await this.populateNFTSerieTotal(retNFT);
   return retNFT;
 }
 
@@ -86,7 +113,7 @@ export async function populateNFTCategories(
   NFT: INFT
 ): Promise<ICompleteNFT | INFT> {
   try {
-    const mongoNft = await NFTService.findNftFromId(NFT.id);
+    const mongoNft = await NFTService.findMongoNftFromId(NFT.id);
     const categories = (mongoNft.categories) as ICategory[];
     return { ...NFT, categories };
   } catch (err) {
@@ -94,3 +121,25 @@ export async function populateNFTCategories(
     return { ...NFT, categories: [] };
   }
 }
+
+/**
+ * Populates an NFT object with the total of it's serie and total on sale
+ * @param NFT - NFT object with serieId, owner, price
+ * @returns NFT object with new categories field from db
+ */
+ export async function populateNFTSerieTotal(
+  NFT: INFT
+): Promise<ICompleteNFT | INFT> {
+  try {
+    if (NFT.serieId === '0' || !NFT.owner) throw new Error()
+    const result = await NFTService.getNFTsForSerieOwnerPrice(NFT)
+    const totalNft = result.nftEntities.totalCount
+    const totalListedNft = result.nftEntities.nodes.filter((x)=> x.listed===1).length
+    return { ...NFT, totalNft, totalListedNft };
+  } catch (err) {
+    L.error({ err }, "error retrieving nft's serie total");
+    return NFT;
+  }
+}
+
+
