@@ -22,12 +22,6 @@ export interface ICompleteNFT extends INFT {
   ownerData?: IUser;
   creatorData?: IUser;
   categories?: ICategory[];
-  internalId?: string;
-  seriesId?: string;
-  fileHash?: string;
-  description?: string;
-  itemTotal?: number;
-  itemId?: number;
 }
 
 export interface NFTListResponse {
