@@ -145,15 +145,18 @@ export class Controller {
       next(err);
     }
   }
-  
-  async getNFTTotalOnSaleCount(
+
+  async getNFTsBySerieOwnerPrice(
     req: Request,
     res: Response,
     next: NextFunction
-  ): Promise<void> {
-    if (!req.params.serieId) next(new Error("serieId param is needed"));
+  ): Promise<void>{
+    if (!req.params.id) next(new Error("id parameter is needed"));
     try {
-      res.json(await NFTService.getNFTTotalOnSaleCount(req.params.serieId));
+      const nft = await NFTService.getNFT(req.params.id);
+      if (nft.serieId === '0' || !nft.owner) throw new Error("NFT is missing data")
+      const nfts = (await NFTService.getNFTsForSerieOwnerPrice(nft)).nftEntities.nodes
+      res.json(nfts);
     } catch (err) {
       next(err);
     }
