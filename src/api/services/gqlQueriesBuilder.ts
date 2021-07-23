@@ -223,7 +223,7 @@ export class GQLQueriesBuilder {
   `;
 
   
-  NFTsForSerieOwnerPrice = (serieId: string, ownerId: string, price: string) => gql`
+  NFTsForSerieOwnerPrice = (serieId: string, ownerId: string, price: string, priceTiime: string) => gql`
     {
       nftEntities(
         filter: { 
@@ -232,7 +232,28 @@ export class GQLQueriesBuilder {
             { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
             { serieId:{ equalTo:"${serieId}" } }
             { owner: { equalTo: "${ownerId}" } }
-            { price:{ equalTo:"${price}" } }
+            { price:{ 
+              ${price !== null ? 
+                (price !== "" ? 
+                  `equalTo:${price}`
+                :
+                  `equalTo:""`
+                )
+              : 
+                "isNull: true"
+              } 
+            } }
+            { priceTiime:{ 
+              ${priceTiime !== null ? 
+                (priceTiime !== "" ? 
+                  `equalTo:${priceTiime}`
+                :
+                  `equalTo:""`
+                )
+              : 
+                "isNull: true"
+              } 
+            } }
           ]
         }
       )

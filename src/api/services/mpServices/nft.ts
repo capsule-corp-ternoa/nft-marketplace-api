@@ -206,18 +206,18 @@ export class NFTService {
    * @param ids - The nfts blockchain ids
    * @throws Will throw an error if can't request indexer
    */
-     async getNFTsNotInIds(ids: string[]): Promise<INFT[]> {
-      try {
-        const query = QueriesBuilder.NFTsNotInIds(ids);
-        const result: NFTListResponse = await request(indexerUrl, query);
-        const NFTs = groupNFTs(result.nftEntities.nodes);
-        return (
-          await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
-        );
-      } catch (err) {
-        throw new Error("Couldn't get NFTs");
-      }
+    async getNFTsNotInIds(ids: string[]): Promise<INFT[]> {
+    try {
+      const query = QueriesBuilder.NFTsNotInIds(ids);
+      const result: NFTListResponse = await request(indexerUrl, query);
+      const NFTs = groupNFTs(result.nftEntities.nodes);
+      return (
+        await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
+      );
+    } catch (err) {
+      throw new Error("Couldn't get NFTs");
     }
+  }
 
   /**
    * Returns a limited amount nfts not in array of specified ids
@@ -368,7 +368,7 @@ export class NFTService {
    */
   async getNFTsForSerieOwnerPrice(NFT: INFT): Promise<NFTListPaginatedResponse>{
     try{
-      const query = QueriesBuilder.NFTsForSerieOwnerPrice(NFT.serieId, NFT.owner, NFT.price)
+      const query = QueriesBuilder.NFTsForSerieOwnerPrice(NFT.serieId, NFT.owner, NFT.price, NFT.priceTiime)
       const result: NFTListPaginatedResponse = await request(indexerUrl, query);
       return result
     }catch(err){

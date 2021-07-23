@@ -8,7 +8,7 @@ import {
 } from "../../../interfaces/graphQL";
 import NftModel from "../../../models/nft";
 import CategoryService from "./category"
-import { populateNFT } from "../../helpers/nftHelpers";
+import { populateNFT, groupNFTs } from "../../helpers/nftHelpers";
 import QueriesBuilder from "../gqlQueriesBuilder";
 
 const indexerUrl =
@@ -21,12 +21,11 @@ export class NFTService {
    * @param ids - The nfts blockchain ids
    * @throws Will throw an error if can't request indexer
    */
-  async getNFTsFromIds(ids: string[]): Promise<INFT[]> {
+   async getNFTsFromIds(ids: string[]): Promise<INFT[]> {
     try {
       const query = QueriesBuilder.NFTsFromIds(ids);
       const result: NFTListResponse = await request(indexerUrl, query);
-
-      const NFTs = result.nftEntities.nodes;
+      const NFTs = groupNFTs(result.nftEntities.nodes);
       return (
         await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
       );
@@ -40,19 +39,18 @@ export class NFTService {
    * @param ids - The nfts blockchain ids
    * @throws Will throw an error if can't request indexer
    */
-     async getNFTsNotInIds(ids: string[]): Promise<INFT[]> {
-      try {
-        const query = QueriesBuilder.NFTsNotInIds(ids);
-        const result: NFTListResponse = await request(indexerUrl, query);
-  
-        const NFTs = result.nftEntities.nodes;
-        return (
-          await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
-        );
-      } catch (err) {
-        throw new Error("Couldn't get NFTs");
-      }
+   async getNFTsNotInIds(ids: string[]): Promise<INFT[]> {
+    try {
+      const query = QueriesBuilder.NFTsNotInIds(ids);
+      const result: NFTListResponse = await request(indexerUrl, query);
+      const NFTs = groupNFTs(result.nftEntities.nodes);
+      return (
+        await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
+      );
+    } catch (err) {
+      throw new Error("Couldn't get NFTs");
     }
+  }
 
   /**
    * Returns a limited amount nfts not in array of specified ids
@@ -65,10 +63,9 @@ export class NFTService {
     try {
       const query = QueriesBuilder.NFTsNotInIdsPaginated(ids, limit, (page - 1) * limit);
       const result: NFTListPaginatedResponse = await request(indexerUrl, query);
-      
       const ret: PaginationResponse<INFT[]> = {
         data: await Promise.all(
-          result.nftEntities.nodes.map(async (NFT) => populateNFT(NFT))
+          groupNFTs(result.nftEntities.nodes).map(async (NFT) => populateNFT(NFT))
         ),
         hasNextPage: result.nftEntities.pageInfo.hasNextPage,
         hasPreviousPage: result.nftEntities.pageInfo.hasPreviousPage,
@@ -85,7 +82,7 @@ export class NFTService {
    * @param codes - The codes of the categories, if not given return all nfts without categories
    * @throws Will throw an error if can't reach database or if given category does not exist
    */
-  async getNFTsFromCategories(codes: string[] | null): Promise<INFT[]> {
+   async getNFTsFromCategories(codes: string[] | null): Promise<INFT[]> {
     try {
       if (codes===null){
         const query = {categories:{ $exists:true, $nin:[[] as any[], null ]} }
@@ -122,7 +119,7 @@ export class NFTService {
    * @param limit - Number of elements per page
    * @throws Will throw an error if can't reach database or if given category does not exist
    */
-  async getPaginatedNFTsFromCategories(
+   async getPaginatedNFTsFromCategories(
     codes: string[] | null,
     page: number = 1,
     limit: number = 10
