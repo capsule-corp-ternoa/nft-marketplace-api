@@ -20,14 +20,17 @@ const ipfsGatewayUri = process.env.IPFS_GATEWAY || defaultIpfsGateway;
  * @returns - NFT object with new fields
  */
 export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
-  let retNFT: INFT = parseRawNFT(NFT);
+  const retNFT: INFT = parseRawNFT(NFT);
   const [creatorData, ownerData, info, categories] = await Promise.all([
     populateNFTCreator(retNFT),
     populateNFTOwner(retNFT),
     populateNFTUri(retNFT),
     populateNFTCategories(retNFT)
   ]);
-  retNFT = { ...retNFT, ...creatorData, ...ownerData, ...info, ...categories };
+  retNFT.creatorData = creatorData;
+  retNFT.ownerData = ownerData;
+  retNFT.info = info;
+  retNFT.categories = categories;
   return retNFT;
 }
 function extractHashFromGatewayUri(uri: string) {

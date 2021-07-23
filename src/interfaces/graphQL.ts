@@ -9,6 +9,10 @@ export interface INFT {
   timestampList?: string | null;
   uri?: string;
   price: string;
+  creatorData?: IUser;
+  ownerData?: IUser;
+  info?: any;
+  categories?: ICategory[];
 }
 
 export interface ICompleteNFT extends INFT {
