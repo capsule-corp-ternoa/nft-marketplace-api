@@ -20,24 +20,22 @@ const ipfsGatewayUri = process.env.IPFS_GATEWAY || defaultIpfsGateway;
  * @returns - NFT array grouped
  */
 export function groupNFTs(NFTs: INFT[]){
-  const removeIds: string[] = []
+  const returnNFTs: INFT[] = []
   const uniqueKeys:any={}
-  // sort nft to get the listed id first
+  // sort nft to get the listed ids first
   NFTs = NFTs.sort((a,b) => b.listed - a.listed)
-  // Get duplicate keys
   NFTs.forEach((NFT) =>{
-    if (NFT.serieId !== '0'){
+    if(NFT.serieId !== '0'){
       const key = `${NFT.serieId}-${NFT.owner}-${NFT.price}-${NFT.priceTiime}`
       if (uniqueKeys[key] === undefined){
         uniqueKeys[key] = true
-      }else{
-        removeIds.push(NFT.id)
+        returnNFTs.push(NFT)
       }
+    }else{
+      returnNFTs.push(NFT)
     }
   })
-  // Remove duplicate keys
-  NFTs = NFTs.filter(x => !removeIds.includes(x.id))
-  return NFTs
+  return returnNFTs
 }
 
 function extractHashFromGatewayUri(uri: string) {

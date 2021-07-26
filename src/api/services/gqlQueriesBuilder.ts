@@ -15,7 +15,7 @@ const nodes = `
 `;
 
 export class GQLQueriesBuilder {
-  allNFTs = () => gql`
+  allNFTs = (listed?: string) => gql`
     {
       nftEntities(
         orderBy: TIMESTAMP_BURN_ASC, 
@@ -23,6 +23,7 @@ export class GQLQueriesBuilder {
           and: [
             { timestampBurn: { isNull: true } }
             { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
+            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
           ]
         }
       ) {
@@ -31,7 +32,7 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  allNFTsPaginated = (first: number, offset: number) => gql`
+  allNFTsPaginated = (first: number, offset: number, listed?: string) => gql`
     {
       nftEntities(
         orderBy: TIMESTAMP_BURN_ASC
@@ -41,6 +42,7 @@ export class GQLQueriesBuilder {
           and: [
             { timestampBurn: { isNull: true } }
             { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
+            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
           ]
         }
       ) {
@@ -71,7 +73,7 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  NFTsFromOwnerId = (id: string, listedFilter:string) => gql`
+  NFTsFromOwnerId = (id: string, listed?: string) => gql`
     {
       nftEntities(
         orderBy: OWNER_ASC
@@ -80,7 +82,7 @@ export class GQLQueriesBuilder {
             { timestampBurn: { isNull: true } }
             { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
             { owner: { equalTo: "${id}" } }
-            ${listedFilter} 
+            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
           ]
         }
       ) {
@@ -90,7 +92,7 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  NFTsFromOwnerIdPaginated = (id: string, first: number, offset: number, listedFilter:string) => gql`
+  NFTsFromOwnerIdPaginated = (id: string, first: number, offset: number, listed?:string) => gql`
     {
       nftEntities(
         orderBy: OWNER_ASC
@@ -99,7 +101,7 @@ export class GQLQueriesBuilder {
             { timestampBurn: { isNull: true } }
             { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
             { owner: { equalTo: "${id}" } }
-            ${listedFilter} 
+            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
           ]
         }
         first: ${first}
@@ -115,7 +117,7 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  NFTsFromCreatorId = (id: string) => gql`
+  NFTsFromCreatorId = (id: string, listed?: string) => gql`
     {
       nftEntities(
         orderBy: CREATOR_ASC
@@ -124,6 +126,7 @@ export class GQLQueriesBuilder {
             { timestampBurn: { isNull: true } }
             { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
             { creator: { equalTo: "${id}" } }
+            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
           ]
         }
       ) {
@@ -136,7 +139,8 @@ export class GQLQueriesBuilder {
   NFTsFromCreatorIdPaginated = (
     id: string,
     first: number,
-    offset: number
+    offset: number,
+    listed?: string
   ) => gql`
     {
       nftEntities(
@@ -146,6 +150,7 @@ export class GQLQueriesBuilder {
             { timestampBurn: { isNull: true } }
             { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
             { creator: { equalTo: "${id}" } }
+            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
           ]
         }
         first: ${first}
@@ -161,7 +166,7 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  NFTsFromIds = (ids: string[]) => gql`
+  NFTsFromIds = (ids: string[], listed?: string) => gql`
     {
       nftEntities(
         orderBy: ID_ASC
@@ -170,7 +175,7 @@ export class GQLQueriesBuilder {
             { timestampBurn: { isNull: true } }
             { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
             { id: { in: ${JSON.stringify(ids)} } }
-            { listed: { equalTo: 1 } },
+            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
           ]
         }
       ) {
@@ -179,7 +184,7 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  NFTsNotInIds = (ids: string[]) => gql`
+  NFTsNotInIds = (ids: string[], listed?: string) => gql`
     {
       nftEntities(
         orderBy: ID_ASC
@@ -188,7 +193,7 @@ export class GQLQueriesBuilder {
             { timestampBurn: { isNull: true } }
             { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
             { not: { id: { in: ${JSON.stringify(ids)} } } }
-            { listed: { equalTo: 1 } },
+            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
           ]
         }
       ) {
@@ -197,7 +202,7 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  NFTsNotInIdsPaginated = (ids: string[], first: number, offset: number) => gql`
+  NFTsNotInIdsPaginated = (ids: string[], first: number, offset: number, listed?: string) => gql`
     {
       nftEntities(
         orderBy: ID_ASC
@@ -208,7 +213,7 @@ export class GQLQueriesBuilder {
             { timestampBurn: { isNull: true } }
             { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
             { not: { id: { in: ${JSON.stringify(ids)} } } }
-            { listed: { equalTo: 1 } },
+            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
           ]
         }
       ) {
