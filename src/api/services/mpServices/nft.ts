@@ -381,6 +381,21 @@ export class NFTService {
       throw new Error("Couldn't get total NFT");
     }
   }
+
+  /**
+   * Finds NFTs with same serie
+   * @param NFT - NFT with serie
+   * @throws Will throw an error if nft ID doesn't exist
+   */
+   async getNFTsForSerie(NFT: INFT): Promise<NFTListPaginatedResponse>{
+    try{
+      const query = QueriesBuilder.NFTsForSerie(NFT.serieId)
+      const result: NFTListPaginatedResponse = await request(indexerUrl, query);
+      return result
+    }catch(err){
+      throw new Error("Couldn't get total NFT");
+    }
+  }
 }
 
 export default new NFTService();

@@ -161,13 +161,15 @@ export async function populateNFTCategories(
  */
  export async function populateNFTSerieTotal(
   NFT: INFT
-): Promise<ICompleteNFT | INFT> {
+): Promise<{totalNft?:number, totalListedNft?:number, totalMinted?:number}> {
   try {
     if (NFT.serieId === '0' || !NFT.owner) throw new Error()
     const result = await NFTService.getNFTsForSerieOwnerPrice(NFT)
     const totalNft = result.nftEntities.totalCount
     const totalListedNft = result.nftEntities.nodes.filter((x)=> x.listed===1).length
-    return { ...NFT, totalNft, totalListedNft };
+    const result2 = await NFTService.getNFTsForSerie(NFT)
+    const totalMinted = result2.nftEntities.totalCount
+    return { totalNft, totalListedNft, totalMinted };
   } catch (err) {
     L.error({ err }, "error retrieving nft's serie total");
     return NFT;
