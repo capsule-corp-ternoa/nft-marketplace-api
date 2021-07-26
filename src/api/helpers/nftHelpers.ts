@@ -163,16 +163,23 @@ export async function populateNFTCategories(
   NFT: INFT
 ): Promise<{totalNft?:number, totalListedNft?:number, totalMinted?:number}> {
   try {
-    if (NFT.serieId === '0' || !NFT.owner) throw new Error()
-    const result = await NFTService.getNFTsForSerieOwnerPrice(NFT)
-    const totalNft = result.nftEntities.totalCount
-    const totalListedNft = result.nftEntities.nodes.filter((x)=> x.listed===1).length
-    const result2 = await NFTService.getNFTsForSerie(NFT)
-    const totalMinted = result2.nftEntities.totalCount
-    return { totalNft, totalListedNft, totalMinted };
+    if (NFT.serieId === '0' || !NFT.owner){
+      return { totalNft: 1, totalListedNft: NFT.listed, totalMinted: 1 };
+    }else{
+      const result = await NFTService.getNFTsForSerieOwnerPrice(NFT)
+      const totalNft = result.nftEntities.totalCount
+      const totalListedNft = result.nftEntities.nodes.filter((x)=> x.listed===1).length
+      const result2 = await NFTService.getNFTsForSerie(NFT)
+      const totalMinted = result2.nftEntities.totalCount
+      return { totalNft, totalListedNft, totalMinted };
+    }
   } catch (err) {
     L.error({ err }, "error retrieving nft's serie total");
-    return NFT;
+    if (NFT){
+      return { totalNft: 1, totalListedNft: NFT.listed, totalMinted: 1 };
+    }else{
+      return { totalNft: 1, totalListedNft: 0, totalMinted: 1 };
+    }
   }
 }
 
