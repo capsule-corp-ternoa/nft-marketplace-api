@@ -5,7 +5,7 @@ import {
   NFTListResponse,
   PaginationResponse,
 } from "../../../interfaces/graphQL";
-import { populateNFT } from "../../helpers/nftHelpers";
+import { populateNFT, groupNFTs } from "../../helpers/nftHelpers";
 import QueriesBuilder from "../gqlQueriesBuilder";
 
 const indexerUrl =
@@ -22,13 +22,20 @@ export class NFTService {
       const listedFilter= `${listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}`
       const query = QueriesBuilder.NFTsFromOwnerId(ownerId, listedFilter);
       const result: NFTListResponse = await request(indexerUrl, query);
-
-      const NFTs = result.nftEntities.nodes;
+      const NFTs = groupNFTs(result.nftEntities.nodes);
       return Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)));
     } catch (err) {
       throw new Error("Couldn't get user's NFTs");
     }
   }
+  /**
+   * Returns a limited amount of user's NFTs
+   * @param ownerId - The user's blockchain id
+   * @param page - Page number
+   * @param limit - Number of elements per page
+   * @throws Will throw an error if can't request indexer
+   * @returns - A paginated array of nfts
+   */
   async getPaginatedNFTsFromOwner(
     ownerId: string,
     listed?: string,
@@ -41,13 +48,12 @@ export class NFTService {
         ownerId,
         limit,
         (page - 1) * limit,
-        listedFilter,
+        listedFilter
       );
       const result: NFTListPaginatedResponse = await request(indexerUrl, query);
-
       const ret: PaginationResponse<INFT[]> = {
         data: await Promise.all(
-          result.nftEntities.nodes.map(async (NFT) => populateNFT(NFT))
+          groupNFTs(result.nftEntities.nodes).map(async (NFT) => populateNFT(NFT))
         ),
         hasNextPage: result.nftEntities.pageInfo.hasNextPage,
         hasPreviousPage: result.nftEntities.pageInfo.hasPreviousPage,

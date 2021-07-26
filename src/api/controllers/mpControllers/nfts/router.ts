@@ -8,4 +8,4 @@ export default express
   .get("/category/", controller.getCategoriesNFTs)
   .get("/:id", controller.getNFT)
   .post("/new", controller.createNFT)
-  .get("/onSaleSeriesNFTsCount/:serieId", controller.getNFTTotalOnSaleCount);
+  .get("/getSameGroupNFTS/:id", controller.getNFTsBySerieOwnerPrice)
