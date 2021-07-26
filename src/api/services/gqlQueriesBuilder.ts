@@ -269,6 +269,23 @@ export class GQLQueriesBuilder {
     }
   `;
 
+  NFTsForSerie = (serieId: string) => gql`
+    {
+      nftEntities(
+        filter: { 
+          and : [
+            { timestampBurn:{ isNull:true } }
+            { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
+            { serieId:{ equalTo:"${serieId}" } }
+          ]
+        }
+      )
+      {
+        totalCount
+      }
+    }
+  `;
+
   capsBalanceFromId = (id: string) => gql`
     {
       accountEntities(
