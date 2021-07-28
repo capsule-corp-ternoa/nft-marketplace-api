@@ -13,10 +13,6 @@ export interface INFT {
   serieId: string;
   totalNft: number;
   totalListedNft: number;
-  creatorData?: IUser;
-  ownerData?: IUser;
-  info?: any;
-  categories?: ICategory[];
 }
 
 export interface ICompleteNFT extends INFT {

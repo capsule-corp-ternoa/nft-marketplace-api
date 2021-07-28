@@ -240,7 +240,7 @@ export class GQLQueriesBuilder {
             { price:{ 
               ${price !== null ? 
                 (price !== "" ? 
-                  `equalTo:${price}`
+                  `equalTo:"${price}"`
                 :
                   `equalTo:""`
                 )
@@ -251,7 +251,7 @@ export class GQLQueriesBuilder {
             { priceTiime:{ 
               ${priceTiime !== null ? 
                 (priceTiime !== "" ? 
-                  `equalTo:${priceTiime}`
+                  `equalTo:"${priceTiime}"`
                 :
                   `equalTo:""`
                 )

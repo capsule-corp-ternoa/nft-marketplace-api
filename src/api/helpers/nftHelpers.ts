@@ -128,11 +128,11 @@ export async function populateNFTUri(NFT: INFT): Promise<any> {
       info.cryptedMedia.url = overwriteDefaultIpfsGateway(info.media.url);
       return info;
     } else {
-      return null;
+      return {};
     }
   } catch (err) {
     L.error({ err }, "invalid NFT uri");
-    return null;
+    return {};
   }
 }
 
