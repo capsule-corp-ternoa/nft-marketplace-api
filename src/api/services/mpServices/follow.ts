@@ -15,7 +15,9 @@ export class FollowService {
       const userFollowed = await UserModel.findOne({walletId: followed}) 
       const userFollower = await UserModel.findOne({walletId: follower}) 
       if (!userFollowed || !userFollower) throw new Error()
-      const follow = new FollowModel({ followed: userFollowed._id, follower: userFollower._id});
+      let follow = await FollowModel.findOne({followed: userFollowed._id, follower: userFollower._id})
+      if (follow) throw new Error()
+      follow = new FollowModel({followed: userFollowed._id, follower: userFollower._id});
       userFollowed.nbFollowers += 1
       userFollower.nbFollowing += 1
       await follow.save()
@@ -23,8 +25,6 @@ export class FollowService {
       await userFollower.save()
       return userFollowed;
     } catch (err) {
-      // tslint:disable-next-line:no-console
-      console.log(err)
       throw new Error("Couldn't follow user");
     }
   }
@@ -41,9 +41,11 @@ export class FollowService {
         const userFollowed = await UserModel.findOne({walletId: followed}) 
         const userFollower = await UserModel.findOne({walletId: follower}) 
         if (!userFollowed || !userFollower) throw new Error()
+        const follow = await FollowModel.findOne({followed: userFollowed._id, follower: userFollower._id})
+        if (!follow) throw new Error()
         userFollowed.nbFollowers -= 1
         userFollower.nbFollowing -= 1
-        await FollowModel.deleteOne({ followed: userFollowed._id, follower: userFollower._id })
+        await follow.delete()
         await userFollowed.save()
         await userFollower.save()
         return userFollowed

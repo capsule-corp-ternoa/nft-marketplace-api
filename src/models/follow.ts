@@ -17,7 +17,6 @@ const Follow = new mongoose.Schema({
   },
 });
 
-// Follow.index({ followed: 1, follower: 1 }, { unique: true });
 Follow.plugin(mongoosePaginate);
 
 const FollowModel = mongoose.model<IFollow & mongoose.Document>(
