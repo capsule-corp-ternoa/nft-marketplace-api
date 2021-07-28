@@ -27,19 +27,15 @@ const User = new mongoose.Schema({
   twitterName: {
     type: String,
   },
+  reviewRequested: {
+    type: Boolean,
+    default: false
+  },
   customUrl: {
     type: String,
   },
   personalUrl: {
     type: String,
-  },
-  reviewCertification: {
-    type: Boolean,
-    default: false
-  },
-  reviewRequested: {
-    type: Boolean,
-    default: false
   },
   verified: {
     type: Boolean,
