@@ -1,5 +1,6 @@
 import { request } from "graphql-request";
 import { IUser, IUserDTO } from "../../../interfaces/IUser";
+import { ICompleteNFT } from "../../../interfaces/graphQL";
 import UserModel from "../../../models/user";
 import QueriesBuilder from "../gqlQueriesBuilder";
 import crypto from "crypto";
@@ -7,6 +8,7 @@ import { PaginateResult } from "mongoose";
 import { AccountResponse, Account } from "../../../interfaces/graphQL";
 import NodeCache from "node-cache";
 import { isValidSignature, validateUrl, validateTwitter } from "../../../utils";
+import NFTService from "./nft";
 
 const indexerUrl =
   process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
@@ -126,6 +128,13 @@ export class UserService {
     }
   }
 
+  /**
+   * verify signature and update the user
+   * @param walletId - User's public address
+   * @param walletData - User's data for update
+   * @throws Will throw an error if signature is invalid or if user can't be found in db
+   * @return A promise of updated user
+   */
   async updateUser(walletId: string, walletData: any): Promise<IUser> {
     try{
       const data = JSON.parse(walletData.data)
@@ -152,6 +161,66 @@ export class UserService {
       return user
     }catch(err){
       throw err
+    }
+  }
+
+  /**
+   * Like an NFT
+   * @param walletId - wallet Id
+   * @param nftId - nft Id
+   * @throws Will throw an error if already liked or if db can't be reached
+   */
+   async likeNft(walletId: string, nftId: string): Promise<IUser> {
+    try {
+      const user  = await UserModel.findOne({walletId});
+      if (!user) throw new Error()
+      if (user.likedNFTs && user.likedNFTs.includes(nftId)) throw new Error()
+      if (user.likedNFTs){
+        user.likedNFTs.push(nftId)
+      }else{
+        user.likedNFTs= [nftId]
+      }
+      await user.save()
+      return user
+    } catch (err) {
+      throw new Error("Couldn't like NFT");
+    }
+  }
+
+  /**
+   * Unlike an NFT
+   * @param walletId - wallet Id
+   * @param nftId - nft Id
+   * @throws Will throw an error if already liked or if db can't be reached
+   */
+   async unlikeNft(walletId: string, nftId: string): Promise<IUser> {
+    try {
+      const user  = await UserModel.findOne({walletId});
+      if (!user || !user.likedNFTs || !user.likedNFTs.includes(nftId)) throw new Error()
+      user.likedNFTs = user.likedNFTs.filter(x => x !== nftId)
+      await user.save()
+      return user
+    } catch (err) {
+      throw new Error("Couldn't unlike NFT");
+    }
+  }
+
+  /**
+   * gets liked NFTs
+   * @param walletId - wallet Id
+   * @throws Will throw an error if db can't be reached
+   */
+   async getLikedNfts(walletId: string): Promise<ICompleteNFT[]> {
+    try {
+      const user  = await UserModel.findOne({walletId});
+      if (!user) throw new Error()
+      if (!user.likedNFTs) return []
+      const nfts = await NFTService.getNFTsFromIds(user.likedNFTs)
+      // tslint:disable-next-line:no-console
+      console.log(nfts)
+      return nfts
+    } catch (err) {
+      throw new Error("Couldn't get liked NFTs");
     }
   }
 }
