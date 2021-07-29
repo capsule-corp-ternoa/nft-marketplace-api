@@ -216,8 +216,6 @@ export class UserService {
       if (!user) throw new Error()
       if (!user.likedNFTs) return []
       const nfts = await NFTService.getNFTsFromIds(user.likedNFTs)
-      // tslint:disable-next-line:no-console
-      console.log(nfts)
       return nfts
     } catch (err) {
       throw new Error("Couldn't get liked NFTs");
