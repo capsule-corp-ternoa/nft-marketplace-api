@@ -360,7 +360,7 @@ export class NFTService {
   async findMongoNftFromId(nftId: string): Promise<IMongoNft> {
     try {
       const nft = await NftModel.findOne({ chainId: nftId }).populate("categories");
-      if (!nft) throw new Error();
+      if (!nft) return null;
       return nft as IMongoNft;
     } catch (err) {
       throw new Error("Couldn't get mongo NFT");
