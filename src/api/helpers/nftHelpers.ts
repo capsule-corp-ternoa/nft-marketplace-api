@@ -125,7 +125,7 @@ export async function populateNFTUri(NFT: INFT): Promise<any> {
     if (response) {
       const info = await response.json();
       info.media.url = overwriteDefaultIpfsGateway(info.media.url);
-      info.cryptedMedia.url = overwriteDefaultIpfsGateway(info.media.url);
+      info.cryptedMedia.url = overwriteDefaultIpfsGateway(info.cryptedMedia.url);
       return info;
     } else {
       return null;
