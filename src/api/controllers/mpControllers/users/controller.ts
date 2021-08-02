@@ -25,7 +25,10 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const user = await UserService.findUser(req.params.id, true, true);
+      const { id } = req.params
+      const { incViews, walletIdViewer } = req.query
+      const { ip } = req
+      const user = await UserService.findUser(id, incViews === "true", walletIdViewer as string, ip, true);
       res.json(user);
     } catch (err) {
       next(err);

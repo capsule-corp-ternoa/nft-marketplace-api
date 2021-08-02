@@ -8,9 +8,11 @@ import {
 } from "../../../interfaces/graphQL";
 import { IMongoNft, INftDto } from "../../../interfaces/INft";
 import NftModel from "../../../models/nft";
+import NftViewModel from "../../../models/nftView";
 import CategoryService from "./category"
 import { populateNFT, groupNFTs } from "../../helpers/nftHelpers";
 import QueriesBuilder from "../gqlQueriesBuilder";
+import { TIME_BETWEEN_SAME_USER_VIEWS } from "../../../utils";
 
 const indexerUrl =
   process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
@@ -65,14 +67,31 @@ export class NFTService {
    * @param id - the NFT's id
    * @throws Will throw an error if the NFT can't be found
    */
-  async getNFT(id: string): Promise<INFT> {
+  async getNFT(
+    id: string, 
+    incViews: boolean = false, 
+    viewerWalletId: string = null,
+    viewerIp: string = null, 
+  ): Promise<INFT> {
     try {
       const query = QueriesBuilder.NFTfromId(id);
       const result: NFTListResponse = await request(indexerUrl, query);
       let NFT = result.nftEntities.nodes[0];
       if (!NFT) throw new Error();
       NFT = await populateNFT(NFT);
-      return NFT;
+      let viewsCount = 0
+      if (incViews){
+        const date = +new Date()
+        const views = await NftViewModel.find({viewed: id})
+        if (viewerIp && (views.length === 0 || date - Math.max.apply(null, views.filter(x => x.viewerIp === viewerIp).map(x => x.date)) > TIME_BETWEEN_SAME_USER_VIEWS)){
+          const newView = new NftViewModel({viewed: id, viewer: viewerWalletId, viewerIp, date})
+          await newView.save();
+          viewsCount = views.length + 1
+        }else{
+          viewsCount = views.length
+        }
+      }
+      return { ...NFT, viewsCount};
     } catch (err) {
       throw new Error("Couldn't get NFT");
     }

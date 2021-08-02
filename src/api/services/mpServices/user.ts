@@ -2,6 +2,7 @@ import { request } from "graphql-request";
 import { IUser, IUserDTO } from "../../../interfaces/IUser";
 import { ICompleteNFT } from "../../../interfaces/graphQL";
 import UserModel from "../../../models/user";
+import UserViewModel from "../../../models/userView";
 import QueriesBuilder from "../gqlQueriesBuilder";
 import crypto from "crypto";
 import { PaginateResult } from "mongoose";
@@ -9,6 +10,7 @@ import { AccountResponse, Account } from "../../../interfaces/graphQL";
 import NodeCache from "node-cache";
 import { isValidSignature, validateUrl, validateTwitter } from "../../../utils";
 import NFTService from "./nft";
+import { TIME_BETWEEN_SAME_USER_VIEWS } from "../../../utils";
 
 const indexerUrl =
   process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
@@ -72,6 +74,8 @@ export class UserService {
   async findUser(
     walletId: string,
     incViews: boolean = false,
+    viewerWalletId: string = null,
+    viewerIp: string = null, 
     ignoreCache: boolean = false
   ): Promise<IUser> {
     if (!ignoreCache && !incViews) {
@@ -79,15 +83,22 @@ export class UserService {
       if (user !== undefined) return user;
     }
     try {
-      const user = await UserModel.findOneAndUpdate(
-        { walletId },
-        incViews ? { $inc: { views: 1 } } : undefined,
-        { new: true }
-      );
+      const user = await UserModel.findOne({ walletId });
+      let viewsCount = 0
       if (!user) throw new Error();
+      if (incViews){
+        const date = +new Date()
+        const views = await UserViewModel.find({viewed: walletId})
+        if (viewerIp && (views.length === 0 || date - Math.max.apply(null, views.filter(x => x.viewerIp === viewerIp).map(x => x.date)) > TIME_BETWEEN_SAME_USER_VIEWS)){
+          const newView = new UserViewModel({viewed: walletId, viewer: viewerWalletId, viewerIp, date})
+          await newView.save();
+          viewsCount = views.length + 1
+        }else{
+          viewsCount = views.length
+        }
+      }
       if (!usersCache.has(walletId)) usersCache.set(walletId, user);
-
-      return user;
+      return {...user.toObject(), viewsCount};
     } catch (err) {
       throw new Error("User can't be found");
     }

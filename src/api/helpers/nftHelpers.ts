@@ -131,7 +131,7 @@ export async function populateNFTUri(NFT: INFT): Promise<any> {
       return {};
     }
   } catch (err) {
-    L.error({ err }, "invalid NFT uri");
+    L.error({ err }, "invalid NFT uri for " + NFT.id + " uri " + NFT.uri);
     return {};
   }
 }
