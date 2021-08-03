@@ -12,10 +12,10 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const { page, limit, codes } = req.query;
+      const { page, limit, codes, listed } = req.query;
       const categoriesCodes = codes === undefined ? null : (typeof codes==='string' ? [codes] : codes)
       if (page === undefined || limit === undefined){
-        res.json(await NFTService.getNFTsFromCategories(categoriesCodes as string[] | null));
+        res.json(await NFTService.getNFTsFromCategories(categoriesCodes as string[] | null, listed as string));
       } else {
         const pageNumber = Number(page);
         const limitNumber = Number(limit);
@@ -28,7 +28,8 @@ export class Controller {
           await NFTService.getPaginatedNFTsFromCategories(
             categoriesCodes as string[] | null,
             pageNumber,
-            limitNumber
+            limitNumber,
+            listed as string
           )
         );
       }
