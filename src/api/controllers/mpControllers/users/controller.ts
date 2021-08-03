@@ -27,8 +27,8 @@ export class Controller {
     try {
       const { id } = req.params
       const { incViews, walletIdViewer } = req.query
-      const { remoteAddress } = req.socket
-      const user = await UserService.findUser(id, incViews === "true", walletIdViewer as string, remoteAddress, true);
+      const { ip } = req
+      const user = await UserService.findUser(id, incViews === "true", walletIdViewer as string, ip, true);
       res.json(user);
     } catch (err) {
       next(err);
