@@ -19,8 +19,7 @@ export class NFTService {
    */
   async getNFTsFromOwner(ownerId: string, listed?: string): Promise<INFT[]> {
     try {
-      const listedFilter= `${listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}`
-      const query = QueriesBuilder.NFTsFromOwnerId(ownerId, listedFilter);
+      const query = QueriesBuilder.NFTsFromOwnerId(ownerId, listed);
       const result: NFTListResponse = await request(indexerUrl, query);
       const NFTs = groupNFTs(result.nftEntities.nodes);
       return Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)));
@@ -43,12 +42,11 @@ export class NFTService {
     limit: number = 10
   ): Promise<PaginationResponse<INFT[]>> {
     try {
-      const listedFilter= `${listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}`
       const query = QueriesBuilder.NFTsFromOwnerIdPaginated(
         ownerId,
         limit,
         (page - 1) * limit,
-        listedFilter
+        listed
       );
       const result: NFTListPaginatedResponse = await request(indexerUrl, query);
       const ret: PaginationResponse<INFT[]> = {
