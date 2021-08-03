@@ -31,8 +31,10 @@ export class Controller {
 
   async getNFT(req: Request, res: Response, next: NextFunction): Promise<void> {
     if (!req.params.id) next(new Error("id parameter is needed"));
+    const { incViews, viewerWalletId } = req.query
+    const { ip } = req
     try {
-      const nft = await NFTService.getNFT(req.params.id);
+      const nft = await NFTService.getNFT(req.params.id, incViews === "true", viewerWalletId as string, ip);
       res.json(nft);
     } catch (err) {
       next(err);

@@ -53,16 +53,15 @@ const User = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  views: {
-    type: Number,
-    default: 0,
-  },
   picture: {
     type: String,
   },
   banner: {
     type: String,
   },
+  likedNFTs: [{
+    type: String,
+  }]
 }, { timestamps: true });
 
 User.plugin(mongoosePaginate);

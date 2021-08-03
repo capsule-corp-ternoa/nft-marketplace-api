@@ -25,7 +25,10 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const user = await UserService.findUser(req.params.id, true, true);
+      const { id } = req.params
+      const { incViews, walletIdViewer } = req.query
+      const { ip } = req
+      const user = await UserService.findUser(id, incViews === "true", walletIdViewer as string, ip, true);
       res.json(user);
     } catch (err) {
       next(err);
@@ -66,6 +69,51 @@ export class Controller {
     try{
       const user = await UserService.updateUser(req.params.walletId, req.body);
       res.json(user);
+    }catch(err){
+      next(err)
+    }
+  }
+
+  async likeNft(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void>{
+    try{
+      const {walletId, nftId} = req.query
+      if (!walletId || !nftId) throw new Error("wallet id or nft id not given")
+      const user = await UserService.likeNft(walletId as string, nftId as string);
+      res.json(user);
+    }catch(err){
+      next(err)
+    }
+  } 
+
+  async unlikeNft(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void>{
+    try{
+      const {walletId, nftId} = req.query
+      if (!walletId || !nftId) throw new Error("wallet id or nft id not given")
+      const user = await UserService.unlikeNft(walletId as string, nftId as string);
+      res.json(user);
+    }catch(err){
+      next(err)
+    }
+  }
+
+  async getLikedNfts(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void>{
+    try{
+      const { id } = req.params
+      if (!id) throw new Error("wallet id not given")
+      const nfts = await UserService.getLikedNfts(id as string);
+      res.json(nfts);
     }catch(err){
       next(err)
     }
