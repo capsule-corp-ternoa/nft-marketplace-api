@@ -27,6 +27,16 @@ const User = new mongoose.Schema({
   twitterName: {
     type: String,
   },
+  reviewRequested: {
+    type: Boolean,
+    default: false
+  },
+  customUrl: {
+    type: String,
+  },
+  personalUrl: {
+    type: String,
+  },
   verified: {
     type: Boolean,
     default: false,
@@ -43,17 +53,16 @@ const User = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  views: {
-    type: Number,
-    default: 0,
-  },
   picture: {
     type: String,
   },
   banner: {
     type: String,
   },
-});
+  likedNFTs: [{
+    type: String,
+  }]
+}, { timestamps: true });
 
 User.plugin(mongoosePaginate);
 

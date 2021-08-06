@@ -1,4 +1,5 @@
 import { IUser } from "./IUser";
+import { ICategory } from "./ICategory";
 
 export interface INFT {
   id: string;
@@ -8,6 +9,11 @@ export interface INFT {
   timestampList?: string | null;
   uri?: string;
   price: string;
+  priceTiime: string;
+  serieId: string;
+  totalNft: number;
+  totalListedNft: number;
+  viewsCount?: number
 }
 
 export interface ICompleteNFT extends INFT {
@@ -15,8 +21,8 @@ export interface ICompleteNFT extends INFT {
   media?: { url: string };
   cryptedMedia?: { url: string };
   ownerData?: IUser;
-  creatorData: IUser;
-  categories?: string[];
+  creatorData?: IUser;
+  categories?: ICategory[];
 }
 
 export interface NFTListResponse {
@@ -28,7 +34,7 @@ export interface NFTListResponse {
 export interface NFTListPaginatedResponse {
   nftEntities: {
     totalCount: number;
-    pageInfo: {
+    pageInfo?: {
       hasNextPage: boolean;
       hasPreviousPage: boolean;
     };
@@ -38,6 +44,7 @@ export interface NFTListPaginatedResponse {
 
 export interface Account {
   capsAmount: string;
+  tiimeAmount: string;
   id?: string;
 }
 
@@ -49,7 +56,7 @@ export interface AccountResponse {
 
 export interface PaginationResponse<DataType> {
   totalCount: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
   data: DataType;
 }
