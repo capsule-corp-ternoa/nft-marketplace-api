@@ -42,8 +42,6 @@ export class NFTService {
    async getNFTsNotInIds(ids: string[], listed?: string): Promise<INFT[]> {
     try {
       const query = QueriesBuilder.NFTsNotInIds(ids, listed);
-      // tslint:disable-next-line:no-console
-      console.log(query)
       const result: NFTListResponse = await request(indexerUrl, query);
       const NFTs = groupNFTs(result.nftEntities.nodes);
       return (
