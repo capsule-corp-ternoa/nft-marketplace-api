@@ -17,4 +17,7 @@ export default function routes(app: Application): void {
   // Tiime machine routes
   app.use("/api/tm/NFTs", tmNftsRouter)
 
+  // keep prod app compatibility temporarily 
+  app.use("/api/users", usersRouter);
+  app.use("/api/NFTs", nftsRouter);
 }
