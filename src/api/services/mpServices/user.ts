@@ -46,6 +46,8 @@ export class UserService {
       const newUser = new UserModel({ ...userDTO, nonce });
       return await newUser.save();
     } catch (err) {
+      // tslint:disable-next-line:no-console
+      console.log('err',err);
       throw new Error("User can't be created");
     }
   }

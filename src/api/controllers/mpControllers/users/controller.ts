@@ -12,8 +12,20 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const user = await UserService.createUser(req.body);
-      res.json(user);
+      const body = JSON.parse(req.body);
+      const { walletId } = body;
+      let existingUser = null;
+      try {
+        existingUser = await UserService.findUser(walletId);
+      }
+      finally {
+        if (existingUser) {
+          res.status(409).send("Wallet user already exists");
+        } else {
+          const user = await UserService.createUser(body);
+          res.json(user);
+        }
+      }
     } catch (err) {
       next(err);
     }
@@ -65,11 +77,11 @@ export class Controller {
     req: Request,
     res: Response,
     next: NextFunction
-  ): Promise<void>{
-    try{
+  ): Promise<void> {
+    try {
       const user = await UserService.updateUser(req.params.walletId, req.body);
       res.json(user);
-    }catch(err){
+    } catch (err) {
       next(err)
     }
   }
