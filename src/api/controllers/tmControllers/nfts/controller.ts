@@ -1,4 +1,4 @@
-import NFTService from "../../../services/mpServices/nft";
+import NFTService from "../../../services/tmServices/nft";
 import L from "../../../../common/logger";
 import { NextFunction, Request, Response } from "express";
 
@@ -37,6 +37,24 @@ export class Controller {
       next(err);
     }
   }
+
+  async getNFTsDistribution(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { serieId, usersNumber, usersToExclude } = req.query;
+      if (!serieId || !usersNumber) throw new Error("Arguments are missing")
+      const arrayUserToExclude = !usersToExclude ? [] : (Array.isArray(usersToExclude) ? usersToExclude as string[] : [usersToExclude as string])
+      const data = await NFTService.getNFTsDistribution(serieId as string, Number(usersNumber as string), arrayUserToExclude)
+      res.json(data);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  
 }
 
 export default new Controller();
