@@ -199,7 +199,7 @@ export class NFTService {
       L.info("building response...");
       const resObject = {} as any
       nfts.forEach((nft, i) => {
-        resObject[nft.id] = users[i]._id
+        if (users[i]) resObject[nft.id] = users[i]._id
       });
       L.info("response ok");
       L.info("building file");
