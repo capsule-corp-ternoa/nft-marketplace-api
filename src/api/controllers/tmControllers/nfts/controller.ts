@@ -45,8 +45,8 @@ export class Controller {
   ): Promise<void> {
     try {
       const { serieId, usersNumber, usersToExclude } = req.query;
-      if (!serieId || !usersNumber) throw new Error("Arguments are missing")
-      const arrayUserToExclude = !usersToExclude ? [] : (Array.isArray(usersToExclude) ? usersToExclude as string[] : [usersToExclude as string])
+      if (!serieId || !usersNumber || !usersToExclude) throw new Error("Arguments are missing")
+      const arrayUserToExclude = (usersToExclude as string).substring(1, (usersToExclude as string).length - 1).split(',')
       const data = await NFTService.getNFTsDistribution(serieId as string, Number(usersNumber as string), arrayUserToExclude)
       res.json(data);
     } catch (err) {

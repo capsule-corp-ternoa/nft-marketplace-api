@@ -193,6 +193,7 @@ export class NFTService {
         .limit(usersNumber)
         .toArray()
       L.info("users retrieved, total : " + users.length);
+      L.info("users excluded : " + usersToExclude);
       L.info("retrieving nfts...");
       const nfts = (await this.getNFTsIdsForSerie(serieId)).nftEntities.nodes
       L.info("nfts retrieved, total : " + nfts.length);
