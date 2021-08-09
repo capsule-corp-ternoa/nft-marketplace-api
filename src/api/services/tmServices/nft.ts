@@ -198,17 +198,25 @@ export class NFTService {
       const nfts = (await this.getNFTsIdsForSerie(serieId)).nftEntities.nodes
       L.info("nfts retrieved, total : " + nfts.length);
       L.info("building response...");
-      const resObject = {} as any
+      const finalRes = [] as any
+      let resObject = {} as any
       nfts.forEach((nft, i) => {
         if (users[i]) resObject[nft.id] = users[i]._id
+        if (Object.keys(resObject).length === 100){
+          finalRes.push(resObject)
+          resObject = {} as any
+        }
       });
+      if (Object.keys(resObject).length > 0){
+        finalRes.push(resObject)
+      }
       L.info("response ok");
       L.info("building file");
-      fs.writeFile("nft-distribution-" + new Date().toISOString().split('T')[0] + ".json", JSON.stringify(resObject), (err) => {
+      fs.writeFile("nft-distribution-" + new Date().toISOString().split('T')[0] + ".json", JSON.stringify(finalRes), (err) => {
         if (err) throw err
         L.info("file saved");
       })
-      return resObject
+      return finalRes
     } catch (err) {
       L.info(err);
       throw new Error("Couldn't get NFTs distribution");
