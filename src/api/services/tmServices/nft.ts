@@ -193,7 +193,8 @@ export class NFTService {
           resolve();
         });
       });
-      L.info("retrieving users...");const users = await (await tmDB.collection('users').find({_id: { $nin: usersToExclude}}, {projection: {_id: 1, tiimeAmount: 1}}))
+      L.info("retrieving users...");
+      const users = await (await tmDB.collection('users').find({_id: { $nin: usersToExclude}}, {projection: {_id: 1, tiimeAmount: 1}}))
         .sort({tiimeAmount: -1, lastClaimedAt: 1})
         .limit(usersNumber)
         .toArray()
