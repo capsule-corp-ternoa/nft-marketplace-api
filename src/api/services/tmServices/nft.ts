@@ -178,7 +178,7 @@ export class NFTService {
       let batchObject = {} as any
       const mongoInstance = new mongoose.Mongoose()
       const tmDB = mongoInstance.connection
-      await new Promise((resolve, reject) => {
+      await new Promise<void>((resolve, reject) => {
         L.info("Connecting to db...");
         mongoInstance.connect(process.env.MONGODB_TM_URI, {
           useNewUrlParser: true,
