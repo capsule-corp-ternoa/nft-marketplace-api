@@ -172,7 +172,7 @@ export class NFTService {
    * @param usersNumber - The users to exclude from the draw
    * @throws Will throw an error if can't request db or indexer
    */
-   async getNFTsDistribution(serieId: string, usersNumber: number, usersToExclude: string[], specialNFTsIds: string[]): Promise<any> {
+   async getNFTsDistribution(serieId: string, ownerId: string, usersNumber: number, usersToExclude: string[], specialNFTsIds: string[]): Promise<any> {
     try {
       const finalBatch = {} as any
       const mongoInstance = new mongoose.Mongoose()
@@ -199,21 +199,24 @@ export class NFTService {
         .toArray()
       L.info("users retrieved, total : " + users.length);
       L.info("users excluded : " + usersToExclude);
-      L.info("Give special NFT to random users, total special nft : " + specialNFTsIds.length);
-      if (specialNFTsIds.length>0){
-        specialNFTsIds.forEach(spNFTId => {
+      L.info("retrieving all nfts...");
+      const nfts = (await this.getNFTsIdsForSerie(serieId, ownerId)).nftEntities.nodes// .filter(x => !specialNFTsIds.includes(x.id))
+      L.info("nfts retrieved, total : " + nfts.length);
+      L.info("Special and classic nfts separation...");
+      const specialNFTs = nfts.filter(x => specialNFTsIds.includes(x.id))
+      const classicNFTs = nfts.filter(x => !specialNFTsIds.includes(x.id))
+      L.info("Total classic : " + classicNFTs.length);
+      L.info("Total special : " + specialNFTs.length);
+      L.info("Give special NFT to random users...");
+      specialNFTs.forEach(spNFT => {
           const randomIndex = Math.floor(Math.random() * users.length)
           if (users.length>0) {
-            finalBatch[spNFTId] = users[randomIndex]._id
+            finalBatch[spNFT.id] = users[randomIndex]._id
             users.splice(randomIndex, 1)
           }
         });
-      }
-      L.info("retrieving only classic nfts...");
-      const nfts = (await this.getNFTsIdsForSerie(serieId)).nftEntities.nodes.filter(x => !specialNFTsIds.includes(x.id))
-      L.info("nfts retrieved, total : " + nfts.length);
-      L.info("building response...");
-      nfts.forEach((nft, i) => {
+      L.info("Give classic NFT depending on ranking...");
+      classicNFTs.forEach((nft, i) => {
         if (users[i]) finalBatch[nft.id] = users[i]._id
       });
       L.info("response ok");
@@ -234,24 +237,9 @@ export class NFTService {
    * @param NFT serie - Serie of nft to give away
    * @throws Will throw an error if nft ID doesn't exist
    */
-   async getNFTsForSerie(serieId: string): Promise<NFTListPaginatedResponse>{
+   async getNFTsIdsForSerie(serieId: string, ownerId: string): Promise<NFTListPaginatedResponse>{
     try{
-      const query = QueriesBuilder.NFTsForSerie(serieId)
-      const result: NFTListPaginatedResponse = await request(indexerUrl, query);
-      return result
-    }catch(err){
-      throw new Error("Couldn't get total NFT");
-    }
-  }
-
-  /**
-   * Finds NFTs with same serie
-   * @param NFT serie - Serie of nft to give away
-   * @throws Will throw an error if nft ID doesn't exist
-   */
-   async getNFTsIdsForSerie(serieId: string): Promise<NFTListPaginatedResponse>{
-    try{
-      const query = QueriesBuilder.NFTsIdsForSerie(serieId)
+      const query = QueriesBuilder.NFTsIdsForSerie(serieId, ownerId)
       const result: NFTListPaginatedResponse = await request(indexerUrl, query);
       return result
     }catch(err){

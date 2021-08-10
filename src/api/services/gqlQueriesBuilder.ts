@@ -286,7 +286,7 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  NFTsIdsForSerie = (serieId: string) => gql`
+  NFTsIdsForSerie = (serieId: string, ownerId: string) => gql`
   {
     nftEntities(
       filter: { 
@@ -294,6 +294,7 @@ export class GQLQueriesBuilder {
           { timestampBurn:{ isNull:true } }
           { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
           { serieId:{ equalTo:"${serieId}" } }
+          { owner:{ equalTo:"${ownerId}" } }
         ]
       }
     )
