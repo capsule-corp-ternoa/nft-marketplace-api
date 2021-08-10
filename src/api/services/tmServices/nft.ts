@@ -174,8 +174,7 @@ export class NFTService {
    */
    async getNFTsDistribution(serieId: string, usersNumber: number, usersToExclude: string[], specialNFTsIds: string[]): Promise<any> {
     try {
-      const finalRes = [] as any
-      let batchObject = {} as any
+      const finalBatch = {} as any
       const mongoInstance = new mongoose.Mongoose()
       const tmDB = mongoInstance.connection
       await new Promise<void>((resolve, reject) => {
@@ -205,40 +204,25 @@ export class NFTService {
         specialNFTsIds.forEach(spNFTId => {
           const randomIndex = Math.floor(Math.random() * users.length)
           if (users.length>0) {
-            batchObject[spNFTId] = users[randomIndex]._id
+            finalBatch[spNFTId] = users[randomIndex]._id
             users.splice(randomIndex, 1)
           }
-          if (Object.keys(batchObject).length === 100){
-            finalRes.push(batchObject)
-            batchObject = {} as any
-          }
         });
-        if (Object.keys(batchObject).length > 0){
-          finalRes.push(batchObject)
-        }
-        batchObject = {}
       }
       L.info("retrieving only classic nfts...");
       const nfts = (await this.getNFTsIdsForSerie(serieId)).nftEntities.nodes.filter(x => !specialNFTsIds.includes(x.id))
       L.info("nfts retrieved, total : " + nfts.length);
       L.info("building response...");
       nfts.forEach((nft, i) => {
-        if (users[i]) batchObject[nft.id] = users[i]._id
-        if (Object.keys(batchObject).length === 100){
-          finalRes.push(batchObject)
-          batchObject = {} as any
-        }
+        if (users[i]) finalBatch[nft.id] = users[i]._id
       });
-      if (Object.keys(batchObject).length > 0){
-        finalRes.push(batchObject)
-      }
       L.info("response ok");
       L.info("building file");
-      fs.writeFile("nft-distribution-" + new Date().toISOString().split('T')[0] + ".json", JSON.stringify(finalRes), (err) => {
+      fs.writeFile("nft-distribution-" + new Date().toISOString().split('T')[0] + ".json", JSON.stringify(finalBatch), (err) => {
         if (err) throw err
         L.info("file saved");
       })
-      return finalRes
+      return finalBatch
     } catch (err) {
       L.info(err);
       throw new Error("Couldn't get NFTs distribution");
