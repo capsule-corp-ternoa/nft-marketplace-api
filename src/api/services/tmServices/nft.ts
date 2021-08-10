@@ -186,7 +186,7 @@ export class NFTService {
       tmDB.on("error", (err) => { 
         throw new Error("db connection error")
       });
-      tmDB.once("open", async () => {
+      tmDB.once("open", () => {
         L.info("db connection successfull");
       });
       L.info("retrieving users...");
