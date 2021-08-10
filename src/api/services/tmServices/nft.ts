@@ -199,10 +199,10 @@ export class NFTService {
       L.info("Give special NFT to random users, total special nft : " + specialNFTsIds.length);
       if (specialNFTsIds.length>0){
         specialNFTsIds.forEach(spNFTId => {
-          const randomId = Math.floor(Math.random() * users.length)
-          if (randomId>0) {
-            batchObject[spNFTId] = users[randomId]._id
-            users.splice(randomId, 1)
+          const randomIndex = Math.floor(Math.random() * users.length)
+          if (randomIndex>0) {
+            batchObject[spNFTId] = users[randomIndex]._id
+            users.splice(randomIndex, 1)
           }
           if (Object.keys(batchObject).length === 100){
             finalRes.push(batchObject)
