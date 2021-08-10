@@ -176,21 +176,24 @@ export class NFTService {
     try {
       const finalRes = [] as any
       let batchObject = {} as any
-      L.info("Connecting to db...");
-      const mongoInstance = new mongoose.Mongoose
-      mongoInstance.connect(process.env.MONGODB_TM_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      })
+      const mongoInstance = new mongoose.Mongoose()
       const tmDB = mongoInstance.connection
-      tmDB.on("error", (err) => { 
-        throw new Error("db connection error")
+      await new Promise((resolve, reject) => {
+        L.info("Connecting to db...");
+        mongoInstance.connect(process.env.MONGODB_TM_URI, {
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+        })
+        tmDB.on("error", (err) => {
+          L.error("db connection error:" + err);
+          reject("db connection error")
+        });
+        tmDB.once("open", () => {
+          L.info("db connection successfull");
+          resolve();
+        });
       });
-      tmDB.once("open", () => {
-        L.info("db connection successfull");
-      });
-      L.info("retrieving users...");
-      const users = await (await tmDB.collection('users').find({_id: { $nin: usersToExclude}}, {projection: {_id: 1, tiimeAmount: 1}}))
+      L.info("retrieving users...");const users = await (await tmDB.collection('users').find({_id: { $nin: usersToExclude}}, {projection: {_id: 1, tiimeAmount: 1}}))
         .sort({tiimeAmount: -1, lastClaimedAt: 1})
         .limit(usersNumber)
         .toArray()
