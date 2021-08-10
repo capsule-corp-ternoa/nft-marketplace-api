@@ -44,10 +44,11 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const { serieId, usersNumber, usersToExclude } = req.query;
-      if (!serieId || !usersNumber || !usersToExclude) throw new Error("Arguments are missing")
-      const arrayUserToExclude = (usersToExclude as string).substring(1, (usersToExclude as string).length - 1).split(',')
-      const data = await NFTService.getNFTsDistribution(serieId as string, Number(usersNumber as string), arrayUserToExclude)
+      const { serieId, usersNumber, usersToExclude, specialNFTsIds } = req.query;
+      if (!serieId || !usersNumber || !usersToExclude || !specialNFTsIds) throw new Error("Arguments are missing")
+      const arrayUserToExclude = usersToExclude === "[]" ? [] : (usersToExclude as string).substring(1, (usersToExclude as string).length - 1).split(',')
+      const arraySpecialNFTsIds = specialNFTsIds === "[]" ? [] : (specialNFTsIds as string).substring(1, (specialNFTsIds as string).length - 1).split(',')
+      const data = await NFTService.getNFTsDistribution(serieId as string, Number(usersNumber as string), arrayUserToExclude, arraySpecialNFTsIds)
       res.json(data);
     } catch (err) {
       next(err);

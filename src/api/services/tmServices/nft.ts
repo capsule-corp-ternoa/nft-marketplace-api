@@ -172,8 +172,10 @@ export class NFTService {
    * @param usersNumber - The users to exclude from the draw
    * @throws Will throw an error if can't request db or indexer
    */
-   async getNFTsDistribution(serieId: string, usersNumber: number, usersToExclude: string[]): Promise<any> {
+   async getNFTsDistribution(serieId: string, usersNumber: number, usersToExclude: string[], specialNFTsIds: string[]): Promise<any> {
     try {
+      const finalRes = [] as any
+      let batchObject = {} as any
       L.info("Connecting to db...");
       const mongoInstance = new mongoose.Mongoose
       mongoInstance.connect(process.env.MONGODB_TM_URI, {
@@ -194,21 +196,37 @@ export class NFTService {
         .toArray()
       L.info("users retrieved, total : " + users.length);
       L.info("users excluded : " + usersToExclude);
-      L.info("retrieving nfts...");
-      const nfts = (await this.getNFTsIdsForSerie(serieId)).nftEntities.nodes
+      L.info("Give special NFT to random users, total special nft : " + specialNFTsIds.length);
+      if (specialNFTsIds.length>0){
+        specialNFTsIds.forEach(spNFTId => {
+          const randomId = Math.floor(Math.random() * users.length)
+          if (randomId>0) {
+            batchObject[spNFTId] = users[randomId]._id
+            users.splice(randomId, 1)
+          }
+          if (Object.keys(batchObject).length === 100){
+            finalRes.push(batchObject)
+            batchObject = {} as any
+          }
+        });
+        if (Object.keys(batchObject).length > 0){
+          finalRes.push(batchObject)
+        }
+        batchObject = {}
+      }
+      L.info("retrieving only classic nfts...");
+      const nfts = (await this.getNFTsIdsForSerie(serieId)).nftEntities.nodes.filter(x => !specialNFTsIds.includes(x.id))
       L.info("nfts retrieved, total : " + nfts.length);
       L.info("building response...");
-      const finalRes = [] as any
-      let resObject = {} as any
       nfts.forEach((nft, i) => {
-        if (users[i]) resObject[nft.id] = users[i]._id
-        if (Object.keys(resObject).length === 100){
-          finalRes.push(resObject)
-          resObject = {} as any
+        if (users[i]) batchObject[nft.id] = users[i]._id
+        if (Object.keys(batchObject).length === 100){
+          finalRes.push(batchObject)
+          batchObject = {} as any
         }
       });
-      if (Object.keys(resObject).length > 0){
-        finalRes.push(resObject)
+      if (Object.keys(batchObject).length > 0){
+        finalRes.push(batchObject)
       }
       L.info("response ok");
       L.info("building file");
