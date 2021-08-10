@@ -54,7 +54,7 @@ function overwriteDefaultIpfsGateway(uri: string): string {
 function parseRawNFT(NFT: INFT): INFT {
   const { uri } = NFT;
   // if (uri.indexOf(ipfsGateways.ternoaPinataIpfsGateaway) >= 0) {
-  NFT.uri = overwriteDefaultIpfsGateway(uri);
+    if (uri) NFT.uri = overwriteDefaultIpfsGateway(uri);
   // }
   return NFT;
 }
