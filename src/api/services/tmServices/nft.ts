@@ -203,7 +203,7 @@ export class NFTService {
       if (specialNFTsIds.length>0){
         specialNFTsIds.forEach(spNFTId => {
           const randomIndex = Math.floor(Math.random() * users.length)
-          if (randomIndex>0) {
+          if (users.length>0) {
             batchObject[spNFTId] = users[randomIndex]._id
             users.splice(randomIndex, 1)
           }
