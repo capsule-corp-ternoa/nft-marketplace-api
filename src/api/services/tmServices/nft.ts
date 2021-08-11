@@ -207,19 +207,26 @@ export class NFTService {
       const classicNFTs = nfts.filter(x => !specialNFTsIds.includes(x.id))
       L.info("Total classic : " + classicNFTs.length);
       L.info("Total special : " + specialNFTs.length);
-      L.info("Give special NFT to random users...");
+      L.info("Give special NFTs to random users...");
       specialNFTs.forEach(spNFT => {
-          const randomIndex = Math.floor(Math.random() * users.length)
-          if (users.length>0) {
-            finalBatch[spNFT.id] = users[randomIndex]._id
-            users.splice(randomIndex, 1)
-          }
-        });
-      L.info("Give classic NFT depending on ranking...");
+        const randomIndex = Math.floor(Math.random() * users.length)
+        if (users.length>0) {
+          finalBatch[spNFT.id] = users[randomIndex]._id
+          users.splice(randomIndex, 1)
+        }
+      });
+      L.info("Saving special object before processing classic NFTs");
+      const specialNFTsDraw = {...finalBatch}
+      L.info("Give classic NFTs depending on ranking...");
       classicNFTs.forEach((nft, i) => {
         if (users[i]) finalBatch[nft.id] = users[i]._id
       });
       L.info("response ok");
+      L.info("building special file");
+      fs.writeFile("nft-distribution-only-special-" + new Date().toISOString().split('T')[0] + ".json", JSON.stringify(specialNFTsDraw), (err) => {
+        if (err) throw err
+        L.info("special file saved");
+      })
       L.info("building file");
       fs.writeFile("nft-distribution-" + new Date().toISOString().split('T')[0] + ".json", JSON.stringify(finalBatch), (err) => {
         if (err) throw err
