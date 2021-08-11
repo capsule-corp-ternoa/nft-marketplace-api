@@ -52,11 +52,16 @@ function overwriteDefaultIpfsGateway(uri: string): string {
   return `${ipfsGatewayUri}/${ipfsHash}`
 }
 function parseRawNFT(NFT: INFT): INFT {
-  const { uri } = NFT;
-  if (uri && uri.indexOf(defaultIpfsGateway) < 0) {
-    NFT.uri = overwriteDefaultIpfsGateway(uri);
+  try{
+    const { uri } = NFT;
+    if (uri && uri.indexOf(defaultIpfsGateway) < 0) {
+      NFT.uri = overwriteDefaultIpfsGateway(uri);
+    }
+    return NFT;
+  }catch(err){
+    L.error({ err }, "Can't parse raw nft");
+    return NFT;
   }
-  return NFT;
 }
 
 /**
