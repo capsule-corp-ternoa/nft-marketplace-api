@@ -13,7 +13,8 @@ export interface INFT {
   serieId: string;
   totalNft: number;
   totalListedNft: number;
-  viewsCount?: number
+  viewsCount?: number;
+  serieData?: INFT[]
 }
 
 export interface ICompleteNFT extends INFT {

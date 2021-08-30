@@ -3,7 +3,11 @@ import mongoose, { PaginateModel } from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
 
 const NftView = new mongoose.Schema({
-  viewed: {
+  viewedSerie: {
+    type: String,
+    required: true,
+  },
+  viewedId: {
     type: String,
     required: true,
   },

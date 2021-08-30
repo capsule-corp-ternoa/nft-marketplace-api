@@ -1,7 +1,7 @@
 import { ICompleteNFT, INFT } from "../../interfaces/graphQL";
-import UserService from "../services/mpServices/user";
+import UserService from "../services/V1/mpServices/user";
 import L from "../../common/logger";
-import NFTService from "../services/mpServices/nft";
+import NFTService from "../services/V2/mpServices/nft";
 import { ICategory } from "../../interfaces/ICategory";
 import { fetchTimeout } from "../../utils";
 import { IUser } from "src/interfaces/IUser";
@@ -19,7 +19,7 @@ const ipfsGatewayUri = process.env.IPFS_GATEWAY || defaultIpfsGateway;
  * @param NFTs - NFTs array
  * @returns - NFT array grouped
  */
-export function groupNFTs(NFTs: INFT[]){
+export function groupNFTsVOld(NFTs: INFT[]){
   const returnNFTs: INFT[] = []
   const uniqueKeys:any={}
   // sort nft to get the listed ids first
@@ -27,6 +27,30 @@ export function groupNFTs(NFTs: INFT[]){
   NFTs.forEach((NFT) =>{
     if(NFT.serieId !== '0'){
       const key = `${NFT.serieId}-${NFT.owner}-${NFT.price}-${NFT.priceTiime}`
+      if (uniqueKeys[key] === undefined){
+        uniqueKeys[key] = true
+        returnNFTs.push(NFT)
+      }
+    }else{
+      returnNFTs.push(NFT)
+    }
+  })
+  return returnNFTs
+}
+
+/**
+ * Groups NFT with NFT.serieId as a key
+ * @param NFTs - NFTs array
+ * @returns - NFT array grouped
+ */
+ export function groupNFTs(NFTs: INFT[]){
+  const returnNFTs: INFT[] = []
+  const uniqueKeys:any={}
+  // sort nft to get the listed ids first
+  NFTs = NFTs.sort((a,b) => b.listed - a.listed)
+  NFTs.forEach((NFT) =>{
+    if(NFT.serieId !== '0'){
+      const key = NFT.serieId
       if (uniqueKeys[key] === undefined){
         uniqueKeys[key] = true
         returnNFTs.push(NFT)
@@ -69,7 +93,7 @@ function parseRawNFT(NFT: INFT): INFT {
  * @param NFT - NFT object
  * @returns - NFT object with new fields
  */
-export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
+export async function populateNFTVOld(NFT: INFT): Promise<ICompleteNFT | INFT> {
   const retNFT: INFT = parseRawNFT(NFT);
   const [creatorData, ownerData, info, categories, totalData] = await Promise.all([
     populateNFTCreator(retNFT),
@@ -79,6 +103,37 @@ export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
     populateNFTSerieTotal(retNFT)
   ]);
   return {...retNFT, creatorData, ownerData, ...info, categories, ...totalData};
+}
+
+/**
+ * Adds information to NFT object from external sources
+ * @param NFT - NFT object
+ * @returns - NFT object with new fields
+ */
+ export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
+  const retNFT: INFT = parseRawNFT(NFT);
+  const [serieData, creatorData, ownerData, info, categories] = await Promise.all([
+    populateSerieData(retNFT),
+    populateNFTCreator(retNFT),
+    populateNFTOwner(retNFT),
+    populateNFTUri(retNFT),
+    populateNFTCategories(retNFT),
+  ]);
+  return {...retNFT, ...serieData, creatorData, ownerData, ...info, categories};
+}
+
+export async function populateSerieData(
+  NFT: INFT
+): Promise<{ serieData: INFT[]; totalNft: number; totalListedNft: number; }> {
+  try{
+    if (NFT.serieId === '0') return {serieData:[], totalNft:1, totalListedNft:NFT.listed}
+    const result = await NFTService.getNFTsForSerie(NFT)
+    const serieData = result.nftEntities.nodes.sort((a,b) => b.listed - a.listed || Number(a.price) - Number(b.price) || Number(a.priceTiime) - Number(b.priceTiime))
+    return {serieData, totalNft: serieData.length , totalListedNft: serieData.filter(x => x.listed).length}
+  } catch (err) {
+    L.error({ err }, "NFTs with same serie could not have been fetched");
+    return null;
+  }
 }
 
 /**
