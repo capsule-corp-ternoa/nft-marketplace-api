@@ -215,13 +215,14 @@ export class UserService {
       const user  = await UserModel.findOne({walletId});
       const nft  = await NFTService.getNFT(nftId);
       const key = {serieId: nft.serieId, nftId: nft.id}
-      if (!user || !nft || !user.likedNFTs || !user.likedNFTs.includes(key)) throw new Error()
+      if (!user || !nft || !user.likedNFTs) throw new Error()
       if (nft.serieId === "0"){
         if (!user.likedNFTs.map(x => x.nftId).includes(key.nftId)) throw new Error()
+        user.likedNFTs = user.likedNFTs.filter(x => x.nftId !== key.nftId)
       }else{
         if (!user.likedNFTs.map(x => x.serieId).includes(key.serieId)) throw new Error()
+        user.likedNFTs = user.likedNFTs.filter(x => x.serieId !== key.serieId)
       }
-      user.likedNFTs = user.likedNFTs.filter(x => x !== key)
       await user.save()
       return user
     } catch (err) {
