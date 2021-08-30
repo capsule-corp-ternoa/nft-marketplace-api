@@ -2,6 +2,7 @@ import { ICompleteNFT, INFT } from "../../interfaces/graphQL";
 import UserService from "../services/V1/mpServices/user";
 import L from "../../common/logger";
 import NFTService from "../services/V2/mpServices/nft";
+import NFTServiceV1 from "../services/V1/mpServices/nft";
 import { ICategory } from "../../interfaces/ICategory";
 import { fetchTimeout } from "../../utils";
 import { IUser } from "src/interfaces/IUser";
@@ -228,7 +229,7 @@ export async function populateNFTCategories(
     if (NFT.serieId === '0' || !NFT.owner){
       return { totalNft: 1, totalListedNft: NFT.listed, totalMinted: 1 };
     }else{
-      const result = await NFTService.getNFTsForSerieOwnerPrice(NFT)
+      const result = await NFTServiceV1.getNFTsForSerieOwnerPrice(NFT)
       const totalNft = result.nftEntities.totalCount
       const totalListedNft = result.nftEntities.nodes.filter((x)=> x.listed===1).length
       const result2 = await NFTService.getNFTsForSerie(NFT)

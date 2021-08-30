@@ -151,7 +151,7 @@ export class Controller {
     }
   }
 
-  async getNFTsBySerieOwnerPrice(
+  async getNFTsBySerie(
     req: Request,
     res: Response,
     next: NextFunction
@@ -160,7 +160,7 @@ export class Controller {
     try {
       const nft = await NFTService.getNFT(req.params.id);
       if (nft.serieId === '0' || !nft.owner) throw new Error("NFT is missing data")
-      const nfts = (await NFTService.getNFTsForSerieOwnerPrice(nft)).nftEntities.nodes
+      const nfts = (await NFTService.getNFTsForSerie(nft)).nftEntities.nodes
       res.json(nfts);
     } catch (err) {
       next(err);

@@ -387,21 +387,6 @@ export class NFTService {
   }
 
   /**
-   * Finds NFTs with same serie / owner / price as the nft in param
-   * @param NFT - NFT with owner serie price
-   * @throws Will throw an error if nft ID doesn't exist
-   */
-  async getNFTsForSerieOwnerPrice(NFT: INFT): Promise<NFTListPaginatedResponse>{
-    try{
-      const query = QueriesBuilder.NFTsForSerieOwnerPrice(NFT.serieId, NFT.owner, NFT.price, NFT.priceTiime)
-      const result: NFTListPaginatedResponse = await request(indexerUrl, query);
-      return result
-    }catch(err){
-      throw new Error("Couldn't get NFT with serie, owner and price");
-    }
-  }
-
-  /**
    * Finds NFTs with same serie
    * @param NFT - NFT with serie
    * @throws Will throw an error if nft ID doesn't exist
