@@ -4,15 +4,15 @@ import { ICategory } from "./ICategory";
 export interface INFT {
   id: string;
   owner: string;
-  creator: string;
+  creator?: string;
   listed: number;
   timestampList?: string | null;
   uri?: string;
   price: string;
   priceTiime: string;
-  serieId: string;
-  totalNft: number;
-  totalListedNft: number;
+  serieId?: string;
+  totalNft?: number;
+  totalListedNft?: number;
   viewsCount?: number;
   serieData?: INFT[]
 }

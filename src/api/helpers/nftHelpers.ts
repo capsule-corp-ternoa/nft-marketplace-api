@@ -127,7 +127,11 @@ export async function populateSerieData(
   NFT: INFT
 ): Promise<{ serieData: INFT[]; totalNft: number; totalListedNft: number; }> {
   try{
-    if (NFT.serieId === '0') return {serieData:[], totalNft:1, totalListedNft:NFT.listed}
+    if (NFT.serieId === '0') return {
+      serieData:[{id: NFT.id, owner: NFT.owner, listed: NFT.listed, price: NFT.price, priceTiime: NFT.priceTiime}], 
+      totalNft:1, 
+      totalListedNft:NFT.listed
+    }
     const result = await NFTService.getNFTsForSerie(NFT)
     const serieData = result.nftEntities.nodes.sort((a,b) => b.listed - a.listed || Number(a.price) - Number(b.price) || Number(a.priceTiime) - Number(b.priceTiime))
     return {serieData, totalNft: serieData.length , totalListedNft: serieData.filter(x => x.listed).length}
