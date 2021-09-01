@@ -164,11 +164,14 @@ export class UserService {
       if (picture && (typeof picture !== "string" || !validateUrl(picture))) isError=true
       if (banner && (typeof banner !== "string" || !validateUrl(banner))) isError=true
       if (isError) throw new Error("Couldn't update user")
-      await UserModel.updateOne(
+      const userOld = await UserModel.findOne({walletId})
+      let twitterVerified = userOld.twitterVerified
+      if (userOld.twitterName !== twitterName) twitterVerified = false
+      const user = await UserModel.findOneAndUpdate(
         { walletId },
-        {name, customUrl, bio, twitterName, personalUrl, picture, banner}
+        {name, customUrl, bio, twitterName, personalUrl, picture, banner, twitterVerified},
+        {new: true}
       );
-      const user = await UserModel.findOne({walletId})
       return user
     }catch(err){
       throw err
@@ -245,6 +248,36 @@ export class UserService {
       return [...nftsUnique, ...nftsWithSeries]
     } catch (err) {
       throw new Error("Couldn't get liked NFTs");
+    }
+  }
+
+  async setTwitterVerificationToken(walletId: string, oauthToken: string): Promise<void> {
+    try{
+      await UserModel.findOneAndUpdate(
+        { walletId },
+        {twitterVerificationToken: oauthToken}
+      );
+    }catch(err){
+      throw err
+    }
+  }
+
+  async getUserByTwitterVerificationToken(oauthToken: string): Promise<IUser> {
+    try{
+      return await UserModel.findOne({ twitterVerificationToken: oauthToken });
+    }catch(err){
+      throw err
+    }
+  }
+
+  async validateTwitter(isValid: boolean, walletId: string): Promise<void> {
+    try{
+        await UserModel.findOneAndUpdate(
+          { walletId },
+          { twitterVerificationToken: '',twitterVerified: isValid }
+        );
+    }catch(err){
+      throw err
     }
   }
 }
