@@ -140,7 +140,7 @@ export class Controller {
     next: NextFunction
   ): Promise<void>{
     try{
-      if (!process.env.TWITTER_CONSUMER_KEY || !process.env.TWITTER_CONSUMER_SECRET) next(new Error("Feature not available"))
+      if (!process.env.TWITTER_CONSUMER_KEY || !process.env.TWITTER_CONSUMER_SECRET) throw new Error("Feature not available")
       if (!req.params.id) throw new Error("User wallet id not given")
       const oauth = new OAuth(
         'https://api.twitter.com/oauth/request_token',
@@ -157,7 +157,7 @@ export class Controller {
         res.redirect("https://api.twitter.com/oauth/authorize?oauth_token=" + oauthToken)
       })
     }catch(err){
-      next(err)
+      res.redirect(process.env.TWITTER_REDIRECT_URL+"&twitterValidated=false")
     }
   }
 
