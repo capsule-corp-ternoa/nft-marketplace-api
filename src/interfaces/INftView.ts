@@ -1,5 +1,6 @@
 export interface INftView {
-    viewed: string;
+    viewedSerie: string;
+    viewedId: string;
     viewer: string;
     viewerIp: string;
     date: Date;
