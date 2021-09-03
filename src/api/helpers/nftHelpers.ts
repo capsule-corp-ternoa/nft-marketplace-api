@@ -193,7 +193,7 @@ export async function populateNFTUri(NFT: INFT): Promise<any> {
       if (info.media.url.indexOf('/ipfs') >= 0 && info.media.url.indexOf(defaultIpfsGateway) < 0) {
         info.media.url = overwriteDefaultIpfsGateway(info.media.url);
       }
-      if (info.media.url.indexOf(defaultIpfsGateway) < 0) {
+      if (info.cryptedMedia.url.indexOf(defaultIpfsGateway) < 0) {
         info.cryptedMedia.url = overwriteDefaultIpfsGateway(info.cryptedMedia.url);
       }
       return info;
