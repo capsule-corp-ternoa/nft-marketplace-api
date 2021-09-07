@@ -27,6 +27,12 @@ const User = new mongoose.Schema({
   twitterName: {
     type: String,
   },
+  twitterVerified: {
+    type: Boolean,
+  },
+  twitterVerificationToken: {
+    type: String,
+  },
   reviewRequested: {
     type: Boolean,
     default: false
@@ -59,9 +65,12 @@ const User = new mongoose.Schema({
   banner: {
     type: String,
   },
-  likedNFTs: [{
-    type: String,
-  }]
+  likedNFTs: [
+    {
+      serieId: {type: String}, 
+      nftId: {type: String}
+    }
+  ]
 }, { timestamps: true });
 
 User.plugin(mongoosePaginate);
