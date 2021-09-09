@@ -43,6 +43,23 @@ export interface NFTListPaginatedResponse {
   };
 }
 
+export interface DistinctNFTListResponse {
+  distinctSerieNfts: {
+    nodes: INFT[];
+  };
+}
+
+export interface DistinctNFTListPaginatedResponse {
+  distinctSerieNfts: {
+    totalCount: number;
+    pageInfo?: {
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
+    };
+    nodes: INFT[];
+  };
+}
+
 export interface Account {
   capsAmount: string;
   tiimeAmount: string;
