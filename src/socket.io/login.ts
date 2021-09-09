@@ -1,7 +1,7 @@
 // tslint:disable: no-unused-expression
 
 import { Namespace, Socket } from "socket.io";
-import UserService from "../api/services/mpServices/user";
+import UserService from "../api/services/user";
 import L from "../common/logger";
 export default (io: Namespace) => {
   io.on("connection", async (socket: Socket) => {
