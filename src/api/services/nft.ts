@@ -7,14 +7,14 @@ import {
   NFTListPaginatedResponse,
   NFTListResponse,
   PaginationResponse,
-} from "../../../interfaces/graphQL";
-import { IMongoNft, INftDto } from "../../../interfaces/INft";
-import NftModel from "../../../models/nft";
-import NftViewModel from "../../../models/nftView";
+} from "../../interfaces/graphQL";
+import { IMongoNft, INftDto } from "../../interfaces/INft";
+import NftModel from "../../models/nft";
+import NftViewModel from "../../models/nftView";
 import CategoryService from "./category"
-import { populateNFT } from "../../helpers/nftHelpers";
-import QueriesBuilder from "../gqlQueriesBuilder";
-import { TIME_BETWEEN_SAME_USER_VIEWS } from "../../../utils";
+import { populateNFT } from "../helpers/nftHelpers";
+import QueriesBuilder from "./gqlQueriesBuilder";
+import { TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
 
 const indexerUrl =
   process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";

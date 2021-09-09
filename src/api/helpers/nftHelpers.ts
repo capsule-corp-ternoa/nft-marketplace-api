@@ -1,7 +1,7 @@
 import { ICompleteNFT, INFT } from "../../interfaces/graphQL";
-import UserService from "../services/mpServices/user";
+import UserService from "../services/user";
 import L from "../../common/logger";
-import NFTService from "../services/mpServices/nft";
+import NFTService from "../services/nft";
 import { ICategory } from "../../interfaces/ICategory";
 import { fetchTimeout } from "../../utils";
 import { IUser } from "src/interfaces/IUser";

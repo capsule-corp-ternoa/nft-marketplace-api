@@ -1,8 +1,10 @@
-import UserService from "../../../services/mpServices/user";
-import L from "../../../../common/logger";
+import UserService from "../../services/user";
+import L from "../../../common/logger";
 import { NextFunction, Request, Response } from "express";
 import fetch from "node-fetch";
 import { OAuth } from "oauth"
+
+const LIMIT_MAX = 20;
 
 export class Controller {
   all(_: Request, res: Response): void {
@@ -125,9 +127,21 @@ export class Controller {
   ): Promise<void> {
     try {
       const { id } = req.params
+      const {page, limit} = req.query
       if (!id) throw new Error("wallet id not given")
-      const nfts = await UserService.getLikedNfts(id as string);
-      res.json(nfts);
+      if (page === undefined || limit === undefined){
+        const nfts = await UserService.getLikedNfts(id as string);
+        res.json(nfts);
+      }else{
+        const pageNumber = Number(page);
+        const limitNumber = Number(limit);
+        if (isNaN(pageNumber) || pageNumber < 1)
+          throw new Error("Page argument is invalid");
+        if (isNaN(limitNumber) || limitNumber < 1 || limitNumber > LIMIT_MAX)
+          throw new Error("Limit argument is invalid");
+        const nfts = await UserService.getLikedNftsPaginated(id as string, pageNumber, limitNumber);
+        res.json(nfts);
+      }
     } catch (err) {
       next(err)
     }

@@ -1,10 +1,8 @@
 import { Application } from "express";
-import usersRouter from "./api/controllers/mpControllers/users/router";
-import nftsRouter from "./api/controllers/mpControllers/nfts/router";
-import categoriesRouter from "./api/controllers/mpControllers/categories/router";
-import followRouter from "./api/controllers/mpControllers/follows/router";
-import appNftsRouter from "./api/controllers/appControllers/nfts/router"
-import tmNftsRouter from "./api/controllers/tmControllers/nfts/router"
+import usersRouter from "./api/controllers/users/router";
+import nftsRouter from "./api/controllers/nfts/router";
+import categoriesRouter from "./api/controllers/categories/router";
+import followRouter from "./api/controllers/follows/router";
 
 export default function routes(app: Application): void {
   // Marketplace routes
@@ -12,8 +10,4 @@ export default function routes(app: Application): void {
   app.use("/api/NFTs", nftsRouter);
   app.use("/api/categories", categoriesRouter);
   app.use("/api/follow", followRouter)
-  // Wallet app routes
-  app.use("/api/app/NFTs", appNftsRouter)
-  // Tiime machine routes
-  app.use("/api/tm/NFTs", tmNftsRouter)
 }

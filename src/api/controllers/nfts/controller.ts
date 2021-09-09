@@ -1,6 +1,6 @@
-import NFTService from "../../../services/mpServices/nft";
+import NFTService from "../../services/nft";
 
-import L from "../../../../common/logger";
+import L from "../../../common/logger";
 import { NextFunction, Request, Response } from "express";
 
 const LIMIT_MAX = 20;
@@ -123,7 +123,6 @@ export class Controller {
           throw new Error("Page argument is invalid");
         if (isNaN(limitNumber) || limitNumber < 1 || limitNumber > LIMIT_MAX)
           throw new Error("Limit argument is invalid");
-
         res.json(
           await NFTService.getPaginatedNFTsFromCategories(
             categoriesCodes as string[] | null,
@@ -156,8 +155,6 @@ export class Controller {
     res: Response,
     next: NextFunction
   ): Promise<void>{
-    // tslint:disable-next-line:no-console
-    console.log("aaaaa")
     if (!req.params.id) next(new Error("id parameter is needed"));
     try {
       const nft = await NFTService.getNFT(req.params.id);

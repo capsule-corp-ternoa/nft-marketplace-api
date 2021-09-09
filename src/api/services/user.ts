@@ -1,16 +1,16 @@
 import { request } from "graphql-request";
-import { IUser, IUserDTO } from "../../../interfaces/IUser";
-import { ICompleteNFT, PaginationResponse } from "../../../interfaces/graphQL";
-import UserModel from "../../../models/user";
-import UserViewModel from "../../../models/userView";
-import QueriesBuilder from "../gqlQueriesBuilder";
+import { IUser, IUserDTO } from "../../interfaces/IUser";
+import { ICompleteNFT, PaginationResponse } from "../../interfaces/graphQL";
+import UserModel from "../../models/user";
+import UserViewModel from "../../models/userView";
+import QueriesBuilder from "./gqlQueriesBuilder";
 import crypto from "crypto";
 import { PaginateResult } from "mongoose";
-import { AccountResponse, Account } from "../../../interfaces/graphQL";
+import { AccountResponse, Account } from "../../interfaces/graphQL";
 import NodeCache from "node-cache";
-import { isValidSignature, validateUrl, validateTwitter } from "../../../utils";
+import { isValidSignature, validateUrl, validateTwitter } from "../../utils";
 import NFTService from "./nft";
-import { TIME_BETWEEN_SAME_USER_VIEWS } from "../../../utils";
+import { TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
 
 const indexerUrl =
   process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";

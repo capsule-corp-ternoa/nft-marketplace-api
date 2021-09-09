@@ -1,6 +1,6 @@
-import FollowService from "../../../services/mpServices/follow";
+import FollowService from "../../services/follow";
 
-import L from "../../../../common/logger";
+import L from "../../../common/logger";
 import { NextFunction, Request, Response } from "express";
 
 export class Controller {
@@ -53,7 +53,11 @@ export class Controller {
   ): Promise<void> {
     try{
       if (!req.params.walletId) next(new Error("wallet id parameter is needed"));
-      const users = await FollowService.getUserFollowers(req.params.walletId)
+      const {page, limit} = req.query
+      const users = (!page || !limit) ? 
+        await FollowService.getUserFollowers(req.params.walletId)
+      : 
+        await FollowService.getUserFollowers(req.params.walletId, Number(page), Number(limit))
       res.json(users);
     }catch(err){
       next(err);
@@ -67,7 +71,11 @@ export class Controller {
   ): Promise<void> {
     try{
       if (!req.params.walletId) next(new Error("wallet id parameter is needed"));
-      const users = await FollowService.getUserFollowings(req.params.walletId)
+      const {page, limit} = req.query
+      const users = (!page || !limit) ? 
+        await FollowService.getUserFollowings(req.params.walletId)
+      : 
+        await FollowService.getUserFollowings(req.params.walletId, Number(page), Number(limit))
       res.json(users);
     }catch(err){
       next(err);

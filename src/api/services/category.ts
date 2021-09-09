@@ -1,5 +1,5 @@
-import CategoryModel from "../../../models/category";
-import { ICategory } from "../../../interfaces/ICategory";
+import CategoryModel from "../../models/category";
+import { ICategory } from "../../interfaces/ICategory";
 
 export class CategoryService {
   /**
