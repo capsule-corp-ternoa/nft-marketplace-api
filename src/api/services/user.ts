@@ -1,16 +1,16 @@
 import { request } from "graphql-request";
-import { IUser, IUserDTO } from "../../../../interfaces/IUser";
-import { ICompleteNFT } from "../../../../interfaces/graphQL";
-import UserModel from "../../../../models/user";
-import UserViewModel from "../../../../models/userView";
-import QueriesBuilder from "../../gqlQueriesBuilder";
+import { IUser, IUserDTO } from "../../interfaces/IUser";
+import { DistinctNFTListPaginatedResponse, DistinctNFTListResponse } from "../../interfaces/graphQL";
+import UserModel from "../../models/user";
+import UserViewModel from "../../models/userView";
+import QueriesBuilder from "./gqlQueriesBuilder";
 import crypto from "crypto";
 import { PaginateResult } from "mongoose";
-import { AccountResponse, Account } from "../../../../interfaces/graphQL";
+import { AccountResponse, Account } from "../../interfaces/graphQL";
 import NodeCache from "node-cache";
-import { isValidSignature, validateUrl, validateTwitter } from "../../../../utils";
+import { isValidSignature, validateUrl, validateTwitter } from "../../utils";
 import NFTService from "./nft";
-import { TIME_BETWEEN_SAME_USER_VIEWS } from "../../../../utils";
+import { TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
 
 const indexerUrl =
   process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
@@ -236,22 +236,27 @@ export class UserService {
   /**
    * gets liked NFTs
    * @param walletId - wallet Id
+   * @param page? - Page number
+   * @param limit? - Number of elements per page
    * @throws Will throw an error if db can't be reached
    */
-   async getLikedNfts(walletId: string): Promise<ICompleteNFT[]> {
+   async getLikedNfts(walletId: string, page?: string, limit?: string): Promise<DistinctNFTListResponse | DistinctNFTListPaginatedResponse> {
     try {
       const user  = await UserModel.findOne({walletId});
-      if (!user) throw new Error()
-      if (!user.likedNFTs) return []
-      const nftsWithSeries = (await NFTService.getNFTsForSeries(user.likedNFTs.filter(x=>x.serieId!=="0").map(x=>x.serieId)))
-      const nftsUnique = (await NFTService.getNFTsFromIds(user.likedNFTs.filter(x=>x.serieId==="0").map(x=>x.nftId)))
-      return [...nftsUnique, ...nftsWithSeries]
+      if (!user.likedNFTs) return {distinctSerieNfts: {nodes: []}}
+      return (await NFTService.getNFTsFromIds(user.likedNFTs.map(x=>x.nftId), page, limit))
     } catch (err) {
       throw new Error("Couldn't get liked NFTs");
     }
   }
 
-  async setTwitterVerificationToken(walletId: string, oauthToken: string): Promise<void> {
+  /**
+   * store temporary oauth twitter token to validate user
+   * @param walletId - wallet Id
+   * @param oauthToken - Oauth token
+   * @throws Will throw an error if db can't be reached
+   */
+   async setTwitterVerificationToken(walletId: string, oauthToken: string): Promise<void> {
     try{
       await UserModel.findOneAndUpdate(
         { walletId },
@@ -262,7 +267,12 @@ export class UserService {
     }
   }
 
-  async getUserByTwitterVerificationToken(oauthToken: string): Promise<IUser> {
+  /**
+   * Get's the user by oauth verification token
+   * @param oauthToken - Oauth token
+   * @throws Will throw an error if db can't be reached
+   */
+   async getUserByTwitterVerificationToken(oauthToken: string): Promise<IUser> {
     try{
       return await UserModel.findOne({ twitterVerificationToken: oauthToken });
     }catch(err){
@@ -270,7 +280,13 @@ export class UserService {
     }
   }
 
-  async validateTwitter(isValid: boolean, walletId: string): Promise<void> {
+  /**
+   * Validate the twitter username
+   * @param isValid - if his twitter name matches the one entered in profile page
+   * @param walletId - wallet id
+   * @throws Will throw an error if db can't be reached
+   */
+    async validateTwitter(isValid: boolean, walletId: string): Promise<void> {
     try{
         await UserModel.findOneAndUpdate(
           { walletId },

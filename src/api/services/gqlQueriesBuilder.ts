@@ -3,54 +3,38 @@ import { gql } from "graphql-request";
 const nodes = `
   nodes {
     id
+    serieId
+    listed
     owner
     creator
-    listed
     timestampList
     uri
     price
     priceTiime
-    serieId
   }
 `;
 
 export class GQLQueriesBuilder {
-  allNFTs = (listed?: string) => gql`
+  allNFTs = (first?: string, limit?: string, listed?: string) => gql`
     {
-      nftEntities(
-        orderBy: TIMESTAMP_BURN_ASC, 
-        filter: { 
-          and: [
-            { timestampBurn: { isNull: true } }
-            { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
-            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
-          ]
-        }
-      ) {
-        ${nodes}
-      }
-    }
-  `;
-
-  allNFTsPaginated = (first: number, offset: number, listed?: string) => gql`
-    {
-      nftEntities(
-        orderBy: TIMESTAMP_BURN_ASC
-        first: ${first}
-        offset: ${offset}
-        filter: { 
-          and: [
-            { timestampBurn: { isNull: true } }
-            { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
-            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
+      distinctSerieNfts(
+        ${first && limit ? `
+            first: ${Number(first)}
+            offset: ${(Number(limit) - 1) * Number(first)}
+        ` : ""}
+        ${listed && listed !== undefined ? `listed: ${Number(listed)}` : ""}
+        filter:{
+          and:[
           ]
         }
       ) {
         totalCount
-        pageInfo {
-          hasNextPage
-          hasPreviousPage
-        }
+        ${first && limit ? `
+          pageInfo {
+            hasNextPage
+            hasPreviousPage
+          }
+        ` : ""}
         ${nodes}
       }
     }
@@ -62,7 +46,6 @@ export class GQLQueriesBuilder {
         filter: { 
           and: [
             { timestampBurn: { isNull: true } }
-            { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
             { id: { equalTo: "${id}" } }
           ]
         }
@@ -72,203 +55,113 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  NFTsFromOwnerId = (id: string, listed?: string) => gql`
+  NFTsFromOwnerId = (id: string, first?: string, limit?: string, listed?: string) => gql`
     {
-      nftEntities(
-        orderBy: OWNER_ASC
-        filter: {
-          and: [
-            { timestampBurn: { isNull: true } }
-            { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
-            { owner: { equalTo: "${id}" } }
-            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
+      distinctSerieNfts(
+        ${first && limit ? `
+            first: ${Number(first)}
+            offset: ${(Number(limit) - 1) * Number(first)}
+        ` : ""}
+        ${listed && listed !== undefined ? `listed: ${Number(listed)}` : ""}
+        owner: "${id}"
+        filter:{
+          and:[
           ]
         }
       ) {
         totalCount
+        ${first && limit ? `
+          pageInfo {
+            hasNextPage
+            hasPreviousPage
+          }
+        ` : ""}
         ${nodes}
       }
     }
   `;
 
-  NFTsFromOwnerIdPaginated = (id: string, first: number, offset: number, listed?:string) => gql`
+  NFTsFromCreatorId = (id: string, first?: string, limit?: string, listed?: string) => gql`
     {
-      nftEntities(
-        orderBy: OWNER_ASC
+      distinctSerieNfts(
+        ${first && limit ? `
+            first: ${Number(first)}
+            offset: ${(Number(limit) - 1) * Number(first)}
+        ` : ""}
+        ${listed && listed !== undefined ? `listed: ${Number(listed)}` : ""}
         filter: {
           and: [
-            { timestampBurn: { isNull: true } }
-            { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
-            { owner: { equalTo: "${id}" } }
-            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
-          ]
-        }
-        first: ${first}
-        offset: ${offset}
-      ) {
-        totalCount
-        pageInfo {
-          hasNextPage
-          hasPreviousPage
-        }
-        ${nodes}
-      }
-    }
-  `;
-
-  NFTsFromCreatorId = (id: string, listed?: string) => gql`
-    {
-      nftEntities(
-        orderBy: CREATOR_ASC
-        filter: {
-          and: [
-            { timestampBurn: { isNull: true } }
-            { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
             { creator: { equalTo: "${id}" } }
-            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
           ]
         }
       ) {
         totalCount
+        ${first && limit ? `
+          pageInfo {
+            hasNextPage
+            hasPreviousPage
+          }
+        ` : ""}
         ${nodes}
       }
     }
   `;
 
-  NFTsFromCreatorIdPaginated = (
-    id: string,
-    first: number,
-    offset: number,
-    listed?: string
-  ) => gql`
+  NFTsFromIds = (ids: string[], first?: string, limit?: string, listed?: string) => gql`
     {
-      nftEntities(
-        orderBy: CREATOR_ASC
-        filter: {
-          and: [
-            { timestampBurn: { isNull: true } }
-            { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
-            { creator: { equalTo: "${id}" } }
-            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
-          ]
-        }
-        first: ${first}
-        offset: ${offset}
-      ) {
-        totalCount
-        pageInfo {
-          hasNextPage
-          hasPreviousPage
-        }
-        ${nodes}
-      }
-    }
-  `;
-
-  NFTsFromIds = (ids: string[], listed?: string) => gql`
-    {
-      nftEntities(
+      distinctSerieNfts(
+        ${first && limit ? `
+            first: ${Number(first)}
+            offset: ${(Number(limit) - 1) * Number(first)}
+        ` : ""}
+        ${listed && listed !== undefined ? `listed: ${Number(listed)}` : ""}
         orderBy: ID_ASC
         filter: {
           and: [
-            { timestampBurn: { isNull: true } }
-            { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
             { id: { in: ${JSON.stringify(ids)} } }
-            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
           ]
         }
       ) {
+        totalCount
+        ${first && limit ? `
+          pageInfo {
+            hasNextPage
+            hasPreviousPage
+          }
+        ` : ""}
         ${nodes}
       }
     }
   `;
 
-  NFTsNotInIds = (ids: string[], listed?: string) => gql`
+  NFTsNotInIds = (ids: string[], first?: string, limit?: string, listed?: string) => gql`
     {
-      nftEntities(
+      distinctSerieNfts(
+        ${first && limit ? `
+            first: ${Number(first)}
+            offset: ${(Number(limit) - 1) * Number(first)}
+        ` : ""}
+        ${listed && listed !== undefined ? `listed: ${Number(listed)}` : ""}
         orderBy: ID_ASC
         filter: {
           and: [
-            { timestampBurn: { isNull: true } }
-            { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
             { not: { id: { in: ${JSON.stringify(ids)} } } }
-            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
-          ]
-        }
-      ) {
-        ${nodes}
-      }
-    }
-  `;
-
-  NFTsNotInIdsPaginated = (ids: string[], first: number, offset: number, listed?: string) => gql`
-    {
-      nftEntities(
-        orderBy: ID_ASC
-        first: ${first}
-        offset: ${offset}
-        filter: { 
-          and: [
-            { timestampBurn: { isNull: true } }
-            { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
-            { not: { id: { in: ${JSON.stringify(ids)} } } }
-            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} } }` : ""}
           ]
         }
       ) {
         totalCount
-        pageInfo {
-          hasNextPage
-          hasPreviousPage
-        }
+        ${first && limit ? `
+          pageInfo {
+            hasNextPage
+            hasPreviousPage
+          }
+        ` : ""}
         ${nodes}
       }
     }
   `;
 
-  
-  NFTsForSerieOwnerPrice = (serieId: string, ownerId: string, price: string, priceTiime: string) => gql`
-    {
-      nftEntities(
-        filter: { 
-          and : [
-            { timestampBurn:{ isNull:true } }
-            { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
-            { serieId:{ equalTo:"${serieId}" } }
-            { owner: { equalTo: "${ownerId}" } }
-            { price:{ 
-              ${price !== null ? 
-                (price !== "" ? 
-                  `equalTo:"${price}"`
-                :
-                  `equalTo:""`
-                )
-              : 
-                "isNull: true"
-              } 
-            } }
-            { priceTiime:{ 
-              ${priceTiime !== null ? 
-                (priceTiime !== "" ? 
-                  `equalTo:"${priceTiime}"`
-                :
-                  `equalTo:""`
-                )
-              : 
-                "isNull: true"
-              } 
-            } }
-          ]
-        }
-      )
-      {
-        totalCount
-        ${nodes}
-      }
-    }
-  `;
-
-  NFTsForSerie = (serieId: string) => {
+  NFTsForSerie = (serieId: string, first?: string, limit?: string) => {
     const nodesSerieData = `
       nodes {
         id
@@ -281,33 +174,51 @@ export class GQLQueriesBuilder {
     return gql`
       {
         nftEntities(
+          ${first && limit ? `
+              first: ${Number(first)}
+              offset: ${(Number(limit) - 1) * Number(first)}
+          ` : ""}
           filter: {
             and : [
               { timestampBurn:{ isNull:true } }
-              { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
               { serieId:{ equalTo:"${serieId}" } }
             ]
           }
         )
         {
           totalCount
+          ${first && limit ? `
+            pageInfo {
+              hasNextPage
+              hasPreviousPage
+            }
+          ` : ""}
           ${nodesSerieData}
         }
       }
     `;
   }
 
-  NFTsForSeries = (serieIds: string[]) => gql`
+  NFTsForSeries = (serieIds: string[], first?: string, limit?: string) => gql`
     {
-      nftEntities(
+      distinctSerieNfts(
+        ${first && limit ? `
+            first: ${Number(first)}
+            offset: ${(Number(limit) - 1) * Number(first)}
+        ` : ""}
         filter: {
           and: [
-            { timestampBurn: { isNull: true } }
-            { not: { id: { in: ${process.env.BAD_NFT_IDS===undefined || process.env.BAD_NFT_IDS==="" ? "[]" : process.env.BAD_NFT_IDS} } } }
             { serieId: { in: ${JSON.stringify(serieIds)} } }
           ]
         }
       ) {
+        totalCount
+        ${first && limit ? `
+          pageInfo {
+            hasNextPage
+            hasPreviousPage
+          }
+        ` : ""}
         ${nodes}
       }
     }

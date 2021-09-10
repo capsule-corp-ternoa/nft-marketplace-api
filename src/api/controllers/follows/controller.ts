@@ -1,7 +1,6 @@
-import FollowService from "../../../../services/V1/mpServices/follow";
-
-import L from "../../../../../common/logger";
+import FollowService from "../../services/follow";
 import { NextFunction, Request, Response } from "express";
+import { LIMIT_MAX_PAGINATION } from "../../../utils";
 
 export class Controller {
   async follow(
@@ -53,7 +52,10 @@ export class Controller {
   ): Promise<void> {
     try{
       if (!req.params.walletId) next(new Error("wallet id parameter is needed"));
-      const users = await FollowService.getUserFollowers(req.params.walletId)
+      const {page, limit} = req.query
+      if (page && (isNaN(Number(page)) || Number(page) < 1)) throw new Error("Page argument is invalid")
+      if (limit && (isNaN(Number(limit)) || Number(limit) < 1 || Number(limit) > LIMIT_MAX_PAGINATION)) throw new Error("Limit argument is invalid")
+      const users = await FollowService.getUserFollowers(req.params.walletId, page as string, limit as string)
       res.json(users);
     }catch(err){
       next(err);
@@ -67,7 +69,10 @@ export class Controller {
   ): Promise<void> {
     try{
       if (!req.params.walletId) next(new Error("wallet id parameter is needed"));
-      const users = await FollowService.getUserFollowings(req.params.walletId)
+      const {page, limit} = req.query
+      if (page && (isNaN(Number(page)) || Number(page) < 1)) throw new Error("Page argument is invalid")
+      if (limit && (isNaN(Number(limit)) || Number(limit) < 1 || Number(limit) > LIMIT_MAX_PAGINATION)) throw new Error("Limit argument is invalid")
+      const users = await FollowService.getUserFollowings(req.params.walletId, page as string, limit as string)
       res.json(users);
     }catch(err){
       next(err);

@@ -1,7 +1,8 @@
-import FollowModel from "../../../../models/follow";
-import { IUser } from "../../../../interfaces/IUser";
-import UserModel from "../../../../models/user";
+import FollowModel from "../../models/follow";
+import { IUser } from "../../interfaces/IUser";
+import UserModel from "../../models/user";
 import { IFollow } from "src/interfaces/IFollow";
+import { PaginateResult } from "mongoose";
 
 export class FollowService {
   /**
@@ -81,13 +82,26 @@ export class FollowService {
    * @param walletId - The user's wallet id
    * @throws Will throw an error if followers can't be fetched
    */
-  async getUserFollowers(walletId: string): Promise<IFollow[]> {
+  async getUserFollowers(walletId: string, page?: string, limit?: string): Promise<IFollow[] | PaginateResult<IFollow>> {
     try {
       const user = await UserModel.findOne({walletId}) 
       if (!user) throw new Error()
-      const follows: any[] = await FollowModel.find({ followed: user._id })
-        .populate("follower");
-      return follows;
+      if (!page || !limit){
+        const follows: any[] = await FollowModel.find({ followed: user._id })
+          .populate("follower");
+        return follows;
+      }else{
+        const follows: PaginateResult<IFollow> = await FollowModel.paginate(
+          { followed: user._id }, 
+          {
+            page: Number(page), 
+            limit: Number(limit),
+            populate: "follower"
+          }
+        )
+        return follows;
+      }
+      
     } catch (err) {
       throw new Error("Followers can't be fetched");
     }
@@ -98,13 +112,25 @@ export class FollowService {
    * @param walletId - The user's wallet id
    * @throws Will throw an error if followings can't be fetched
    */
-  async getUserFollowings(walletId: string): Promise<IFollow[]> {
+  async getUserFollowings(walletId: string, page?: string, limit?: string): Promise<IFollow[] | PaginateResult<IFollow>> {
     try {
       const user = await UserModel.findOne({walletId}) 
       if (!user) throw new Error()
-      const follows: any[] = await FollowModel.find({ follower: user._id })
-        .populate("followed");
-      return follows;
+      if (!page || !limit){
+        const follows: any[] = await FollowModel.find({ follower: user._id })
+          .populate("followed");
+        return follows;
+      }else{
+        const follows: PaginateResult<IFollow> = await FollowModel.paginate(
+          { follower: user._id }, 
+          {
+            page: Number(page), 
+            limit: Number(limit),
+            populate: "followed"
+          }
+        )
+        return follows;
+      }
     } catch (err) {
       throw new Error("Followings can't be fetched");
     }
