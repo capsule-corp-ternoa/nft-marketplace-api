@@ -71,10 +71,3 @@ export interface AccountResponse {
     nodes: Account[];
   };
 }
-
-export interface PaginationResponse<DataType> {
-  totalCount: number;
-  hasNextPage?: boolean;
-  hasPreviousPage?: boolean;
-  data: DataType;
-}
