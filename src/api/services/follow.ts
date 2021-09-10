@@ -82,7 +82,7 @@ export class FollowService {
    * @param walletId - The user's wallet id
    * @throws Will throw an error if followers can't be fetched
    */
-  async getUserFollowers(walletId: string, page?: number, limit?: number): Promise<IFollow[] | PaginateResult<IFollow>> {
+  async getUserFollowers(walletId: string, page?: string, limit?: string): Promise<IFollow[] | PaginateResult<IFollow>> {
     try {
       const user = await UserModel.findOne({walletId}) 
       if (!user) throw new Error()
@@ -94,8 +94,8 @@ export class FollowService {
         const follows: PaginateResult<IFollow> = await FollowModel.paginate(
           { followed: user._id }, 
           {
-            page, 
-            limit,
+            page: Number(page), 
+            limit: Number(limit),
             populate: "follower"
           }
         )
@@ -112,7 +112,7 @@ export class FollowService {
    * @param walletId - The user's wallet id
    * @throws Will throw an error if followings can't be fetched
    */
-  async getUserFollowings(walletId: string, page?: number, limit?: number): Promise<IFollow[] | PaginateResult<IFollow>> {
+  async getUserFollowings(walletId: string, page?: string, limit?: string): Promise<IFollow[] | PaginateResult<IFollow>> {
     try {
       const user = await UserModel.findOne({walletId}) 
       if (!user) throw new Error()
@@ -124,8 +124,8 @@ export class FollowService {
         const follows: PaginateResult<IFollow> = await FollowModel.paginate(
           { follower: user._id }, 
           {
-            page, 
-            limit,
+            page: Number(page), 
+            limit: Number(limit),
             populate: "followed"
           }
         )

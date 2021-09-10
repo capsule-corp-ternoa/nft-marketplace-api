@@ -1,6 +1,6 @@
 import { request } from "graphql-request";
 import { IUser, IUserDTO } from "../../interfaces/IUser";
-import { ICompleteNFT, PaginationResponse } from "../../interfaces/graphQL";
+import { DistinctNFTListPaginatedResponse, DistinctNFTListResponse } from "../../interfaces/graphQL";
 import UserModel from "../../models/user";
 import UserViewModel from "../../models/userView";
 import QueriesBuilder from "./gqlQueriesBuilder";
@@ -236,34 +236,15 @@ export class UserService {
   /**
    * gets liked NFTs
    * @param walletId - wallet Id
+   * @param page? - Page number
+   * @param limit? - Number of elements per page
    * @throws Will throw an error if db can't be reached
    */
-   async getLikedNfts(walletId: string): Promise<ICompleteNFT[]> {
+   async getLikedNfts(walletId: string, page?: string, limit?: string): Promise<DistinctNFTListResponse | DistinctNFTListPaginatedResponse> {
     try {
       const user  = await UserModel.findOne({walletId});
-      if (!user) throw new Error()
-      if (!user.likedNFTs) return []
-      const nfts = (await NFTService.getNFTsFromIds(user.likedNFTs.map(x=>x.nftId)))
-      return nfts
-    } catch (err) {
-      throw new Error("Couldn't get liked NFTs");
-    }
-  }
-
-/**
- * gets liked NFTs paginated
- * @param walletId - wallet Id
- * @param page - Page number
- * @param limit - Number of elements per page
- * @throws Will throw an error if db can't be reached
- */
-  async getLikedNftsPaginated(walletId: string, page: number, limit: number): Promise<PaginationResponse<ICompleteNFT[]>> {
-    try {
-      const user  = await UserModel.findOne({walletId});
-      if (!user) throw new Error()
-      if (!user.likedNFTs) return {data: [], hasNextPage: false, hasPreviousPage: false, totalCount: 0}
-      const nfts = await NFTService.getPaginatedNFTsFromIds(user.likedNFTs.map(x=>x.nftId), page, limit)
-      return nfts
+      if (!user.likedNFTs) return {distinctSerieNfts: {nodes: []}}
+      return (await NFTService.getNFTsFromIds(user.likedNFTs.map(x=>x.nftId), page, limit))
     } catch (err) {
       throw new Error("Couldn't get liked NFTs");
     }

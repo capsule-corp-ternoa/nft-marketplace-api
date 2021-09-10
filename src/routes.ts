@@ -5,7 +5,6 @@ import categoriesRouter from "./api/controllers/categories/router";
 import followRouter from "./api/controllers/follows/router";
 
 export default function routes(app: Application): void {
-  // Marketplace routes
   app.use("/api/users", usersRouter);
   app.use("/api/NFTs", nftsRouter);
   app.use("/api/categories", categoriesRouter);
