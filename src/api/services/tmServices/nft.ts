@@ -174,7 +174,8 @@ export class NFTService {
    */
    async getNFTsDistribution(serieId: string, ownerId: string, usersNumber: number, usersToExclude: string[], specialNFTsIds: string[]): Promise<any> {
     try {
-      const finalBatch = {} as any
+      let finalBatch = {} as any
+      const finalBatches = [] as any
       const mongoInstance = new mongoose.Mongoose()
       const tmDB = mongoInstance.connection
       await new Promise<void>((resolve, reject) => {
@@ -220,6 +221,10 @@ export class NFTService {
       L.info("Give classic NFTs depending on ranking...");
       classicNFTs.forEach((nft, i) => {
         if (users[i]) finalBatch[nft.id] = users[i]._id
+        if (Object.keys(finalBatch).length >= 1000){
+          finalBatches.push(finalBatch)
+          finalBatch={}
+        }
       });
       L.info("response ok");
       L.info("building special file");
@@ -228,7 +233,7 @@ export class NFTService {
         L.info("special file saved");
       })
       L.info("building file");
-      fs.writeFile("nft-distribution-" + new Date().toISOString().split('T')[0] + ".json", JSON.stringify(finalBatch), (err) => {
+      fs.writeFile("nft-distribution-" + new Date().toISOString().split('T')[0] + ".json", JSON.stringify(finalBatches), (err) => {
         if (err) throw err
         L.info("file saved");
       })
