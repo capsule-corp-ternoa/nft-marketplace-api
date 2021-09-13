@@ -15,12 +15,12 @@ const nodes = `
 `;
 
 export class GQLQueriesBuilder {
-  allNFTs = (first?: string, limit?: string, listed?: string) => gql`
+  allNFTs = (first?: string, page?: string, listed?: string) => gql`
     {
       distinctSerieNfts(
-        ${first && limit ? `
+        ${first && page ? `
             first: ${Number(first)}
-            offset: ${(Number(limit) - 1) * Number(first)}
+            offset: ${(Number(page) - 1) * Number(first)}
         ` : ""}
         ${listed && listed !== undefined ? `listed: ${Number(listed)}` : ""}
         filter:{
@@ -29,7 +29,7 @@ export class GQLQueriesBuilder {
         }
       ) {
         totalCount
-        ${first && limit ? `
+        ${first && page ? `
           pageInfo {
             hasNextPage
             hasPreviousPage
@@ -55,12 +55,12 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  NFTsFromOwnerId = (id: string, first?: string, limit?: string, listed?: string) => gql`
+  NFTsFromOwnerId = (id: string, first?: string, page?: string, listed?: string) => gql`
     {
       distinctSerieNfts(
-        ${first && limit ? `
+        ${first && page ? `
             first: ${Number(first)}
-            offset: ${(Number(limit) - 1) * Number(first)}
+            offset: ${(Number(page) - 1) * Number(first)}
         ` : ""}
         ${listed && listed !== undefined ? `listed: ${Number(listed)}` : ""}
         owner: "${id}"
@@ -70,7 +70,7 @@ export class GQLQueriesBuilder {
         }
       ) {
         totalCount
-        ${first && limit ? `
+        ${first && page ? `
           pageInfo {
             hasNextPage
             hasPreviousPage
@@ -81,12 +81,12 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  NFTsFromCreatorId = (id: string, first?: string, limit?: string, listed?: string) => gql`
+  NFTsFromCreatorId = (id: string, first?: string, page?: string, listed?: string) => gql`
     {
       distinctSerieNfts(
-        ${first && limit ? `
+        ${first && page ? `
             first: ${Number(first)}
-            offset: ${(Number(limit) - 1) * Number(first)}
+            offset: ${(Number(page) - 1) * Number(first)}
         ` : ""}
         ${listed && listed !== undefined ? `listed: ${Number(listed)}` : ""}
         filter: {
@@ -96,7 +96,7 @@ export class GQLQueriesBuilder {
         }
       ) {
         totalCount
-        ${first && limit ? `
+        ${first && page ? `
           pageInfo {
             hasNextPage
             hasPreviousPage
@@ -107,12 +107,12 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  NFTsFromIds = (ids: string[], first?: string, limit?: string, listed?: string) => gql`
+  NFTsFromIds = (ids: string[], first?: string, page?: string, listed?: string) => gql`
     {
       distinctSerieNfts(
-        ${first && limit ? `
+        ${first && page ? `
             first: ${Number(first)}
-            offset: ${(Number(limit) - 1) * Number(first)}
+            offset: ${(Number(page) - 1) * Number(first)}
         ` : ""}
         ${listed && listed !== undefined ? `listed: ${Number(listed)}` : ""}
         orderBy: ID_ASC
@@ -123,7 +123,7 @@ export class GQLQueriesBuilder {
         }
       ) {
         totalCount
-        ${first && limit ? `
+        ${first && page ? `
           pageInfo {
             hasNextPage
             hasPreviousPage
@@ -134,12 +134,12 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  NFTsNotInIds = (ids: string[], first?: string, limit?: string, listed?: string) => gql`
+  NFTsNotInIds = (ids: string[], first?: string, page?: string, listed?: string) => gql`
     {
       distinctSerieNfts(
-        ${first && limit ? `
+        ${first && page ? `
             first: ${Number(first)}
-            offset: ${(Number(limit) - 1) * Number(first)}
+            offset: ${(Number(page) - 1) * Number(first)}
         ` : ""}
         ${listed && listed !== undefined ? `listed: ${Number(listed)}` : ""}
         orderBy: ID_ASC
@@ -150,7 +150,7 @@ export class GQLQueriesBuilder {
         }
       ) {
         totalCount
-        ${first && limit ? `
+        ${first && page ? `
           pageInfo {
             hasNextPage
             hasPreviousPage
@@ -161,7 +161,7 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  NFTsForSerie = (serieId: string, first?: string, limit?: string) => {
+  NFTsForSerie = (serieId: string, first?: string, page?: string) => {
     const nodesSerieData = `
       nodes {
         id
@@ -174,9 +174,9 @@ export class GQLQueriesBuilder {
     return gql`
       {
         nftEntities(
-          ${first && limit ? `
+          ${first && page ? `
               first: ${Number(first)}
-              offset: ${(Number(limit) - 1) * Number(first)}
+              offset: ${(Number(page) - 1) * Number(first)}
           ` : ""}
           filter: {
             and : [
@@ -187,7 +187,7 @@ export class GQLQueriesBuilder {
         )
         {
           totalCount
-          ${first && limit ? `
+          ${first && page ? `
             pageInfo {
               hasNextPage
               hasPreviousPage
@@ -199,12 +199,12 @@ export class GQLQueriesBuilder {
     `;
   }
 
-  NFTsForSeries = (serieIds: string[], first?: string, limit?: string) => gql`
+  NFTsForSeries = (serieIds: string[], first?: string, page?: string) => gql`
     {
       distinctSerieNfts(
-        ${first && limit ? `
+        ${first && page ? `
             first: ${Number(first)}
-            offset: ${(Number(limit) - 1) * Number(first)}
+            offset: ${(Number(page) - 1) * Number(first)}
         ` : ""}
         filter: {
           and: [
@@ -213,7 +213,7 @@ export class GQLQueriesBuilder {
         }
       ) {
         totalCount
-        ${first && limit ? `
+        ${first && page ? `
           pageInfo {
             hasNextPage
             hasPreviousPage
