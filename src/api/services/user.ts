@@ -106,13 +106,13 @@ export class UserService {
 
   /**
    * Finds multiple users in DB
-   * @param ids - An array of users mongo ids
+   * @param wallet ids - An array of users wallet ids
    * @throws Will throw an error if DB can't be reached
    * @return A promise that resolves to the users
    */
-  async findUsersById(ids: string[]): Promise<IUser[]> {
+  async findUsersByWalletId(walletIds: string[]): Promise<IUser[]> {
     try {
-      const users = UserModel.find({ _id: { $in: ids } });
+      const users = UserModel.find({ walletId: { $in: walletIds } });
       return users;
     } catch (err) {
       throw new Error("Users can't be found");
