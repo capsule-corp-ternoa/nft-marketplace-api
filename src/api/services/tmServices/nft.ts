@@ -193,6 +193,11 @@ export class NFTService {
           resolve();
         });
       });
+      L.info("creating folder...");
+      if (!fs.existsSync('./nfts-distribution')) {
+        fs.mkdirSync('./nfts-distribution')
+      }
+
       L.info("retrieving users...");
       const users = await (await tmDB.collection('users').find({$and: [{_id: { $nin: usersToExclude}}, {status: {$ne: 'banned'}}]}, {projection: {_id: 1, tiimeAmount: 1}}))
         .sort({tiimeAmount: -1, lastClaimedAt: 1})
@@ -224,17 +229,24 @@ export class NFTService {
         if (users[i]) finalBatch[nft.id] = users[i]._id
         if (Object.keys(finalBatch).length >= 1000){
           finalBatches.push(finalBatch)
+          fs.writeFile("./nfts-distribution/nft-distribution-"+ i +" "+ new Date().toISOString().split('T')[0] + ".json", JSON.stringify(finalBatch), (err) => {
+            if (err) throw err
+          })
           finalBatch={}
         }
       });
+      finalBatches.push(finalBatch)
+      fs.writeFile("./nfts-distribution/nft-distribution-last" +" "+ new Date().toISOString().split('T')[0] + ".json", JSON.stringify(finalBatch), (err) => {
+        if (err) throw err
+      })
       L.info("response ok");
       L.info("building special file");
-      fs.writeFile("nft-distribution-only-special-" + new Date().toISOString().split('T')[0] + ".json", JSON.stringify(specialNFTsDraw), (err) => {
+      fs.writeFile("./nfts-distribution/nft-distribution-only-special-" + new Date().toISOString().split('T')[0] + ".json", JSON.stringify(specialNFTsDraw), (err) => {
         if (err) throw err
         L.info("special file saved");
       })
       L.info("building file");
-      fs.writeFile("nft-distribution-" + new Date().toISOString().split('T')[0] + ".json", JSON.stringify(finalBatches), (err) => {
+      fs.writeFile("./nfts-distribution/nft-distribution-" + new Date().toISOString().split('T')[0] + ".json", JSON.stringify(finalBatches), (err) => {
         if (err) throw err
         L.info("file saved");
       })
