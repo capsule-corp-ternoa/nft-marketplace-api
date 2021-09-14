@@ -194,14 +194,15 @@ export class NFTService {
         });
       });
       L.info("retrieving users...");
-      const users = await (await tmDB.collection('users').find({_id: { $nin: usersToExclude}}, {projection: {_id: 1, tiimeAmount: 1}}))
+      const users = await (await tmDB.collection('users').find({$and: [{_id: { $nin: usersToExclude}}, {status: {$ne: 'banned'}}]}, {projection: {_id: 1, tiimeAmount: 1}}))
         .sort({tiimeAmount: -1, lastClaimedAt: 1})
         .limit(usersNumber)
         .toArray()
       L.info("users retrieved, total : " + users.length);
+      L.info("users excluded length : " + usersToExclude.length);
       L.info("users excluded : " + usersToExclude);
       L.info("retrieving all nfts...");
-      const nfts = (await this.getNFTsIdsForSerie(serieId, ownerId)).nftEntities.nodes// .filter(x => !specialNFTsIds.includes(x.id))
+      const nfts = (await this.getNFTsIdsForSerie(serieId, ownerId)).nftEntities.nodes
       L.info("nfts retrieved, total : " + nfts.length);
       L.info("Special and classic nfts separation...");
       const specialNFTs = nfts.filter(x => specialNFTsIds.includes(x.id))
