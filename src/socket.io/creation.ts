@@ -16,6 +16,26 @@ export default (io: Namespace) => {
     } else {
       await socket.join(session);
       L.info('socked ' + socket.id + ' joined to session ' + session) + ' room size='+io.adapter.rooms.get(session as string).size;
+      socket.on('PGPS_READY', (data, callback)=>{
+        const validCallback = callback && typeof callback === "function";
+        socket.to(`${session}`).emit("PGPS_READY", data);
+        validCallback && callback({ ok: true });
+      })
+      socket.on('PGPS_READY_RECEIVED', (data, callback)=>{
+        const validCallback = callback && typeof callback === "function";
+        socket.to(`${session}`).emit("PGPS_READY_RECEIVED", data);
+        validCallback && callback({ ok: true });
+      })
+      socket.on('RUN_NFT_MINT', (data, callback)=>{
+        const validCallback = callback && typeof callback === "function";
+        socket.to(`${session}`).emit("RUN_NFT_MINT", data);
+        validCallback && callback({ ok: true });
+      })
+      socket.on('RUN_NFT_MINT_RECEIVED', (data, callback)=>{
+        const validCallback = callback && typeof callback === "function";
+        socket.to(`${session}`).emit("RUN_NFT_MINT_RECEIVED", data);
+        validCallback && callback({ ok: true });
+      })
       socket.on("MINTING_NFT", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("MINTING_NFT", data);
