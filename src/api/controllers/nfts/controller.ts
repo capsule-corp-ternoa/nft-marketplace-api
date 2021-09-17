@@ -62,6 +62,20 @@ export class Controller {
     }
   }
 
+  async getStatNFTsUser(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    if (!req.params.id) next(new Error("id param is needed"));
+    try {
+      res.json(await NFTService.getStatNFTsUser(req.params.id));
+    } catch (err) {
+      next(err);
+    }
+  }
+
+
   async getCategoriesNFTs(
     req: Request,
     res: Response,

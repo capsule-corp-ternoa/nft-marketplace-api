@@ -15,9 +15,9 @@ export class FollowService {
     try {
       const userFollowed = await UserModel.findOne({walletId: followed}) 
       const userFollower = await UserModel.findOne({walletId: follower}) 
-      if (!userFollowed || !userFollower) throw new Error()
+      if (!userFollowed || !userFollower) throw new Error("user not found")
       let follow = await FollowModel.findOne({followed: userFollowed._id, follower: userFollower._id})
-      if (follow) throw new Error()
+      if (follow) throw new Error("user is already following")
       follow = new FollowModel({followed: userFollowed._id, follower: userFollower._id});
       userFollowed.nbFollowers += 1
       userFollower.nbFollowing += 1
@@ -41,9 +41,9 @@ export class FollowService {
         
         const userFollowed = await UserModel.findOne({walletId: followed}) 
         const userFollower = await UserModel.findOne({walletId: follower}) 
-        if (!userFollowed || !userFollower) throw new Error()
+        if (!userFollowed || !userFollower) throw new Error("user not found")
         const follow = await FollowModel.findOne({followed: userFollowed._id, follower: userFollower._id})
-        if (!follow) throw new Error()
+        if (!follow) throw new Error("user is already not following")
         userFollowed.nbFollowers -= 1
         userFollower.nbFollowing -= 1
         await follow.delete()
@@ -73,7 +73,7 @@ export class FollowService {
           return {isFollowing: false}
         }
       } catch (err) {
-        throw new Error("Couldn't follow user");
+        throw new Error("Couldn't retrieve follow");
       }
     }
 

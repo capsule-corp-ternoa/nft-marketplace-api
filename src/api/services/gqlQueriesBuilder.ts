@@ -109,6 +109,33 @@ export class GQLQueriesBuilder {
 
   NFTsFromIds = (ids: string[], first?: string, page?: string, listed?: string) => gql`
     {
+      nftEntities(
+        ${first && page ? `
+            first: ${Number(first)}
+            offset: ${(Number(page) - 1) * Number(first)}
+        ` : ""}
+        orderBy: ID_ASC
+        filter: {
+          and: [
+            { id: { in: ${JSON.stringify(ids)} } }
+            ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} }}` : ""}
+          ]
+        }
+      ) {
+        totalCount
+        ${first && page ? `
+          pageInfo {
+            hasNextPage
+            hasPreviousPage
+          }
+        ` : ""}
+        ${nodes}
+      }
+    }
+  `;
+
+  NFTsFromIdsDistinct = (ids: string[], first?: string, page?: string, listed?: string) => gql`
+    {
       distinctSerieNfts(
         ${first && page ? `
             first: ${Number(first)}
@@ -224,6 +251,67 @@ export class GQLQueriesBuilder {
     }
   `;
 
+  countOwnerOwned = (id: string) => gql`
+    {
+      nftEntities(
+        filter: { 
+          and: [
+            { timestampBurn: { isNull: true } }
+            { owner: { equalTo: "${id}" } }
+          ]
+        }
+      ) {
+        totalCount
+      }
+    }
+  `;
+  countOwnerOwnedListed = (id: string) => gql`
+    {
+      nftEntities(
+        filter: { 
+          and: [
+            { timestampBurn: { isNull: true } }
+            { owner: { equalTo: "${id}" } }
+            {listed: { equalTo: 1}}
+          ]
+        }
+      ) {
+        totalCount
+      }
+    }
+  `;
+
+  countOwnerOwnedUnlisted = (id: string) => gql`
+    {
+      nftEntities(
+        filter: { 
+          and: [
+            { timestampBurn: { isNull: true } }
+            { owner: { equalTo: "${id}" } }
+            {listed: { equalTo: 0}}
+          ]
+        }
+      ) {
+        totalCount
+      }
+    }
+  `;
+
+  countCreated = (id: string) => gql`
+    {
+      nftEntities(
+        filter: { 
+          and: [
+            { timestampBurn: { isNull: true } }
+            { creator: { equalTo: "${id}" } }
+          ]
+        }
+      ) {
+        totalCount
+      }
+    }
+  `;
+
   capsBalanceFromId = (id: string) => gql`
     {
       accountEntities(
@@ -238,6 +326,7 @@ export class GQLQueriesBuilder {
       }
     }
   `;
+
 }
 
 export default new GQLQueriesBuilder();

@@ -8,6 +8,8 @@ import {
   NFTListResponse,
 } from "../../interfaces/graphQL";
 import { IMongoNft, INftDto } from "../../interfaces/INft";
+import UserModel from "../../models/user";
+import FollowModel from "../../models/follow";
 import NftModel from "../../models/nft";
 import NftViewModel from "../../models/nftView";
 import CategoryService from "./category"
@@ -117,6 +119,42 @@ export class NFTService {
   }
 
   /**
+   * Gets user stat (number of owned, created, listed, not listed, followers, followed)
+   * @param userWalletId - The user's wallet address
+   * @throws Will throw an error if can't request indexer or db or user not find
+   */
+   async getStatNFTsUser(userWalletId: string): Promise<{
+    countOwned: number, 
+    countOwnedListed: number, 
+    countOwnedUnlisted: number, 
+    countCreated: number, 
+    countFollowers: number, 
+    countFollowed: number
+   }> {
+    try {
+      const user = await UserModel.findOne({walletId: userWalletId}) 
+      if (!user) throw new Error('User not found in db')
+      const [owned, ownedListed, ownedUnlisted, created, followers, followed] = await Promise.all([
+        request(indexerUrl, QueriesBuilder.countOwnerOwned(userWalletId)),
+        request(indexerUrl, QueriesBuilder.countOwnerOwnedListed(userWalletId)),
+        request(indexerUrl, QueriesBuilder.countOwnerOwnedUnlisted(userWalletId)),
+        request(indexerUrl, QueriesBuilder.countCreated(userWalletId)),
+        FollowModel.find({ followed: user._id }),
+        FollowModel.find({ follower: user._id })
+      ])
+      const countOwned: number = owned.nftEntities.totalCount;
+      const countOwnedListed: number = ownedListed.nftEntities.totalCount;
+      const countOwnedUnlisted: number = ownedUnlisted.nftEntities.totalCount;
+      const countCreated: number = created.nftEntities.totalCount;
+      const countFollowers: number = followers.length
+      const countFollowed: number = followed.length
+      return {countOwned, countOwnedListed, countOwnedUnlisted, countCreated, countFollowers, countFollowed}
+    } catch (err) {
+      throw new Error("Couldn't get users stat");
+    }
+  }
+
+  /**
    * Returns several nfts from array of ids
    * @param ids - The nfts blockchain ids
    * @param page? - Page number
@@ -124,7 +162,27 @@ export class NFTService {
    * @param listed? - filter for listed (1) or non listed (0), undefined gets all
    * @throws Will throw an error if can't request indexer
    */
-   async getNFTsFromIds(ids: string[], page?: string, limit?: string, listed?: string): Promise<DistinctNFTListResponse | DistinctNFTListPaginatedResponse> {
+   async getNFTsFromIds(ids: string[], page?: string, limit?: string, listed?: string): Promise<NFTListResponse | NFTListPaginatedResponse> {
+    try {
+      const query = QueriesBuilder.NFTsFromIds(ids, limit, page, listed);
+      const result: NFTListResponse | NFTListPaginatedResponse = await request(indexerUrl, query);
+      const NFTs = result.nftEntities.nodes;
+      result.nftEntities.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
+      return result
+    } catch (err) {
+      throw new Error("Couldn't get NFTs from ids");
+    }
+  }
+
+  /**
+   * Returns several nfts from array of ids
+   * @param ids - The nfts blockchain ids
+   * @param page? - Page number
+   * @param limit? - Number of elements per page
+   * @param listed? - filter for listed (1) or non listed (0), undefined gets all
+   * @throws Will throw an error if can't request indexer
+   */
+   async getNFTsFromIdsDistinct(ids: string[], page?: string, limit?: string, listed?: string): Promise<DistinctNFTListResponse | DistinctNFTListPaginatedResponse> {
     try {
       const query = QueriesBuilder.NFTsFromIds(ids, limit, page, listed);
       const result: DistinctNFTListResponse | DistinctNFTListPaginatedResponse = await request(indexerUrl, query);
@@ -189,7 +247,7 @@ export class NFTService {
         )
         const query = {categories: {$in: categories} }
         const mongoNfts = await NftModel.find(query)
-        const result = await this.getNFTsFromIds(
+        const result = await this.getNFTsFromIdsDistinct(
           mongoNfts.map((nft) => nft.chainId),
           page,
           limit,
