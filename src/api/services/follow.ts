@@ -116,7 +116,7 @@ export class FollowService {
     try {
       const user = await UserModel.findOne({walletId}) 
       if (!user) throw new Error()
-      const followedIds: any[] = (await FollowModel.find({ followed: user._id })).map(x => x.followed)
+      const followedIds: any[] = (await FollowModel.find({ follower: user._id })).map(x => x.followed)
       const searchQuery = {$and: [{_id: {$in: followedIds}}]} as any
       if (certifiedOnly) searchQuery.$and.push({verified: true})
       if (nameOrAddressSearch) searchQuery.$and.push({$or: [{name: {$regex: nameOrAddressSearch, $options: "i"}}, {walletId: {$regex: nameOrAddressSearch, $options: "i"}}]})
