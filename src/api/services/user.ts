@@ -1,6 +1,6 @@
 import { request } from "graphql-request";
 import { IUser, IUserDTO } from "../../interfaces/IUser";
-import { DistinctNFTListPaginatedResponse, DistinctNFTListResponse } from "../../interfaces/graphQL";
+import { NFTListPaginatedResponse, NFTListResponse } from "../../interfaces/graphQL";
 import UserModel from "../../models/user";
 import UserViewModel from "../../models/userView";
 import QueriesBuilder from "./gqlQueriesBuilder";
@@ -192,9 +192,9 @@ export class UserService {
       if (!user || !nft) throw new Error()
       if (user.likedNFTs){
         if (nft.serieId === "0"){
-          if (user.likedNFTs.map(x => x.nftId).includes(key.nftId)) throw new Error()
+          if (user.likedNFTs.map(x => x.nftId).includes(key.nftId)) throw new Error("NFT already liked")
         }else{
-          if (user.likedNFTs.map(x => x.serieId).includes(key.serieId)) throw new Error()
+          if (user.likedNFTs.map(x => x.serieId).includes(key.serieId)) throw new Error("NFT already liked")
         }
         user.likedNFTs.push(key)
       }else{
@@ -220,10 +220,10 @@ export class UserService {
       const key = {serieId: nft.serieId, nftId: nft.id}
       if (!user || !nft || !user.likedNFTs) throw new Error()
       if (nft.serieId === "0"){
-        if (!user.likedNFTs.map(x => x.nftId).includes(key.nftId)) throw new Error()
+        if (!user.likedNFTs.map(x => x.nftId).includes(key.nftId)) throw new Error("NFT already not liked")
         user.likedNFTs = user.likedNFTs.filter(x => x.nftId !== key.nftId)
       }else{
-        if (!user.likedNFTs.map(x => x.serieId).includes(key.serieId)) throw new Error()
+        if (!user.likedNFTs.map(x => x.serieId).includes(key.serieId)) throw new Error("NFT already not liked")
         user.likedNFTs = user.likedNFTs.filter(x => x.serieId !== key.serieId)
       }
       await user.save()
@@ -240,11 +240,25 @@ export class UserService {
    * @param limit? - Number of elements per page
    * @throws Will throw an error if db can't be reached
    */
-   async getLikedNfts(walletId: string, page?: string, limit?: string): Promise<DistinctNFTListResponse | DistinctNFTListPaginatedResponse> {
+   async getLikedNfts(walletId: string, page?: string, limit?: string): Promise<NFTListResponse |NFTListPaginatedResponse> {
     try {
-      const user  = await UserModel.findOne({walletId});
-      if (!user.likedNFTs) return {distinctSerieNfts: {nodes: []}}
-      return (await NFTService.getNFTsFromIds(user.likedNFTs.map(x=>x.nftId), page, limit))
+      if (page && limit){
+        const totalLikedNfts = (await UserModel.findOne({walletId})).likedNFTs.length
+        const likedIndexStart = (Number(page)-1)*Number(limit)
+        const hasNextPage = likedIndexStart+Number(limit) < totalLikedNfts
+        const hasPreviousPage = Number(page) > 1 && likedIndexStart>0
+        if (likedIndexStart >= totalLikedNfts) throw new Error("Pagination parameters are incorrect");
+        const user  = await UserModel.findOne({walletId}, {likedNFTs: {$slice: [likedIndexStart, Number(limit)]}});
+        if (!user.likedNFTs) return {nftEntities: {nodes: [], totalCount: 0, pageInfo: {hasNextPage: false, hasPreviousPage:false}}}
+        const res = await NFTService.getNFTsFromIds(user.likedNFTs.map(x=>x.nftId)) as NFTListPaginatedResponse
+        res.nftEntities.pageInfo = {hasNextPage, hasPreviousPage}
+        return res
+      }else{
+        const user  = await UserModel.findOne({walletId});
+        if (!user.likedNFTs) return {nftEntities: {nodes: [], totalCount: 0}}
+        const res = await NFTService.getNFTsFromIds(user.likedNFTs.map(x=>x.nftId))
+        return res
+      }
     } catch (err) {
       throw new Error("Couldn't get liked NFTs");
     }
