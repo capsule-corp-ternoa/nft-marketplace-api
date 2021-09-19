@@ -4,6 +4,7 @@ import { decodeAddress, signatureVerify } from '@polkadot/util-crypto';
 import { u8aToHex } from '@polkadot/util';
 
 export const TIME_BETWEEN_SAME_USER_VIEWS = 10000
+export const LIMIT_MAX_PAGINATION = 50
 
 export const fetchTimeout = (url: string, options: any = null, timeoutLimit = 30000) => {
     const controller = new AbortController();

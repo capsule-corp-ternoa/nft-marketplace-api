@@ -1,8 +1,7 @@
 import { ICompleteNFT, INFT } from "../../interfaces/graphQL";
-import UserService from "../services/V1/mpServices/user";
+import UserService from "../services/user";
 import L from "../../common/logger";
-import NFTService from "../services/V2/mpServices/nft";
-import NFTServiceV1 from "../services/V1/mpServices/nft";
+import NFTService from "../services/nft";
 import { ICategory } from "../../interfaces/ICategory";
 import { fetchTimeout } from "../../utils";
 import { IUser } from "src/interfaces/IUser";
@@ -14,54 +13,6 @@ const ipfsGateways = {
 }
 const defaultIpfsGateway = ipfsGateways.ternoaIpfsGateway;
 const ipfsGatewayUri = process.env.IPFS_GATEWAY || defaultIpfsGateway;
-
-/**
- * Groups NFT with NFT.serieId-NFT.owner-NFT.price-NFT.priceTiime as a key
- * @param NFTs - NFTs array
- * @returns - NFT array grouped
- */
-export function groupNFTsVOld(NFTs: INFT[]) {
-  const returnNFTs: INFT[] = []
-  const uniqueKeys: any = {}
-  // sort nft to get the listed ids first
-  NFTs = NFTs.sort((a, b) => b.listed - a.listed)
-  NFTs.forEach((NFT) => {
-    if (NFT.serieId !== '0') {
-      const key = `${NFT.serieId}-${NFT.owner}-${NFT.price}-${NFT.priceTiime}`
-      if (uniqueKeys[key] === undefined) {
-        uniqueKeys[key] = true
-        returnNFTs.push(NFT)
-      }
-    } else {
-      returnNFTs.push(NFT)
-    }
-  })
-  return returnNFTs
-}
-
-/**
- * Groups NFT with NFT.serieId as a key
- * @param NFTs - NFTs array
- * @returns - NFT array grouped
- */
-export function groupNFTs(NFTs: INFT[]) {
-  const returnNFTs: INFT[] = []
-  const uniqueKeys: any = {}
-  // sort nft to get the listed ids first
-  NFTs = NFTs.sort((a, b) => b.listed - a.listed)
-  NFTs.forEach((NFT) => {
-    if (NFT.serieId !== '0') {
-      const key = NFT.serieId
-      if (uniqueKeys[key] === undefined) {
-        uniqueKeys[key] = true
-        returnNFTs.push(NFT)
-      }
-    } else {
-      returnNFTs.push(NFT)
-    }
-  })
-  return returnNFTs
-}
 
 function extractHashFromGatewayUri(uri: string) {
   const regex: RegExp = new RegExp('(http?s:\/\/.*\/)(.*)', 'gm');
@@ -87,23 +38,6 @@ function parseRawNFT(NFT: INFT): INFT {
     L.error({ err }, "Can't parse raw nft");
     return NFT;
   }
-}
-
-/**
- * Adds information to NFT object from external sources
- * @param NFT - NFT object
- * @returns - NFT object with new fields
- */
-export async function populateNFTVOld(NFT: INFT): Promise<ICompleteNFT | INFT> {
-  const retNFT: INFT = parseRawNFT(NFT);
-  const [creatorData, ownerData, info, categories, totalData] = await Promise.all([
-    populateNFTCreator(retNFT),
-    populateNFTOwner(retNFT),
-    populateNFTUri(retNFT),
-    populateNFTCategories(retNFT),
-    populateNFTSerieTotal(retNFT)
-  ]);
-  return { ...retNFT, creatorData, ownerData, ...info, categories, ...totalData };
 }
 
 /**
@@ -224,34 +158,3 @@ export async function populateNFTCategories(
     return [];
   }
 }
-
-/**
- * Populates an NFT object with the total of it's serie and total on sale
- * @param NFT - NFT object with serieId, owner, price
- * @returns NFT object with new categories field from db
- */
-export async function populateNFTSerieTotal(
-  NFT: INFT
-): Promise<{ totalNft?: number, totalListedNft?: number, totalMinted?: number }> {
-  try {
-    if (NFT.serieId === '0' || !NFT.owner) {
-      return { totalNft: 1, totalListedNft: NFT.listed, totalMinted: 1 };
-    } else {
-      const result = await NFTServiceV1.getNFTsForSerieOwnerPrice(NFT)
-      const totalNft = result.nftEntities.totalCount
-      const totalListedNft = result.nftEntities.nodes.filter((x) => x.listed === 1).length
-      const result2 = await NFTService.getNFTsForSerie(NFT)
-      const totalMinted = result2.nftEntities.totalCount
-      return { totalNft, totalListedNft, totalMinted };
-    }
-  } catch (err) {
-    L.error({ err }, "error retrieving nft's serie total");
-    if (NFT) {
-      return { totalNft: 1, totalListedNft: NFT.listed, totalMinted: 1 };
-    } else {
-      return { totalNft: 1, totalListedNft: 0, totalMinted: 1 };
-    }
-  }
-}
-
-
