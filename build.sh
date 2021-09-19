@@ -4,7 +4,7 @@ set -x
 
 [ -z "$APP_HOME" ] && export APP_HOME=$(pwd)
 
-[ -z "$MONGODB_ADDON_URI" ] && export MONGODB_URI="$MONGODB_ADDON_URI"
+[ -z "$MONGODB_URI" ] && export MONGODB_URI="$MONGODB_ADDON_URI"
 [ -z "$REDIS_URL" ] && export REDIS_URL="$REDIS_URL"
 
 npm install
