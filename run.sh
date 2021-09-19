@@ -6,6 +6,6 @@ set -x
 
 [ -z "$MONGODB_URI" ] && export MONGODB_URI="$MONGODB_ADDON_URI"
 [ -z "$REDIS_URL" ] && export REDIS_URL="$REDIS_URL"
+[ -z "$PORT" ] && export PORT="8080"
 
-npm install
-npm run build
+npm run start
