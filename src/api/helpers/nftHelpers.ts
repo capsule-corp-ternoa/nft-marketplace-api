@@ -25,10 +25,6 @@ function extractHashFromGatewayUri(uri: string) {
 }
 function overwriteDefaultIpfsGateway(uri: string): string {
   const ipfsHash: string = extractHashFromGatewayUri(uri);
-  // tslint:disable-next-line:no-console
-  console.log(process.env.IPFS_GATEWAY)
-  // tslint:disable-next-line:no-console
-  console.log(`${ipfsGatewayUri}/${ipfsHash}`)
   return `${ipfsGatewayUri}/${ipfsHash}`
 }
 function parseRawNFT(NFT: INFT): INFT {
