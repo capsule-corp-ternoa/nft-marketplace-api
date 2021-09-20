@@ -125,7 +125,7 @@ export class Controller {
   ): Promise<void> {
     try {
       const { id } = req.params
-      const {page, limit} = req.query
+      const {marketplaceId, page, limit} = req.query
       if (!id) throw new Error("wallet id not given")
       if (page && (isNaN(Number(page)) || Number(page) < 1)) throw new Error("Page argument is invalid")
       if (limit && (isNaN(Number(limit)) || Number(limit) < 1 || Number(limit) > LIMIT_MAX_PAGINATION)) throw new Error("Limit argument is invalid")

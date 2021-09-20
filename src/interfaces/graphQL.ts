@@ -14,7 +14,8 @@ export interface INFT {
   totalNft?: number;
   totalListedNft?: number;
   viewsCount?: number;
-  serieData?: INFT[]
+  serieData?: INFT[];
+  marketplaceId?: string;
 }
 
 export interface ICompleteNFT extends INFT {

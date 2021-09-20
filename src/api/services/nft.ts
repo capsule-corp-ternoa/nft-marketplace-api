@@ -27,9 +27,9 @@ export class NFTService {
    * @param listed? - filter for listed (1) or non listed (0), undefined gets all
    * @throws Will throw an error if can't request indexer
    */
-  async getAllNFTs(page?: string, limit?: string, listed?: string): Promise<CustomResponse<INFT>> {
+  async getAllNFTs(marketplaceId: string|undefined, page?: string, limit?: string, listed?: string): Promise<CustomResponse<INFT>> {
     try {
-      const query = QueriesBuilder.allNFTs(limit, page, listed);
+      const query = QueriesBuilder.allNFTs(marketplaceId, limit, page, listed);
       const res: DistinctNFTListResponse = await request(indexerUrl, query);
       const NFTs = res.distinctSerieNfts.nodes;
       res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
@@ -91,9 +91,9 @@ export class NFTService {
    * @param listed? - filter for listed (1) or non listed (0), undefined gets all
    * @throws Will throw an error if can't request indexer
    */
-  async getNFTsFromOwner(ownerId: string, page?: string, limit?: string, listed?: string): Promise<CustomResponse<INFT>> {
+  async getNFTsFromOwner(marketplaceId: string|undefined, ownerId: string, page?: string, limit?: string, listed?: string): Promise<CustomResponse<INFT>> {
     try {
-      const query = QueriesBuilder.NFTsFromOwnerId(ownerId, limit, page, listed);
+      const query = QueriesBuilder.NFTsFromOwnerId(marketplaceId, ownerId, limit, page, listed);
       const res: DistinctNFTListResponse = await request(indexerUrl, query);
       const NFTs = res.distinctSerieNfts.nodes;
       res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
@@ -140,7 +140,7 @@ export class NFTService {
    * @param userWalletId - The user's wallet address
    * @throws Will throw an error if can't request indexer or db or user not find
    */
-   async getStatNFTsUser(userWalletId: string): Promise<{
+   async getStatNFTsUser(marketplaceId: string|undefined, userWalletId: string): Promise<{
     countOwned: number, 
     countOwnedListed: number, 
     countOwnedUnlisted: number, 
@@ -153,7 +153,7 @@ export class NFTService {
       if (!user) throw new Error('User not found in db')
       const [owned, ownedListed, ownedUnlisted, created, followers, followed] = await Promise.all([
         request(indexerUrl, QueriesBuilder.countOwnerOwned(userWalletId)),
-        request(indexerUrl, QueriesBuilder.countOwnerOwnedListed(userWalletId)),
+        request(indexerUrl, QueriesBuilder.countOwnerOwnedListed(marketplaceId, userWalletId)),
         request(indexerUrl, QueriesBuilder.countOwnerOwnedUnlisted(userWalletId)),
         request(indexerUrl, QueriesBuilder.countCreated(userWalletId)),
         FollowModel.find({ followed: user._id }),
@@ -206,9 +206,9 @@ export class NFTService {
    * @param listed? - filter for listed (1) or non listed (0), undefined gets all
    * @throws Will throw an error if can't request indexer
    */
-   async getNFTsFromIdsDistinct(ids: string[], page?: string, limit?: string, listed?: string): Promise<CustomResponse<INFT>> {
+   async getNFTsFromIdsDistinct(marketplaceId: string|undefined, ids: string[], page?: string, limit?: string, listed?: string): Promise<CustomResponse<INFT>> {
     try {
-      const query = QueriesBuilder.NFTsFromIdsDistinct(ids, limit, page, listed);
+      const query = QueriesBuilder.NFTsFromIdsDistinct(marketplaceId, ids, limit, page, listed);
       const res: DistinctNFTListResponse = await request(indexerUrl, query);
       const NFTs = res.distinctSerieNfts.nodes;
       res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
@@ -232,9 +232,9 @@ export class NFTService {
    * @param listed? - filter for listed (1) or non listed (0), undefined gets all
    * @throws Will throw an error if can't request indexer
    */
-    async getNFTsNotInIds(ids: string[], page?: string, limit?: string, listed?: string): Promise<CustomResponse<INFT>> {
+    async getNFTsNotInIds(marketplaceId: string|undefined, ids: string[], page?: string, limit?: string, listed?: string): Promise<CustomResponse<INFT>> {
     try {
-      const query = QueriesBuilder.NFTsNotInIds(ids, limit, page, listed);
+      const query = QueriesBuilder.NFTsNotInIds(marketplaceId, ids, limit, page, listed);
       const res: DistinctNFTListResponse  = await request(indexerUrl, query);
       const NFTs = res.distinctSerieNfts.nodes;
       res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
@@ -258,12 +258,13 @@ export class NFTService {
    * @param listed? - filter for listed (1) or non listed (0), undefined gets all
    * @throws Will throw an error if can't reach database or if given category does not exist
    */
-  async getNFTsFromCategories(codes: string[] | null, page?: string, limit?: string, listed?: string): Promise<CustomResponse<INFT>> {
+  async getNFTsFromCategories(marketplaceId: string|undefined, codes: string[] | null, page?: string, limit?: string, listed?: string): Promise<CustomResponse<INFT>> {
     try {
       if (codes===null){
         const query = {categories:{ $exists:true, $nin:[[] as any[], null ]} }
         const mongoNfts = await NftModel.find(query);
         const result = await this.getNFTsNotInIds(
+          marketplaceId, 
           mongoNfts.map((nft) => nft.chainId),
           page,
           limit,
@@ -282,6 +283,7 @@ export class NFTService {
         const query = {categories: {$in: categories} }
         const mongoNfts = await NftModel.find(query)
         const result = await this.getNFTsFromIdsDistinct(
+          marketplaceId, 
           mongoNfts.map((nft) => nft.chainId),
           page,
           limit,

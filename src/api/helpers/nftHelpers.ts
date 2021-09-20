@@ -62,7 +62,7 @@ export async function populateSerieData(
 ): Promise<{ serieData: INFT[]; totalNft: number; totalListedNft: number; }> {
   try {
     if (NFT.serieId === '0') return {
-      serieData: [{ id: NFT.id, owner: NFT.owner, listed: NFT.listed, price: NFT.price, priceTiime: NFT.priceTiime }],
+      serieData: [{ id: NFT.id, owner: NFT.owner, listed: NFT.listed, price: NFT.price, priceTiime: NFT.priceTiime, marketplaceId: NFT.marketplaceId }],
       totalNft: 1,
       totalListedNft: NFT.listed
     }
