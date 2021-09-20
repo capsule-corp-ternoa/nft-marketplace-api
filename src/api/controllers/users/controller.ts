@@ -49,6 +49,20 @@ export class Controller {
     }
   }
 
+  async getUsersBywalletId(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { walletIds } = req.query
+      const user = await UserService.findUsersByWalletId(walletIds as string[]);
+      res.json(user);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async reviewRequested(
     req: Request,
     res: Response,
