@@ -1,6 +1,6 @@
 import { request } from "graphql-request";
 import { IUser, IUserDTO } from "../../interfaces/IUser";
-import { NFTListPaginatedResponse, NFTListResponse } from "../../interfaces/graphQL";
+import { NFTListResponse } from "../../interfaces/graphQL";
 import UserModel from "../../models/user";
 import UserViewModel from "../../models/userView";
 import QueriesBuilder from "./gqlQueriesBuilder";
@@ -11,6 +11,8 @@ import NodeCache from "node-cache";
 import { isValidSignature, validateUrl, validateTwitter } from "../../utils";
 import NFTService from "./nft";
 import { TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
+import { CustomResponse } from "../../interfaces/graphQL";
+import { INFT } from "../../interfaces/graphQL";
 
 const indexerUrl =
   process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
@@ -27,9 +29,16 @@ export class UserService {
   async getAllUsers(
     page: number = 1,
     limit: number = 15
-  ): Promise<PaginateResult<IUser>> {
+  ): Promise<CustomResponse<IUser>> {
     try {
-      return await UserModel.paginate({ artist: true }, { page, limit });
+      const res:PaginateResult<IUser>  = await UserModel.paginate({ artist: true }, { page, limit });
+      const response: CustomResponse<IUser> = {
+        totalCount: res.totalDocs,
+        data: res.docs,
+        hasNextPage: res.hasNextPage,
+        hasPreviousPage: res.hasNextPage
+      }
+      return response
     } catch (err) {
       throw new Error("Users can't be fetched");
     }
@@ -240,7 +249,7 @@ export class UserService {
    * @param limit? - Number of elements per page
    * @throws Will throw an error if db can't be reached
    */
-   async getLikedNfts(walletId: string, page?: string, limit?: string): Promise<NFTListResponse |NFTListPaginatedResponse> {
+   async getLikedNfts(walletId: string, page?: string, limit?: string): Promise<CustomResponse<INFT>> {
     try {
       if (page && limit){
         const totalLikedNfts = (await UserModel.findOne({walletId})).likedNFTs.length
@@ -249,15 +258,16 @@ export class UserService {
         const hasPreviousPage = Number(page) > 1 && likedIndexStart>0
         if (likedIndexStart >= totalLikedNfts) throw new Error("Pagination parameters are incorrect");
         const user  = await UserModel.findOne({walletId}, {likedNFTs: {$slice: [likedIndexStart, Number(limit)]}});
-        if (!user.likedNFTs) return {nftEntities: {nodes: [], totalCount: 0, pageInfo: {hasNextPage: false, hasPreviousPage:false}}}
-        const res = await NFTService.getNFTsFromIds(user.likedNFTs.map(x=>x.nftId)) as NFTListPaginatedResponse
-        res.nftEntities.pageInfo = {hasNextPage, hasPreviousPage}
-        return res
+        if (!user.likedNFTs) return {data: [], totalCount: 0, hasNextPage: false, hasPreviousPage:false}
+        const response = await NFTService.getNFTsFromIds(user.likedNFTs.map(x=>x.nftId))
+        response.hasNextPage = hasNextPage
+        response.hasPreviousPage = hasPreviousPage
+        return response
       }else{
         const user  = await UserModel.findOne({walletId});
-        if (!user.likedNFTs) return {nftEntities: {nodes: [], totalCount: 0}}
-        const res = await NFTService.getNFTsFromIds(user.likedNFTs.map(x=>x.nftId))
-        return res
+        if (!user.likedNFTs) return {data: [], totalCount: 0}
+        const response = await NFTService.getNFTsFromIds(user.likedNFTs.map(x=>x.nftId))
+        return response
       }
     } catch (err) {
       throw new Error("Couldn't get liked NFTs");

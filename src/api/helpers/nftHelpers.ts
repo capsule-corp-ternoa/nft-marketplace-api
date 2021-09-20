@@ -67,7 +67,7 @@ export async function populateSerieData(
       totalListedNft: NFT.listed
     }
     const result = await NFTService.getNFTsForSerie(NFT)
-    const serieData = result.nftEntities.nodes.sort((a, b) => b.listed - a.listed || Number(a.price) - Number(b.price) || Number(a.priceTiime) - Number(b.priceTiime))
+    const serieData = result.data.sort((a, b) => b.listed - a.listed || Number(a.price) - Number(b.price) || Number(a.priceTiime) - Number(b.priceTiime))
     return { serieData, totalNft: serieData.length, totalListedNft: serieData.filter(x => x.listed).length }
   } catch (err) {
     L.error({ err }, "NFTs with same serie could not have been fetched");

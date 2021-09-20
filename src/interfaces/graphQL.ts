@@ -28,12 +28,6 @@ export interface ICompleteNFT extends INFT {
 
 export interface NFTListResponse {
   nftEntities: {
-    nodes: INFT[];
-  };
-}
-
-export interface NFTListPaginatedResponse {
-  nftEntities: {
     totalCount: number;
     pageInfo?: {
       hasNextPage: boolean;
@@ -44,12 +38,6 @@ export interface NFTListPaginatedResponse {
 }
 
 export interface DistinctNFTListResponse {
-  distinctSerieNfts: {
-    nodes: INFT[];
-  };
-}
-
-export interface DistinctNFTListPaginatedResponse {
   distinctSerieNfts: {
     totalCount: number;
     pageInfo?: {
@@ -71,3 +59,11 @@ export interface AccountResponse {
     nodes: Account[];
   };
 }
+
+export interface CustomResponse<DataType> {
+  totalCount?: number;
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+  data: DataType[];
+}
+
