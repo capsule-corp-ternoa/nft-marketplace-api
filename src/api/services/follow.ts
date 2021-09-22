@@ -2,6 +2,7 @@ import FollowModel from "../../models/follow";
 import { IUser } from "../../interfaces/IUser";
 import UserModel from "../../models/user";
 import { PaginateResult } from "mongoose";
+import { CustomResponse } from "../../interfaces/graphQL";
 
 export class FollowService {
   /**
@@ -81,17 +82,21 @@ export class FollowService {
    * @param walletId - The user's wallet id
    * @throws Will throw an error if followers can't be fetched
    */
-  async getUserFollowers(walletId: string, page?: string, limit?: string, certifiedOnly?: string, nameOrAddressSearch?: string): Promise<IUser[] | PaginateResult<IUser>> {
+  async getUserFollowers(walletId: string, page?: string, limit?: string, certifiedOnly?: string, nameOrAddressSearch?: string): Promise<CustomResponse<IUser>> {
     try {
       const user = await UserModel.findOne({walletId}) 
       if (!user) throw new Error()
-      const followerIds: any[] = (await FollowModel.find({ followed: user._id })).map(x => x.follower)
+      const followerIds: string[] = (await FollowModel.find({ followed: user._id })).map(x => x.follower)
       const searchQuery = {$and: [{_id: {$in: followerIds}}]} as any
       if (certifiedOnly) searchQuery.$and.push({verified: true})
       if (nameOrAddressSearch) searchQuery.$and.push({$or: [{name: {$regex: nameOrAddressSearch, $options: "i"}}, {walletId: {$regex: nameOrAddressSearch, $options: "i"}}]})
       if (!page || !limit){
-        const followers: any[] = await UserModel.find(searchQuery)
-        return followers;
+        const followers: IUser[] = await UserModel.find(searchQuery)
+        const res: CustomResponse<IUser> = {
+          totalCount: followers.length,
+          data: followers
+        }
+        return res;
       }else{
         const followers: PaginateResult<IUser> = await UserModel.paginate(
           searchQuery, 
@@ -100,7 +105,13 @@ export class FollowService {
             limit: Number(limit)
           }
         )
-        return followers;
+        const res: CustomResponse<IUser> = {
+          totalCount: followers.totalDocs,
+          hasNextPage: followers.hasNextPage,
+          hasPreviousPage: followers.hasPrevPage,
+          data: followers.docs
+        }
+        return res;
       }
     } catch (err) {
       throw new Error("Followers can't be fetched");
@@ -112,17 +123,21 @@ export class FollowService {
    * @param walletId - The user's wallet id
    * @throws Will throw an error if followings can't be fetched
    */
-  async getUserFollowings(walletId: string, page?: string, limit?: string, certifiedOnly?: string, nameOrAddressSearch?: string): Promise<IUser[] | PaginateResult<IUser>> {
+  async getUserFollowings(walletId: string, page?: string, limit?: string, certifiedOnly?: string, nameOrAddressSearch?: string): Promise<CustomResponse<IUser>> {
     try {
       const user = await UserModel.findOne({walletId}) 
       if (!user) throw new Error()
-      const followedIds: any[] = (await FollowModel.find({ follower: user._id })).map(x => x.followed)
+      const followedIds: string[] = (await FollowModel.find({ follower: user._id })).map(x => x.followed)
       const searchQuery = {$and: [{_id: {$in: followedIds}}]} as any
       if (certifiedOnly) searchQuery.$and.push({verified: true})
       if (nameOrAddressSearch) searchQuery.$and.push({$or: [{name: {$regex: nameOrAddressSearch, $options: "i"}}, {walletId: {$regex: nameOrAddressSearch, $options: "i"}}]})
       if (!page || !limit){
-        const followers: any[] = await UserModel.find(searchQuery)
-        return followers;
+        const followers: IUser[] = await UserModel.find(searchQuery)
+        const res: CustomResponse<IUser> = {
+          totalCount: followers.length,
+          data: followers
+        }
+        return res;
       }else{
         const followed: PaginateResult<IUser> = await UserModel.paginate(
           searchQuery, 
@@ -131,7 +146,13 @@ export class FollowService {
             limit: Number(limit),
           }
         )
-        return followed;
+        const res: CustomResponse<IUser> = {
+          totalCount: followed.totalDocs,
+          hasNextPage: followed.hasNextPage,
+          hasPreviousPage: followed.hasPrevPage,
+          data: followed.docs
+        }
+        return res;
       }
     } catch (err) {
       throw new Error("Followings can't be fetched");
