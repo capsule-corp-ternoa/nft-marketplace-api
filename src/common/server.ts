@@ -10,6 +10,7 @@ import redis from 'redis';
 import { createAdapter } from "socket.io-redis";
 import * as Sentry from "@sentry/node"
 import * as Tracing from "@sentry/tracing"
+import { env } from "process";
 
 const app = express();
 
@@ -21,10 +22,7 @@ if (process.env.SENTRY_DSN){
       new Sentry.Integrations.Http({ tracing: true }),
       // enable Express.js middleware tracing
       new Tracing.Integrations.Express({
-        // to trace all requests to the default router
         app,
-        // alternatively, you can specify the routes you want to trace:
-        // router: someRouter,
       }),
     ],
     tracesSampleRate: 1.0,
@@ -59,11 +57,10 @@ export default class ExpressServer {
   }
 
   router(routes: (app: Application) => void): ExpressServer {
-    
-    if (process.env.SENTRY_DSN && process.env.NODE_ENV !== "development") app.use(Sentry.Handlers.requestHandler());
-    if (process.env.SENTRY_DSN && process.env.NODE_ENV !== "development") app.use(Sentry.Handlers.tracingHandler());
+    if (process.env.SENTRY_DSN && process.env.NODE_ENV === "production") app.use(Sentry.Handlers.requestHandler());
+    if (process.env.SENTRY_DSN && process.env.NODE_ENV === "production") app.use(Sentry.Handlers.tracingHandler());
     routes(app);
-    if (process.env.SENTRY_DSN && process.env.NODE_ENV !== "development") app.use(Sentry.Handlers.errorHandler());
+    if (process.env.SENTRY_DSN && process.env.NODE_ENV === "production") app.use(Sentry.Handlers.errorHandler());
     app.use(errorHandler);
     return this;
   }
