@@ -21,6 +21,8 @@
     "@polkadot/types-known": "^4.2.1",
     "@polkadot/util": "^6.0.5",
     "@polkadot/util-crypto": "^6.0.5",
+    "@sentry/node": "^6.13.2",
+    "@sentry/tracing": "^6.13.2",
     "abort-controller": "^3.0.0",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",

@@ -5,12 +5,28 @@ import { Server } from "socket.io";
 import cors from "cors";
 import os from "os";
 import L from "./logger";
-
 import errorHandler from "../api/middlewares/error.handler";
 import redis from 'redis';
 import { createAdapter } from "socket.io-redis";
+import * as Sentry from "@sentry/node"
+import * as Tracing from "@sentry/tracing"
 
 const app = express();
+
+if (process.env.SENTRY_DSN){
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    integrations: [
+      // enable HTTP calls tracing
+      new Sentry.Integrations.Http({ tracing: true }),
+      // enable Express.js middleware tracing
+      new Tracing.Integrations.Express({
+        app,
+      }),
+    ],
+    tracesSampleRate: 1.0,
+  });
+}
 
 export default class ExpressServer {
   constructor() {
@@ -40,7 +56,10 @@ export default class ExpressServer {
   }
 
   router(routes: (app: Application) => void): ExpressServer {
+    if (process.env.SENTRY_DSN && process.env.NODE_ENV === "production") app.use(Sentry.Handlers.requestHandler());
+    if (process.env.SENTRY_DSN && process.env.NODE_ENV === "production") app.use(Sentry.Handlers.tracingHandler());
     routes(app);
+    if (process.env.SENTRY_DSN && process.env.NODE_ENV === "production") app.use(Sentry.Handlers.errorHandler());
     app.use(errorHandler);
     return this;
   }
