@@ -76,21 +76,11 @@ export class FollowService {
       if (nameOrAddressSearch) searchQuery.$and.push({$or: [{name: {$regex: nameOrAddressSearch, $options: "i"}}, {walletId: {$regex: nameOrAddressSearch, $options: "i"}}]})
       if (!page || !limit){
         const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}`)
-        const followers: IUser[] = await data.json()
-        const res: CustomResponse<IUser> = {
-          totalCount: followers.length,
-          data: followers
-        }
+        const res: CustomResponse<IUser> = await data.json()
         return res;
       }else{
         const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}&page=${page}&limit=${limit}`)
-        const followers: PaginateResult<IUser> = await data.json()
-        const res: CustomResponse<IUser> = {
-          totalCount: followers.totalDocs,
-          hasNextPage: followers.hasNextPage,
-          hasPreviousPage: followers.hasPrevPage,
-          data: followers.docs
-        }
+        const res: CustomResponse<IUser> = await data.json()
         return res;
       }
     } catch (err) {
@@ -111,21 +101,11 @@ export class FollowService {
       if (nameOrAddressSearch) searchQuery.$and.push({$or: [{name: {$regex: nameOrAddressSearch, $options: "i"}}, {walletId: {$regex: nameOrAddressSearch, $options: "i"}}]})
       if (!page || !limit){
         const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}`)
-        const followed: IUser[] = await data.json()
-        const res: CustomResponse<IUser> = {
-          totalCount: followed.length,
-          data: followed
-        }
+        const res: CustomResponse<IUser> = await data.json()
         return res;
       }else{
         const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}&page=${page}&limit=${limit}`)
-        const followed: PaginateResult<IUser> = await data.json()
-        const res: CustomResponse<IUser> = {
-          totalCount: followed.totalDocs,
-          hasNextPage: followed.hasNextPage,
-          hasPreviousPage: followed.hasPrevPage,
-          data: followed.docs
-        }
+        const res: CustomResponse<IUser> = await data.json()
         return res;
       }
     } catch (err) {
