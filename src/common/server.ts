@@ -10,7 +10,6 @@ import redis from 'redis';
 import { createAdapter } from "socket.io-redis";
 import * as Sentry from "@sentry/node"
 import * as Tracing from "@sentry/tracing"
-import { env } from "process";
 
 const app = express();
 
