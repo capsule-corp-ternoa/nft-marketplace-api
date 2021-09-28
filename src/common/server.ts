@@ -16,6 +16,7 @@ const app = express();
 if (process.env.SENTRY_DSN){
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
+    environment: process.env.SENTRY_ENV,
     integrations: [
       // enable HTTP calls tracing
       new Sentry.Integrations.Http({ tracing: true }),
@@ -56,10 +57,10 @@ export default class ExpressServer {
   }
 
   router(routes: (app: Application) => void): ExpressServer {
-    if (process.env.SENTRY_DSN && process.env.NODE_ENV === "production") app.use(Sentry.Handlers.requestHandler());
-    if (process.env.SENTRY_DSN && process.env.NODE_ENV === "production") app.use(Sentry.Handlers.tracingHandler());
+    if (process.env.SENTRY_DSN) app.use(Sentry.Handlers.requestHandler());
+    if (process.env.SENTRY_DSN) app.use(Sentry.Handlers.tracingHandler());
     routes(app);
-    if (process.env.SENTRY_DSN && process.env.NODE_ENV === "production") app.use(Sentry.Handlers.errorHandler());
+    if (process.env.SENTRY_DSN) app.use(Sentry.Handlers.errorHandler());
     app.use(errorHandler);
     return this;
   }
