@@ -7,7 +7,6 @@ import {
   CustomResponse,
 } from "../../interfaces/graphQL";
 import { IMongoNft, INftDto } from "../../interfaces/INft";
-import UserModel from "../../models/user";
 import FollowModel from "../../models/follow";
 import NftModel from "../../models/nft";
 import NftViewModel from "../../models/nftView";
@@ -149,15 +148,13 @@ export class NFTService {
     countFollowed: number
    }> {
     try {
-      const user = await UserModel.findOne({walletId: userWalletId}) 
-      if (!user) throw new Error('User not found in db')
       const [owned, ownedListed, ownedUnlisted, created, followers, followed] = await Promise.all([
         request(indexerUrl, QueriesBuilder.countOwnerOwned(userWalletId)),
         request(indexerUrl, QueriesBuilder.countOwnerOwnedListed(marketplaceId, userWalletId)),
         request(indexerUrl, QueriesBuilder.countOwnerOwnedUnlisted(userWalletId)),
         request(indexerUrl, QueriesBuilder.countCreated(userWalletId)),
-        FollowModel.find({ followed: user._id }),
-        FollowModel.find({ follower: user._id })
+        FollowModel.find({ followed: userWalletId }),
+        FollowModel.find({ follower: userWalletId })
       ])
       const countOwned: number = owned.nftEntities.totalCount;
       const countOwnedListed: number = ownedListed.nftEntities.totalCount;
