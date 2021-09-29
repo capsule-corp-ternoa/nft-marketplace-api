@@ -19,23 +19,9 @@ export class Controller {
     try {
       const { body } = req;
       const { walletId } = body;
-      let existingUser = null;
-      try {
-        const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/${walletId}`)
-        existingUser = await data.json()
-      }
-      finally {
-        if (existingUser) {
-          res.status(409).send("Wallet user already exists");
-        } else {
-          const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/create`, {
-            method: 'POST',
-            body
-          })
-          const user = await data.json()
-          res.json(user);
-        }
-      }
+      const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/${walletId}`)
+      const response = await data.json()
+      res.json(response)
     } catch (err) {
       next(err);
     }
