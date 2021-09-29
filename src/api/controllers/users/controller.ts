@@ -18,8 +18,10 @@ export class Controller {
   ): Promise<void> {
     try {
       const { body } = req;
-      const { walletId } = body;
-      const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/${walletId}`)
+      const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/create`,{
+        method: 'POST',
+        body: JSON.stringify(body)
+      });
       const response = await data.json()
       res.json(response)
     } catch (err) {
@@ -95,7 +97,7 @@ export class Controller {
     try {
       const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/${req.params.walletId}`,{
         method: 'POST',
-        body: req.body
+        body: JSON.stringify(req.body)
       });
       const user = await data.json();
       res.json(user);
