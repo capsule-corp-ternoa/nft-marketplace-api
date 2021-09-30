@@ -232,7 +232,10 @@ export class NFTService {
     async getNFTsNotInIds(marketplaceId: string|undefined, ids: string[], page?: string, limit?: string, listed?: string): Promise<CustomResponse<INFT>> {
     try {
       const query = QueriesBuilder.NFTsNotInIds(marketplaceId, ids, limit, page, listed);
+      console.log(query)
       const res: DistinctNFTListResponse  = await request(indexerUrl, query);
+      console.log("count", res.distinctSerieNfts.nodes.length)
+      console.log(res.distinctSerieNfts.nodes)
       const NFTs = res.distinctSerieNfts.nodes;
       res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
       const result: CustomResponse<INFT>={
