@@ -63,6 +63,7 @@ To run this project, you will need to add the following environment variables to
 
 ### Follows
 `GET /api/follow/followers/:walletId` : Gets all the followers of specified wallet id user
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
@@ -73,6 +74,7 @@ Parameters:
 | nameOrAddressSearch | query param | no | filter data based on follower name or address (Leo, 5HGa...) |
 
 `GET /api/follow/followed/:walletId` : Gets all the followed users of specified wallet id user
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
@@ -83,18 +85,21 @@ Parameters:
 | nameOrAddressSearch | query param | no | filter data based on followed name or address (Leo, 5HGa...) |
 
 `GET /api/follow/countFollowers/:walletId` : Gets the number of followers of specified wallet id user
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
 | walletId | request param | yes | wallet address of the user |
 
 `GET /api/follow/countFollowed/:walletId` : Gets the number of followed user of specified wallet id user
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
 | walletId | request param | yes | wallet address of the user |
 
 `GET /api/follow/isUserFollowing` : Return true if walletIdFollower is following walletIdFollowed 
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
@@ -102,6 +107,7 @@ Parameters:
 | walletIdFollowed | query param | yes | wallet address of the followed user |
 
 `POST /api/follow/follow` :  Creates a follow from walletIdFollower to walletIdFollowed
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
@@ -109,6 +115,7 @@ Parameters:
 | walletIdFollowed | query param | yes | wallet address of the followed user |
 
 `POST /api/follow/unfollow` :  Removes a follow from walletIdFollower to walletIdFollowed
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
@@ -117,6 +124,7 @@ Parameters:
 
 ### NFTs
 `GET /api/nfts/` : Gets all NFTs
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
@@ -126,6 +134,7 @@ Parameters:
 | listed | query param | no | Get only listed or not listed nfts (0, 1) |
 
 `GET /api/nfts/owner/:id` : Gets all NFTs
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
@@ -136,6 +145,7 @@ Parameters:
 | listed | query param | no | Get only listed or not listed nfts (0, 1) |
 
 `GET /api/nfts/creator/:id` : Gets all NFTs
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
@@ -145,6 +155,7 @@ Parameters:
 | listed | query param | no | Get only listed or not listed nfts (0, 1) |
 
 `GET /api/nfts/stat/:id` : Gets users NFTs statistics (Number of owned, created, on sale, not on sale, followers, followed)
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
@@ -152,6 +163,7 @@ Parameters:
 | marketplaceId | query param | no | Get only nfts from specific marketplace (0) |
 
 `GET /api/nfts/category/` : Gets NFTs by categorie codes or without categories
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
@@ -162,6 +174,7 @@ Parameters:
 | codes | query param | no | Categorie codes or omit to get without categories (&codes=001, &codes=001&codes=002) |
 
 `GET /api/nfts/:id` : Gets NFT by id
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
@@ -171,6 +184,7 @@ Parameters:
 | viewerWalletId | query param | no | wallet address of the viewer, if connected |
 
 `POST /api/nfts/getSameGroupNFTS/:id` : Gets NFTs with the same serie as specified NFT id
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
@@ -180,12 +194,14 @@ Parameters:
 
 ### Users
 `PATCH /api/users/reviewRequested/:id` : Allow user to request review of their account (use the Ternoa-api)
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
 | id | request param | yes | id of user to review request for |
 
 `GET /api/users/` : Gets all users (use the Ternoa-api)
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
@@ -193,18 +209,21 @@ Parameters:
 | limit | query param | no | number of elements per page (10) |
 
 `GET /api/users/verifyTwitter/:id` : Verify Twitter username of specified user's id (use the Ternoa-api)
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
 | id | request param | yes | id of user to review request for |
 
 `GET /api/users/getUsers/` : Get users by wallet ids (use the Ternoa-api)
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
 | walletIds | query param | yes | wallet addresses (?walletIds=5HGa..., ?walletIds=5HGa...&walletIds=5HTa...) |
 
 `GET /api/users/:id` : Get user by wallet id (use the Ternoa-api)
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
@@ -214,12 +233,14 @@ Parameters:
 | viewerWalletId | query param | no | wallet address of the viewer, if connected |
 
 `GET /api/users/:id/caps` : Get user's caps balance
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
 | id | request param | yes | wallet address of user to get balance |
 
 `GET /api/users/:id/liked` : Get user's liked NFTs
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
@@ -228,12 +249,14 @@ Parameters:
 | limit | query param | no | number of elements per page (10) |
 
 `POST /api/users/create` : Create a new user if it does not exist (use the Ternoa-api)
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
 | walletId | body param | yes | wallet address of user to create |
 
 `POST /api/users/like` : Like an NFT (use the Ternoa-api)
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
@@ -242,6 +265,7 @@ Parameters:
 | serieId | query param | yes | NFT serieId to like |
 
 `POST /api/users/unlike` : Unike an NFT (use the Ternoa-api)
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
@@ -250,6 +274,7 @@ Parameters:
 | serieId | query param | yes | NFT serieId to like |
 
 `POST /api/users/:walletId` : Update a user (use the Ternoa-api, must be signed by wallet)
+
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
 | :---|---|---|---|
