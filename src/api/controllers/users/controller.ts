@@ -51,8 +51,8 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const { walletIds } = req.query
-      const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/getUsers?walletIds=${(walletIds as string[]).join("&walletIds=")}`)
+      const walletIds = typeof req.query.walletIds === "string" ? [req.query.walletIds] : req.query.walletIds as string[]
+      const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/getUsers?walletIds=${walletIds.join("&walletIds=")}`)
       const users = await data.json()
       res.json(users);
     } catch (err) {
