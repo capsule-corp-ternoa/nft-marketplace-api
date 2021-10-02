@@ -36,7 +36,8 @@
     "node-fetch": "^2.6.1",
     "npm": "^7.19.1",
     "oauth": "^0.9.15",
-    "pino": "^6.11.2"
+    "pino": "^6.11.2",
+    "socket.io": "^4.0.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.10",
