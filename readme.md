@@ -51,8 +51,6 @@ To run this project, you will need to add the following environment variables to
 | INDEXER_URL | https://indexer.chaos.ternoa.com/ | Address of Ternoa's blockchain indexer |
 | MONGODB_URI | mongodb+srv://***:***@***?retryWrites=true&w=majority | Mongo DB URI |
 | PORT | 3000 | Port to start the app, default: 3000 |
-| REDIS_URL | http://localhost:6379 | Redis URL to handle sockets |
-| REDIS_ENABLED | true or false | enable or disable redis |
 | SENTRY_DSN | https://projectId@sentry.io/x | The url to your sentry project if you want to monitor activity |
 | SENTRY_ENV | development or production or ... | Allow to separate monitoring on environment |
 
