@@ -184,7 +184,7 @@ Parameters:
 | incViews | query param | no | increment views or not (true, false) |
 | viewerWalletId | query param | no | wallet address of the viewer, if connected |
 
-`POST /api/nfts/getSameGroupNFTS/:id` : Gets NFTs with the same serie as specified NFT id
+`GET /api/nfts/getSameGroupNFTS/:id` : Gets NFTs with the same serie as specified NFT id
 
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
