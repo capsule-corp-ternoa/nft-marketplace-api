@@ -1,5 +1,8 @@
 # Secret NFT API
 
+![Ternoa logo](https://user-images.githubusercontent.com/15839293/135729256-e05e614c-9359-424c-bb52-87b97d475ed9.png)
+
+
 "SecretNFT API" is the server used by the "SecretNFT" application. 
 This API's purpose is to get data related to NFTs (from blockahin to offchain Data), users, follows, likes, ...
 
@@ -181,7 +184,7 @@ Parameters:
 | incViews | query param | no | increment views or not (true, false) |
 | viewerWalletId | query param | no | wallet address of the viewer, if connected |
 
-`POST /api/nfts/getSameGroupNFTS/:id` : Gets NFTs with the same serie as specified NFT id
+`GET /api/nfts/getSameGroupNFTS/:id` : Gets NFTs with the same serie as specified NFT id
 
 Parameters: 
 | PARAMETER | TYPE | MANDATORY | USE |
