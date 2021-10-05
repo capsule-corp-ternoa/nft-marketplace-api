@@ -19,7 +19,12 @@ export default (io: Namespace) => {
           user = await UserService.findUser(walletId);
         } catch (err) {
           try {
-            user = await UserService.createUser({ walletId });
+            const body = { walletId }
+            const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/create`, {
+              method: 'POST',
+              body: JSON.stringify(body)
+            })
+            user = data.json()
           } catch (err) {
             validCallback &&
               callback({ error: "500", msg: "Something went wrong" });
