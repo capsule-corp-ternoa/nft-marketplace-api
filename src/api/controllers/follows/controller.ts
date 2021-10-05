@@ -78,5 +78,33 @@ export class Controller {
       next(err);
     }
   }
+
+  async countUserFollowers(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try{
+      if (!req.params.walletId) next(new Error("wallet id parameter is needed"));
+      const count = await FollowService.countUserFollowers(req.params.walletId)
+      res.json(count);
+    }catch(err){
+      next(err);
+    }
+  }
+
+  async countUserFollowing(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try{
+      if (!req.params.walletId) next(new Error("wallet id parameter is needed"));
+      const count = await FollowService.countUserFollowing(req.params.walletId)
+      res.json(count);
+    }catch(err){
+      next(err);
+    }
+  }
 }
 export default new Controller();
