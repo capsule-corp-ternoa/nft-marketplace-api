@@ -6,7 +6,7 @@ import QueriesBuilder from "./gqlQueriesBuilder";
 import { AccountResponse, Account } from "../../interfaces/graphQL";
 import NodeCache from "node-cache";
 import NFTService from "./nft";
-import { TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
+import { TIME_BETWEEN_SAME_USER_VIEWS, TERNOA_API_URL } from "../../utils";
 import { CustomResponse } from "../../interfaces/graphQL";
 import { INFT } from "../../interfaces/graphQL";
 
@@ -35,7 +35,7 @@ export class UserService {
       if (user !== undefined) return user;
     }
     try {
-      const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/${walletId}`)
+      const data = await fetch(`${TERNOA_API_URL}/api/users/${walletId}`)
       const user = await data.json()
       let viewsCount = 0
       if (!user) throw new Error();
@@ -87,7 +87,7 @@ export class UserService {
    async getLikedNfts(walletId: string, page?: string, limit?: string): Promise<CustomResponse<INFT>> {
     try {
       if (page && limit){
-        const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/${walletId}`)
+        const data = await fetch(`${TERNOA_API_URL}/api/users/${walletId}`)
         const user = await data.json() as IUser
         const totalLikedNfts = user.likedNFTs.length
         const likedIndexStart = (Number(page)-1)*Number(limit)
@@ -101,7 +101,7 @@ export class UserService {
         response.hasPreviousPage = hasPreviousPage
         return response
       }else{
-        const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/${walletId}`)
+        const data = await fetch(`${TERNOA_API_URL}/api/users/${walletId}`)
         const user = await data.json() as IUser
         if (!user.likedNFTs) return {data: [], totalCount: 0}
         const response = await NFTService.getNFTsFromIds(user.likedNFTs.map(x=>x.nftId))

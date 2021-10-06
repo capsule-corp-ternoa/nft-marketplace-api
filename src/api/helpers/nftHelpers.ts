@@ -3,7 +3,7 @@ import UserService from "../services/user";
 import L from "../../common/logger";
 import NFTService from "../services/nft";
 import { ICategory } from "../../interfaces/ICategory";
-import { fetchTimeout } from "../../utils";
+import { fetchTimeout, removeURLSlash } from "../../utils";
 import { IUser } from "src/interfaces/IUser";
 
 const ipfsGateways = {
@@ -12,7 +12,7 @@ const ipfsGateways = {
   ternoaIpfsGateway: `https://ipfs.ternoa.dev/ipfs`,
 }
 const defaultIpfsGateway = ipfsGateways.ternoaIpfsGateway;
-const ipfsGatewayUri = process.env.IPFS_GATEWAY || defaultIpfsGateway;
+const ipfsGatewayUri = (process.env.IPFS_GATEWAY && removeURLSlash(process.env.IPFS_GATEWAY)) || defaultIpfsGateway;
 
 function extractHashFromGatewayUri(uri: string) {
   const regex: RegExp = new RegExp('(http?s:\/\/.*\/)(.*)', 'gm');
