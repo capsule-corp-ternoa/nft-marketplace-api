@@ -1,12 +1,12 @@
 import UserService from "../../services/user";
 import { NextFunction, Request, Response } from "express";
 import fetch from "node-fetch";
-import { LIMIT_MAX_PAGINATION } from "../../../utils";
+import { LIMIT_MAX_PAGINATION, TERNOA_API_URL } from "../../../utils";
 
 export class Controller {
   async all(req: Request, res: Response): Promise<void> {
     const {page, limit} = req.query
-    const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/?page=${page}&limit=${limit}`)
+    const data = await fetch(`${TERNOA_API_URL}/api/users/?page=${page}&limit=${limit}`)
     const response = await data.json()
     res.json(response)
   }
@@ -18,7 +18,7 @@ export class Controller {
   ): Promise<void> {
     try {
       const { body } = req;
-      const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/create`,{
+      const data = await fetch(`${TERNOA_API_URL}/api/users/create`,{
         method: 'POST',
         body: JSON.stringify(body)
       });
@@ -52,7 +52,7 @@ export class Controller {
   ): Promise<void> {
     try {
       const walletIds = typeof req.query.walletIds === "string" ? [req.query.walletIds] : req.query.walletIds as string[]
-      const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/getUsers?walletIds=${walletIds.join("&walletIds=")}`)
+      const data = await fetch(`${TERNOA_API_URL}/api/users/getUsers?walletIds=${walletIds.join("&walletIds=")}`)
       const users = await data.json()
       res.json(users);
     } catch (err) {
@@ -66,7 +66,7 @@ export class Controller {
     next: NextFunction
   ): Promise<any> {
     try {
-      const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/reviewRequested/${req.params.id}`,{
+      const data = await fetch(`${TERNOA_API_URL}/api/users/reviewRequested/${req.params.id}`,{
         method: 'PATCH'
       });
       const user = await data.json()
@@ -95,7 +95,7 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/${req.params.walletId}`,{
+      const data = await fetch(`${TERNOA_API_URL}/api/users/${req.params.walletId}`,{
         method: 'POST',
         body: JSON.stringify(req.body)
       });
@@ -113,7 +113,7 @@ export class Controller {
   ): Promise<void> {
     try {
       const { walletId, nftId, serieId } = req.query
-      const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/like?walletId=${walletId}&nftId=${nftId}&serieId=${serieId}`, {
+      const data = await fetch(`${TERNOA_API_URL}/api/users/like?walletId=${walletId}&nftId=${nftId}&serieId=${serieId}`, {
         method: 'POST',
       })
       const user = await data.json()
@@ -130,7 +130,7 @@ export class Controller {
   ): Promise<void> {
     try {
       const { walletId, nftId, serieId } = req.query
-      const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/unlike?walletId=${walletId}&nftId=${nftId}&serieId=${serieId}`, {
+      const data = await fetch(`${TERNOA_API_URL}/api/users/unlike?walletId=${walletId}&nftId=${nftId}&serieId=${serieId}`, {
         method: 'POST',
       })
       const user = await data.json()
@@ -166,7 +166,7 @@ export class Controller {
   ): Promise<void>{
     try{
       if (!req.params.id) throw new Error("User wallet id not given")
-      res.redirect(`${process.env.TERNOA_API_URL}/api/users/verifyTwitter/${req.params.id}`)
+      res.redirect(`${TERNOA_API_URL}/api/users/verifyTwitter/${req.params.id}`)
     }catch(err){
       next(err)
     }

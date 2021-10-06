@@ -1,8 +1,8 @@
 import FollowModel from "../../models/follow";
 import { IUser } from "../../interfaces/IUser";
-import { PaginateResult } from "mongoose";
 import { CustomResponse } from "../../interfaces/graphQL";
 import fetch from "node-fetch";
+import { TERNOA_API_URL } from '../../utils'
 
 export class FollowService {
   /**
@@ -17,7 +17,7 @@ export class FollowService {
       if (follow) throw new Error("user is already following")
       follow = new FollowModel({followed, follower});
       await follow.save()
-      const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/${followed}`)
+      const data = await fetch(`${TERNOA_API_URL}/api/users/${followed}`)
       const userFollowed = await data.json()
       return userFollowed;
     } catch (err) {
@@ -36,7 +36,7 @@ export class FollowService {
         const follow = await FollowModel.findOne({followed, follower})
         if (!follow) throw new Error("user is already not following")
         await follow.delete()
-        const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/${followed}`)
+        const data = await fetch(`${TERNOA_API_URL}/api/users/${followed}`)
         const userFollowed = await data.json()
         return userFollowed;
       } catch (err) {
@@ -75,11 +75,11 @@ export class FollowService {
       if (certifiedOnly) searchQuery.$and.push({verified: true})
       if (nameOrAddressSearch) searchQuery.$and.push({$or: [{name: {$regex: nameOrAddressSearch, $options: "i"}}, {walletId: {$regex: nameOrAddressSearch, $options: "i"}}]})
       if (!page || !limit){
-        const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}`)
+        const data = await fetch(`${TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}`)
         const res: CustomResponse<IUser> = await data.json()
         return res;
       }else{
-        const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}&page=${page}&limit=${limit}`)
+        const data = await fetch(`${TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}&page=${page}&limit=${limit}`)
         const res: CustomResponse<IUser> = await data.json()
         return res;
       }
@@ -100,11 +100,11 @@ export class FollowService {
       if (certifiedOnly) searchQuery.$and.push({verified: true})
       if (nameOrAddressSearch) searchQuery.$and.push({$or: [{name: {$regex: nameOrAddressSearch, $options: "i"}}, {walletId: {$regex: nameOrAddressSearch, $options: "i"}}]})
       if (!page || !limit){
-        const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}`)
+        const data = await fetch(`${TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}`)
         const res: CustomResponse<IUser> = await data.json()
         return res;
       }else{
-        const data = await fetch(`${process.env.TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}&page=${page}&limit=${limit}`)
+        const data = await fetch(`${TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}&page=${page}&limit=${limit}`)
         const res: CustomResponse<IUser> = await data.json()
         return res;
       }
