@@ -61,8 +61,6 @@ export async function populateSerieData(
   NFT: INFT
 ): Promise<{ serieData: INFT[]; totalNft: number; totalListedNft: number; }> {
   try {
-    const t = new Date()
-    console.log("seriedata init", t)
     if (NFT.serieId === '0') return {
       serieData: [{ id: NFT.id, owner: NFT.owner, listed: NFT.listed, price: NFT.price, priceTiime: NFT.priceTiime, marketplaceId: NFT.marketplaceId }],
       totalNft: 1,
@@ -70,7 +68,6 @@ export async function populateSerieData(
     }
     const result = await NFTService.getNFTsForSerie(NFT)
     const serieData = result.data.sort((a, b) => b.listed - a.listed || Number(a.price) - Number(b.price) || Number(a.priceTiime) - Number(b.priceTiime))
-    console.log("seriedata ok", +new Date() - +t)
     return { serieData, totalNft: serieData.length, totalListedNft: serieData.filter(x => x.listed).length }
   } catch (err) {
     L.error({ err }, "NFTs with same serie could not have been fetched");
@@ -87,11 +84,8 @@ export async function populateNFTCreator(
   NFT: INFT
 ): Promise<IUser> {
   try {
-    const t = new Date()
-    console.log("creator init", t)
     const { creator } = NFT;
     const creatorData = await UserService.findUser(creator);
-    console.log("creator ok", +new Date() - +t)
     return creatorData;
   } catch (err) {
     L.error({ err }, "NFT creator id not in database");
@@ -108,11 +102,8 @@ export async function populateNFTOwner(
   NFT: INFT
 ): Promise<IUser> {
   try {
-    const t = new Date()
-    console.log("owner init", t)
     const { owner } = NFT;
     const ownerData = await UserService.findUser(owner);
-    console.log("owner ok", +new Date() - +t)
     return ownerData;
   } catch (err) {
     L.error({ err }, "NFT owner id not in database");
@@ -127,8 +118,6 @@ export async function populateNFTOwner(
  */
 export async function populateNFTUri(NFT: INFT): Promise<any> {
   try {
-    const t = new Date()
-    console.log("uri init", t)
     const response = await fetchTimeout(NFT.uri, null, Number(process.env.IPFS_REQUEST_TIMEOUT) || 8000).catch((_e) => {
       L.error('fetch error:' + _e);
       throw new Error('Could not retrieve NFT data from ' + NFT.uri)
@@ -141,10 +130,8 @@ export async function populateNFTUri(NFT: INFT): Promise<any> {
       if (info.cryptedMedia.url.indexOf(defaultIpfsGateway) < 0) {
         info.cryptedMedia.url = overwriteDefaultIpfsGateway(info.cryptedMedia.url);
       }
-      console.log("URI ok", +new Date() - +t)
       return info;
     } else {
-      console.log("URI not ok", +new Date() - +t)
       return {};
     }
   } catch (err) {
@@ -162,12 +149,9 @@ export async function populateNFTCategories(
   NFT: INFT
 ): Promise<ICategory[]> {
   try {
-    const t = new Date()
-    console.log("categories init", t)
     const mongoNft = await NFTService.findMongoNftFromId(NFT.id);
     if (!mongoNft) return []
     const categories = (mongoNft.categories) as ICategory[];
-    console.log("categories ok", t)
     return categories;
   } catch (err) {
     L.error({ err }, "error retrieving nft's categories from mongo");
