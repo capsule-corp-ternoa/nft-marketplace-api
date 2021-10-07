@@ -48,15 +48,10 @@ export default (io: Namespace) => {
         // confirm success to mobile app
         validCallback && callback({ ok: true });
       });
-      socket.on("PING", (data, callback) => {
-        const validCallback = callback && typeof callback === "function";
-        const nbListeners = socket.listenersAny().length
-        console.log(data)
-        console.log(nbListeners)
-        socket.to(`${session}`).emit("PING", nbListeners);
-        // confirm success to mobile app
-        validCallback && callback({ ok: true });
-      });
+      socket.on('disconnect', () => {
+        console.log('user disconnected');
+        socket.to(`${session}`).emit("USER_LEFT", 1);
+      })
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",
       });
