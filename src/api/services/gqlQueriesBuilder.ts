@@ -11,13 +11,15 @@ const nodes = `
     uri
     price
     priceTiime
+    marketplaceId
   }
 `;
 
 export class GQLQueriesBuilder {
-  allNFTs = (first?: string, page?: string, listed?: string) => gql`
+  allNFTs = (marketplaceId: string | undefined, first?: string, page?: string, listed?: string) => gql`
     {
       distinctSerieNfts(
+        ${marketplaceId && marketplaceId !== undefined ? `marketplaceId: "${marketplaceId}"` : ""}
         ${first && page ? `
             first: ${Number(first)}
             offset: ${(Number(page) - 1) * Number(first)}
@@ -55,9 +57,10 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  NFTsFromOwnerId = (id: string, first?: string, page?: string, listed?: string) => gql`
+  NFTsFromOwnerId = (marketplaceId: string | undefined, id: string, first?: string, page?: string, listed?: string) => gql`
     {
       distinctSerieNfts(
+        ${marketplaceId && marketplaceId !== undefined ? `marketplaceId: "${marketplaceId}"` : ""}
         ${first && page ? `
             first: ${Number(first)}
             offset: ${(Number(page) - 1) * Number(first)}
@@ -117,6 +120,7 @@ export class GQLQueriesBuilder {
         orderBy: ID_ASC
         filter: {
           and: [
+            { timestampBurn: { isNull: true } }
             { id: { in: ${JSON.stringify(ids)} } }
             ${listed && listed !== undefined ? `{ listed: {equalTo: ${Number(listed)} }}` : ""}
           ]
@@ -134,9 +138,10 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  NFTsFromIdsDistinct = (ids: string[], first?: string, page?: string, listed?: string) => gql`
+  NFTsFromIdsDistinct = (marketplaceId: string | undefined, ids: string[], first?: string, page?: string, listed?: string) => gql`
     {
       distinctSerieNfts(
+        ${marketplaceId && marketplaceId !== undefined ? `marketplaceId: "${marketplaceId}"` : ""}
         ${first && page ? `
             first: ${Number(first)}
             offset: ${(Number(page) - 1) * Number(first)}
@@ -161,9 +166,10 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  NFTsNotInIds = (ids: string[], first?: string, page?: string, listed?: string) => gql`
+  NFTsNotInIds = (marketplaceId: string | undefined, ids: string[], first?: string, page?: string, listed?: string) => gql`
     {
       distinctSerieNfts(
+        ${marketplaceId && marketplaceId !== undefined ? `marketplaceId: "${marketplaceId}"` : ""}
         ${first && page ? `
             first: ${Number(first)}
             offset: ${(Number(page) - 1) * Number(first)}
@@ -196,6 +202,7 @@ export class GQLQueriesBuilder {
         listed
         price
         priceTiime
+        marketplaceId
       }
     `;
     return gql`
@@ -207,7 +214,7 @@ export class GQLQueriesBuilder {
           ` : ""}
           filter: {
             and : [
-              { timestampBurn:{ isNull:true } }
+              { timestampBurn: { isNull: true } }
               { serieId:{ equalTo:"${serieId}" } }
             ]
           }
@@ -226,31 +233,6 @@ export class GQLQueriesBuilder {
     `;
   }
 
-  NFTsForSeries = (serieIds: string[], first?: string, page?: string) => gql`
-    {
-      distinctSerieNfts(
-        ${first && page ? `
-            first: ${Number(first)}
-            offset: ${(Number(page) - 1) * Number(first)}
-        ` : ""}
-        filter: {
-          and: [
-            { serieId: { in: ${JSON.stringify(serieIds)} } }
-          ]
-        }
-      ) {
-        totalCount
-        ${first && page ? `
-          pageInfo {
-            hasNextPage
-            hasPreviousPage
-          }
-        ` : ""}
-        ${nodes}
-      }
-    }
-  `;
-
   countOwnerOwned = (id: string) => gql`
     {
       nftEntities(
@@ -265,12 +247,13 @@ export class GQLQueriesBuilder {
       }
     }
   `;
-  countOwnerOwnedListed = (id: string) => gql`
+  countOwnerOwnedListed = (marketplaceId: string | undefined, id: string) => gql`
     {
       nftEntities(
         filter: { 
           and: [
             { timestampBurn: { isNull: true } }
+            ${marketplaceId && marketplaceId !== undefined ? `{ marketplaceId: { equalTo: "${marketplaceId}"} }` : ""}
             { owner: { equalTo: "${id}" } }
             {listed: { equalTo: 1}}
           ]

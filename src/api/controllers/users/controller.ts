@@ -1,13 +1,16 @@
 import UserService from "../../services/user";
 import { NextFunction, Request, Response } from "express";
 import fetch from "node-fetch";
-import { OAuth } from "oauth"
-import { LIMIT_MAX_PAGINATION } from "../../../utils";
+import { LIMIT_MAX_PAGINATION, TERNOA_API_URL } from "../../../utils";
 
 export class Controller {
-  all(_: Request, res: Response): void {
-    UserService.getAllUsers().then((r) => res.json(r));
+  async all(req: Request, res: Response): Promise<void> {
+    const {page, limit} = req.query
+    const data = await fetch(`${TERNOA_API_URL}/api/users/?page=${page}&limit=${limit}`)
+    const response = await data.json()
+    res.json(response)
   }
+
   async newUser(
     req: Request,
     res: Response,
@@ -15,19 +18,12 @@ export class Controller {
   ): Promise<void> {
     try {
       const { body } = req;
-      const { walletId } = body;
-      let existingUser = null;
-      try {
-        existingUser = await UserService.findUser(walletId);
-      }
-      finally {
-        if (existingUser) {
-          res.status(409).send("Wallet user already exists");
-        } else {
-          const user = await UserService.createUser(body);
-          res.json(user);
-        }
-      }
+      const data = await fetch(`${TERNOA_API_URL}/api/users/create`,{
+        method: 'POST',
+        body: JSON.stringify(body)
+      });
+      const response = await data.json()
+      res.json(response)
     } catch (err) {
       next(err);
     }
@@ -49,13 +45,31 @@ export class Controller {
     }
   }
 
+  async getUsersBywalletId(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const walletIds = typeof req.query.walletIds === "string" ? [req.query.walletIds] : req.query.walletIds as string[]
+      const data = await fetch(`${TERNOA_API_URL}/api/users/getUsers?walletIds=${walletIds.join("&walletIds=")}`)
+      const users = await data.json()
+      res.json(users);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async reviewRequested(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<any> {
     try {
-      const user = await UserService.reviewRequested(req.params.id);
+      const data = await fetch(`${TERNOA_API_URL}/api/users/reviewRequested/${req.params.id}`,{
+        method: 'PATCH'
+      });
+      const user = await data.json()
       res.json(user);
     } catch (err) {
       next(err);
@@ -81,7 +95,11 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const user = await UserService.updateUser(req.params.walletId, req.body);
+      const data = await fetch(`${TERNOA_API_URL}/api/users/${req.params.walletId}`,{
+        method: 'POST',
+        body: JSON.stringify(req.body)
+      });
+      const user = await data.json();
       res.json(user);
     } catch (err) {
       next(err)
@@ -94,9 +112,11 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const { walletId, nftId } = req.query
-      if (!walletId || !nftId) throw new Error("wallet id or nft id not given")
-      const user = await UserService.likeNft(walletId as string, nftId as string);
+      const { walletId, nftId, serieId } = req.query
+      const data = await fetch(`${TERNOA_API_URL}/api/users/like?walletId=${walletId}&nftId=${nftId}&serieId=${serieId}`, {
+        method: 'POST',
+      })
+      const user = await data.json()
       res.json(user);
     } catch (err) {
       next(err)
@@ -109,9 +129,11 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const { walletId, nftId } = req.query
-      if (!walletId || !nftId) throw new Error("wallet id or nft id not given")
-      const user = await UserService.unlikeNft(walletId as string, nftId as string);
+      const { walletId, nftId, serieId } = req.query
+      const data = await fetch(`${TERNOA_API_URL}/api/users/unlike?walletId=${walletId}&nftId=${nftId}&serieId=${serieId}`, {
+        method: 'POST',
+      })
+      const user = await data.json()
       res.json(user);
     } catch (err) {
       next(err)
@@ -143,53 +165,11 @@ export class Controller {
     next: NextFunction
   ): Promise<void>{
     try{
-      if (!process.env.TWITTER_CONSUMER_KEY || !process.env.TWITTER_CONSUMER_SECRET) throw new Error("Feature not available")
       if (!req.params.id) throw new Error("User wallet id not given")
-      const oauth = new OAuth(
-        'https://api.twitter.com/oauth/request_token',
-        'https://api.twitter.com/oauth/access_token',
-        process.env.TWITTER_CONSUMER_KEY,
-        process.env.TWITTER_CONSUMER_SECRET,
-        '1.0A',
-        `${req.headers.host.substr(0,5)==="local" ? "http://" : "https://"}${req.headers.host}/api/mp/users/verifyTwitter/callback`,
-        'HMAC-SHA1'
-      )
-      oauth.getOAuthRequestToken((err, oauthToken) => {
-        if (err) throw new Error(err.statusCode + ': ' + err.data)
-        UserService.setTwitterVerificationToken(req.params.id, oauthToken)
-        res.redirect("https://api.twitter.com/oauth/authorize?oauth_token=" + oauthToken)
-      })
+      res.redirect(`${TERNOA_API_URL}/api/users/verifyTwitter/${req.params.id}`)
     }catch(err){
-      res.redirect(process.env.TWITTER_REDIRECT_URL+"&twitterValidated=false")
+      next(err)
     }
   }
-
-  async verifyTwitterCallback(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void>{
-    try{
-      if (!req.query.oauth_token || !req.query.oauth_verifier) throw new Error("Couldn't validate twitter username")
-      const user = await UserService.getUserByTwitterVerificationToken(req.query.oauth_token as string)
-      const userAccessData = await fetch(`https://api.twitter.com/oauth/access_token?oauth_token=${req.query.oauth_token}&oauth_verifier=${req.query.oauth_verifier}`)
-      const screenName = new URLSearchParams(await userAccessData.text()).get("screen_name")
-      if (screenName !== (user as any).twitterName.substring(1)) throw Error("Couldn't validate twitter username")
-      await UserService.validateTwitter(true, user.walletId)
-      res.redirect(process.env.TWITTER_REDIRECT_URL+"&twittervalidated=true")
-    }catch(err){
-      try{
-        const token = req.query.oauth_token || req.query.denied
-        if (token){
-          const user = await UserService.getUserByTwitterVerificationToken(token as string)
-          await UserService.validateTwitter(false, user.walletId)
-        }
-      }catch(errMongo){
-        res.redirect(process.env.TWITTER_REDIRECT_URL+"&twitterValidated=false")
-      }
-      res.redirect(process.env.TWITTER_REDIRECT_URL+"&twitterValidated=false")
-    }
-  }
-
 }
 export default new Controller();

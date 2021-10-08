@@ -48,6 +48,18 @@ export default (io: Namespace) => {
         // confirm success to mobile app
         validCallback && callback({ ok: true });
       });
+      socket.on('disconnect', () => {
+        console.log('user disconnected');
+        socket.to(`${session}`).emit("USER_DISCONNECT", 1);
+      })
+      socket.on('timeout', () => {
+        console.log('user timeout');
+        socket.to(`${session}`).emit("USER_TIMEOUT", 1);
+      })
+      socket.on('close', () => {
+        console.log('user close');
+        socket.to(`${session}`).emit("USER_CLOSE", 1);
+      })
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
         msg: "Connection successful",
       });

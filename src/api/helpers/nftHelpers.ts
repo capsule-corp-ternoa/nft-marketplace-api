@@ -3,7 +3,7 @@ import UserService from "../services/user";
 import L from "../../common/logger";
 import NFTService from "../services/nft";
 import { ICategory } from "../../interfaces/ICategory";
-import { fetchTimeout } from "../../utils";
+import { fetchTimeout, removeURLSlash } from "../../utils";
 import { IUser } from "src/interfaces/IUser";
 
 const ipfsGateways = {
@@ -12,7 +12,7 @@ const ipfsGateways = {
   ternoaIpfsGateway: `https://ipfs.ternoa.dev/ipfs`,
 }
 const defaultIpfsGateway = ipfsGateways.ternoaIpfsGateway;
-const ipfsGatewayUri = process.env.IPFS_GATEWAY || defaultIpfsGateway;
+const ipfsGatewayUri = (process.env.IPFS_GATEWAY && removeURLSlash(process.env.IPFS_GATEWAY)) || defaultIpfsGateway;
 
 function extractHashFromGatewayUri(uri: string) {
   const regex: RegExp = new RegExp('(http?s:\/\/.*\/)(.*)', 'gm');
@@ -62,12 +62,12 @@ export async function populateSerieData(
 ): Promise<{ serieData: INFT[]; totalNft: number; totalListedNft: number; }> {
   try {
     if (NFT.serieId === '0') return {
-      serieData: [{ id: NFT.id, owner: NFT.owner, listed: NFT.listed, price: NFT.price, priceTiime: NFT.priceTiime }],
+      serieData: [{ id: NFT.id, owner: NFT.owner, listed: NFT.listed, price: NFT.price, priceTiime: NFT.priceTiime, marketplaceId: NFT.marketplaceId }],
       totalNft: 1,
       totalListedNft: NFT.listed
     }
     const result = await NFTService.getNFTsForSerie(NFT)
-    const serieData = result.nftEntities.nodes.sort((a, b) => b.listed - a.listed || Number(a.price) - Number(b.price) || Number(a.priceTiime) - Number(b.priceTiime))
+    const serieData = result.data.sort((a, b) => b.listed - a.listed || Number(a.price) - Number(b.price) || Number(a.priceTiime) - Number(b.priceTiime))
     return { serieData, totalNft: serieData.length, totalListedNft: serieData.filter(x => x.listed).length }
   } catch (err) {
     L.error({ err }, "NFTs with same serie could not have been fetched");

@@ -8,7 +8,3 @@ export interface IUser {
   twitterName?: string;
   twitterVerified?: boolean;
 }
-
-export interface IUserDTO {
-  walletId: string;
-}
