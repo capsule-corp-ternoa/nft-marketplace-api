@@ -68,11 +68,11 @@ export class Controller {
     try {
       const {cookie} = JSON.parse(req.body)
       if(cookie && decryptCookie(cookie) === req.params.id){
-      const data = await fetch(`${TERNOA_API_URL}/api/users/reviewRequested/${req.params.id}`,{
-        method: 'PATCH'
-      });
-      const user = await data.json()
-      res.json(user);
+        const data = await fetch(`${TERNOA_API_URL}/api/users/reviewRequested/${req.params.id}`,{
+          method: 'PATCH'
+        });
+        const user = await data.json()
+        res.json(user);
       }else{
         throw new Error('Unvalid authentication')
       }
@@ -120,11 +120,11 @@ export class Controller {
       const { walletId, nftId, serieId } = req.query
       const {cookie} = JSON.parse(req.body)
       if(cookie && decryptCookie(cookie) === walletId){
-      const data = await fetch(`${TERNOA_API_URL}/api/users/like?walletId=${walletId}&nftId=${nftId}&serieId=${serieId}`, {
-        method: 'POST',
-      })
-      const user = await data.json()
-      res.json(user);
+        const data = await fetch(`${TERNOA_API_URL}/api/users/like?walletId=${walletId}&nftId=${nftId}&serieId=${serieId}`, {
+          method: 'POST',
+        })
+        const user = await data.json()
+        res.json(user);
       }else{
         throw new Error('Unvalid authentication')
       }
@@ -142,11 +142,11 @@ export class Controller {
       const { walletId, nftId, serieId } = req.query
       const {cookie} = JSON.parse(req.body)
       if(cookie && decryptCookie(cookie) === walletId){
-      const data = await fetch(`${TERNOA_API_URL}/api/users/unlike?walletId=${walletId}&nftId=${nftId}&serieId=${serieId}`, {
-        method: 'POST',
-      })
-      const user = await data.json()
-      res.json(user);
+        const data = await fetch(`${TERNOA_API_URL}/api/users/unlike?walletId=${walletId}&nftId=${nftId}&serieId=${serieId}`, {
+          method: 'POST',
+        })
+        const user = await data.json()
+        res.json(user);
       }else{
           throw new Error('Unvalid authentication')
         }

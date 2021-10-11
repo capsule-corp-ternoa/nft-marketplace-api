@@ -13,10 +13,10 @@ export class Controller {
       const {cookie} = JSON.parse(req.body)
       if (!walletIdFollowed || !walletIdFollower) next(new Error("wallet ids parameters are needed"));
       if(cookie && decryptCookie(cookie) === walletIdFollower){
-      res.json(await FollowService.follow(walletIdFollowed as string, walletIdFollower as string));
-    }else{
-      throw new Error('Unvalid authentication')
-    }
+        res.json(await FollowService.follow(walletIdFollowed as string, walletIdFollower as string));
+      }else{
+        throw new Error('Unvalid authentication')
+      }
     }catch(err){
       next(err);
     }
@@ -32,10 +32,10 @@ export class Controller {
       const {cookie} = JSON.parse(req.body)
       if (!walletIdFollowed || !walletIdFollower) next(new Error("wallet ids parameters are needed"));
       if(cookie && decryptCookie(cookie) === walletIdFollower){
-      res.json(await FollowService.unfollow(walletIdFollowed as string, walletIdFollower as string));
-    }else{
-      throw new Error('Unvalid authentication')
-    }
+        res.json(await FollowService.unfollow(walletIdFollowed as string, walletIdFollower as string));
+      }else{
+        throw new Error('Unvalid authentication')
+      }
     }catch(err){
       next(err);
     }
