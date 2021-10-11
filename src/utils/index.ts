@@ -33,8 +33,8 @@ export const TERNOA_API_URL = process.env.TERNOA_API_URL ? removeURLSlash(proces
 
 export const decryptCookie = (cookie: string) => {
     try{
-        if (!process.env.NEXT_PUBLIC_SECRET_COOKIE) return cookie
-        const bytes = cryptoJs.AES.decrypt(cookie, process.env.NEXT_PUBLIC_SECRET_COOKIE)
+        if (!process.env.SECRET_COOKIE) return cookie
+        const bytes = cryptoJs.AES.decrypt(cookie, process.env.SECRET_COOKIE)
         const decryptedCookie = bytes.toString(cryptoJs.enc.Utf8)
         return decryptedCookie
     }catch(err){
