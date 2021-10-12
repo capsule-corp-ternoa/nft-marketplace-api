@@ -1,7 +1,7 @@
 import UserService from "../../services/user";
 import { NextFunction, Request, Response } from "express";
 import fetch from "node-fetch";
-import { LIMIT_MAX_PAGINATION, TERNOA_API_URL } from "../../../utils";
+import { LIMIT_MAX_PAGINATION, TERNOA_API_URL, decryptCookie } from "../../../utils";
 
 export class Controller {
   async all(req: Request, res: Response): Promise<void> {
@@ -66,11 +66,16 @@ export class Controller {
     next: NextFunction
   ): Promise<any> {
     try {
-      const data = await fetch(`${TERNOA_API_URL}/api/users/reviewRequested/${req.params.id}`,{
-        method: 'PATCH'
-      });
-      const user = await data.json()
-      res.json(user);
+      const {cookie} = JSON.parse(req.body)
+      if(cookie && decryptCookie(cookie) === req.params.id){
+        const data = await fetch(`${TERNOA_API_URL}/api/users/reviewRequested/${req.params.id}`,{
+          method: 'PATCH'
+        });
+        const user = await data.json()
+        res.json(user);
+      }else{
+        throw new Error('Unvalid authentication')
+      }
     } catch (err) {
       next(err);
     }
@@ -113,11 +118,16 @@ export class Controller {
   ): Promise<void> {
     try {
       const { walletId, nftId, serieId } = req.query
-      const data = await fetch(`${TERNOA_API_URL}/api/users/like?walletId=${walletId}&nftId=${nftId}&serieId=${serieId}`, {
-        method: 'POST',
-      })
-      const user = await data.json()
-      res.json(user);
+      const {cookie} = JSON.parse(req.body)
+      if(cookie && decryptCookie(cookie) === walletId){
+        const data = await fetch(`${TERNOA_API_URL}/api/users/like?walletId=${walletId}&nftId=${nftId}&serieId=${serieId}`, {
+          method: 'POST',
+        })
+        const user = await data.json()
+        res.json(user);
+      }else{
+        throw new Error('Unvalid authentication')
+      }
     } catch (err) {
       next(err)
     }
@@ -130,11 +140,16 @@ export class Controller {
   ): Promise<void> {
     try {
       const { walletId, nftId, serieId } = req.query
-      const data = await fetch(`${TERNOA_API_URL}/api/users/unlike?walletId=${walletId}&nftId=${nftId}&serieId=${serieId}`, {
-        method: 'POST',
-      })
-      const user = await data.json()
-      res.json(user);
+      const {cookie} = JSON.parse(req.body)
+      if(cookie && decryptCookie(cookie) === walletId){
+        const data = await fetch(`${TERNOA_API_URL}/api/users/unlike?walletId=${walletId}&nftId=${nftId}&serieId=${serieId}`, {
+          method: 'POST',
+        })
+        const user = await data.json()
+        res.json(user);
+      }else{
+          throw new Error('Unvalid authentication')
+        }
     } catch (err) {
       next(err)
     }
