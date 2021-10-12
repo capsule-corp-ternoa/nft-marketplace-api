@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import AbortController from "abort-controller"
+import cryptoJs from 'crypto-js'
 
 export const TIME_BETWEEN_SAME_USER_VIEWS = 10000
 export const LIMIT_MAX_PAGINATION = 50
@@ -29,3 +30,14 @@ export const removeURLSlash = (url: string) => {
 }
 
 export const TERNOA_API_URL = process.env.TERNOA_API_URL ? removeURLSlash(process.env.TERNOA_API_URL) : ""
+
+export const decryptCookie = (cookie: string) => {
+    try{
+        if (!process.env.SECRET_COOKIE) return cookie
+        const bytes = cryptoJs.AES.decrypt(cookie, process.env.SECRET_COOKIE)
+        const decryptedCookie = bytes.toString(cryptoJs.enc.Utf8)
+        return decryptedCookie
+    }catch(err){
+        return ""
+    }
+}
