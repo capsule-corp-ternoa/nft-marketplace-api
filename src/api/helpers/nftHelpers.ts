@@ -53,7 +53,7 @@ export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
     populateSerieData(retNFT),
     populateNFTCreator(retNFT),
     populateNFTOwner(retNFT),
-    populateNFTUri(retNFT),
+    Promise.resolve({}),// populateNFTUri(retNFT),
     populateNFTCategories(retNFT),
   ]);
   console.log('populateNFT');
