@@ -30,7 +30,7 @@ export class UserService {
     viewerIp: string = null, 
     ignoreCache: boolean = false
   ): Promise<IUser> {
-    if (!ignoreCache && !incViews) {
+    if (false && !ignoreCache && !incViews) {
       const user = usersCache.get(walletId) as IUser | undefined;
       if (user !== undefined) return user;
     }

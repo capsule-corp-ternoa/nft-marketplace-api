@@ -8,7 +8,7 @@ import L from "./logger";
 import errorHandler from "../api/middlewares/error.handler";
 import * as Sentry from "@sentry/node"
 import * as Tracing from "@sentry/tracing"
-
+import compression from "compression";
 const app = express();
 
 if (process.env.SENTRY_DSN){
@@ -31,6 +31,7 @@ export default class ExpressServer {
   constructor() {
     // CORS
     app.use(cors());
+    app.use(compression())
     // express middlewares
     app.use(express.json({ limit: process.env.REQUEST_LIMIT || "100kb" }));
     app.use(
