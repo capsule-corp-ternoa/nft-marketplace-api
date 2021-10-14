@@ -30,10 +30,10 @@ export default (io: Namespace) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("RUN_NFT_MINT", data);
         validCallback && callback({ ok: true });
-      })
-      socket.on('RUN_NFT_MINT_RECEIVED', (data, callback)=>{
+      }) 
+      socket.on('RUN_NFT_MINT_ACK_FROM_WALLET', (data, callback)=>{
         const validCallback = callback && typeof callback === "function";
-        socket.to(`${session}`).emit("RUN_NFT_MINT_RECEIVED", data);
+        socket.to(`${session}`).emit("RUN_NFT_MINT_ACK_FROM_WALLET", data);
         validCallback && callback({ ok: true });
       })
       socket.on("MINTING_NFT", (data, callback) => {
@@ -45,15 +45,6 @@ export default (io: Namespace) => {
       socket.on("MINTING_NFT_RECEIVED", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("MINTING_NFT_RECEIVED", data);
-        // confirm success to mobile app
-        validCallback && callback({ ok: true });
-      });
-      socket.on("PING", (data, callback) => {
-        const validCallback = callback && typeof callback === "function";
-        const nbListeners = socket.listenersAny().length
-        console.log(data)
-        console.log(nbListeners)
-        socket.to(`${session}`).emit("PING", nbListeners);
         // confirm success to mobile app
         validCallback && callback({ ok: true });
       });
