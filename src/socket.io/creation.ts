@@ -30,10 +30,10 @@ export default (io: Namespace) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("RUN_NFT_MINT", data);
         validCallback && callback({ ok: true });
-      }) 
+      })
       socket.on('RUN_NFT_MINT_RECEIVED', (data, callback)=>{
         const validCallback = callback && typeof callback === "function";
-        socket.to(`${session}`).emit("RUN_NFT_MINT_RECEIVED", data);
+        socket.to(`${session}`).emit("RUN_NFT_MINT_ACK_FROM_WALLET", data);
         validCallback && callback({ ok: true });
       })
       socket.on("MINTING_NFT", (data, callback) => {
