@@ -50,7 +50,7 @@ export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
   const timeLabel = `populateNFT-${NFT.id}-${new Date().getTime()}`
   console.time(timeLabel);
   const [serieData, creatorData, ownerData, info, categories] = await Promise.all([
-    Promise.resolve({}) ,// populateSerieData(retNFT),
+    populateSerieData(retNFT),
     populateNFTCreator(retNFT),
     populateNFTOwner(retNFT),
     populateNFTUri(retNFT),
