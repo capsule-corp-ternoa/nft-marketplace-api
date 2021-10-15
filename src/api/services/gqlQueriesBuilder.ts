@@ -233,6 +233,45 @@ export class GQLQueriesBuilder {
     `;
   }
 
+  NFTsForSeries = (serieIds: string[], first?: string, page?: string) => {
+    const nodesSerieData = `
+      nodes {
+        id
+        owner
+        listed
+        price
+        priceTiime
+        marketplaceId
+      }
+    `;
+    return gql`
+      {
+        nftEntities(
+          ${first && page ? `
+              first: ${Number(first)}
+              offset: ${(Number(page) - 1) * Number(first)}
+          ` : ""}
+          filter: {
+            and : [
+              { timestampBurn: { isNull: true } }
+              { serieId:{ in:${JSON.stringify(serieIds)} } }
+            ]
+          }
+        )
+        {
+          totalCount
+          ${first && page ? `
+            pageInfo {
+              hasNextPage
+              hasPreviousPage
+            }
+          ` : ""}
+          ${nodesSerieData}
+        }
+      }
+    `;
+  }
+
   countOwnerOwned = (id: string) => gql`
     {
       nftEntities(
