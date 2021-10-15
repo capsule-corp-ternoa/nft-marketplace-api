@@ -242,6 +242,7 @@ export class GQLQueriesBuilder {
         price
         priceTiime
         marketplaceId
+        serieId
       }
     `;
     return gql`
