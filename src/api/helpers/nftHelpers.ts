@@ -45,7 +45,7 @@ function parseRawNFT(NFT: INFT): INFT {
  * @param NFT - NFT object
  * @returns - NFT object with new fields
  */
-export async function populateNFT(NFT: INFT, seriesData?: CustomResponse<INFT>): Promise<ICompleteNFT | INFT> {
+export async function populateNFT(NFT: INFT, seriesData: CustomResponse<INFT>): Promise<ICompleteNFT | INFT> {
   const retNFT: INFT = parseRawNFT(NFT);
   const [serieData, creatorData, ownerData, info, categories] = await Promise.all([
     populateSerieData(retNFT, seriesData),
@@ -59,7 +59,7 @@ export async function populateNFT(NFT: INFT, seriesData?: CustomResponse<INFT>):
 
 export async function populateSerieData(
   NFT: INFT,
-  seriesData?: CustomResponse<INFT>
+  seriesData: CustomResponse<INFT>
 ): Promise<{ serieData: INFT[]; totalNft: number; totalListedNft: number; }> {
   try {
     if (NFT.serieId === '0') return {
