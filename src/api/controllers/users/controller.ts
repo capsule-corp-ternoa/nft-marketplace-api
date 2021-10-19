@@ -18,9 +18,10 @@ export class Controller {
   ): Promise<void> {
     try {
       const { body } = req;
+      const stringifyBody = typeof body === 'string'? body : JSON.stringify(body)
       const data = await fetch(`${TERNOA_API_URL}/api/users/create`,{
         method: 'POST',
-        body: JSON.stringify(body)
+        body : stringifyBody
       });
       const response = await data.json()
       res.json(response)
