@@ -34,9 +34,8 @@ export class NFTService {
       const res: DistinctNFTListResponse = await request(indexerUrl, query);
       console.timeEnd('indexer')
       const NFTs = res.distinctSerieNfts.nodes;
-      console.time('map')
-      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
-      console.timeEnd('map')
+      const seriesData = await this.getNFTsForSeries(NFTs.map(x => x.serieId))
+      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData)))
       const result: CustomResponse<INFT>={
         totalCount: res.distinctSerieNfts.totalCount,
         data: res.distinctSerieNfts.nodes,
@@ -68,7 +67,8 @@ export class NFTService {
       const result: NFTListResponse = await request(indexerUrl, query);
       let NFT = result.nftEntities.nodes[0];
       if (!NFT) throw new Error();
-      NFT = await populateNFT(NFT);
+      const seriesData = await this.getNFTsForSeries([NFT.serieId])
+      NFT = await populateNFT(NFT, seriesData);
       let viewsCount = 0
       if (incViews){
         const date = +new Date()
@@ -100,7 +100,8 @@ export class NFTService {
       const query = QueriesBuilder.NFTsFromOwnerId(marketplaceId, ownerId, limit, page, listed);
       const res: DistinctNFTListResponse = await request(indexerUrl, query);
       const NFTs = res.distinctSerieNfts.nodes;
-      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
+      const seriesData = await this.getNFTsForSeries(NFTs.map(x => x.serieId))
+      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData)))
       const result: CustomResponse<INFT>={
         totalCount: res.distinctSerieNfts.totalCount,
         data: res.distinctSerieNfts.nodes,
@@ -126,7 +127,8 @@ export class NFTService {
       const query = QueriesBuilder.NFTsFromCreatorId(creatorId, limit, page, listed);
       const res: DistinctNFTListResponse = await request(indexerUrl, query);
       const NFTs = res.distinctSerieNfts.nodes;
-      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
+      const seriesData = await this.getNFTsForSeries(NFTs.map(x => x.serieId))
+      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData)))
       const result: CustomResponse<INFT>={
         totalCount: res.distinctSerieNfts.totalCount,
         data: res.distinctSerieNfts.nodes,
@@ -186,7 +188,8 @@ export class NFTService {
       const query = QueriesBuilder.NFTsFromIds(ids, limit, page, listed);
       const res: NFTListResponse = await request(indexerUrl, query);
       const NFTs = res.nftEntities.nodes;
-      res.nftEntities.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
+      const seriesData = await this.getNFTsForSeries(NFTs.map(x => x.serieId))
+      res.nftEntities.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData)))
       const result: CustomResponse<INFT>={
         totalCount: res.nftEntities.totalCount,
         data: res.nftEntities.nodes,
@@ -213,7 +216,8 @@ export class NFTService {
       const query = QueriesBuilder.NFTsFromIdsDistinct(marketplaceId, ids, limit, page, listed);
       const res: DistinctNFTListResponse = await request(indexerUrl, query);
       const NFTs = res.distinctSerieNfts.nodes;
-      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
+      const seriesData = await this.getNFTsForSeries(NFTs.map(x => x.serieId))
+      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData)))
       const result: CustomResponse<INFT>={
         totalCount: res.distinctSerieNfts.totalCount,
         data: res.distinctSerieNfts.nodes,
@@ -239,7 +243,8 @@ export class NFTService {
       const query = QueriesBuilder.NFTsNotInIds(marketplaceId, ids, limit, page, listed);
       const res: DistinctNFTListResponse  = await request(indexerUrl, query);
       const NFTs = res.distinctSerieNfts.nodes;
-      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT)))
+      const seriesData = await this.getNFTsForSeries(NFTs.map(x => x.serieId))
+      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData)))
       const result: CustomResponse<INFT>={
         totalCount: res.distinctSerieNfts.totalCount,
         data: res.distinctSerieNfts.nodes,
@@ -344,6 +349,29 @@ export class NFTService {
    async getNFTsForSerie(NFT: INFT, page?: string, limit?: string): Promise<CustomResponse<INFT>>{
     try{
       const query = QueriesBuilder.NFTsForSerie(NFT.serieId, limit, page)
+      const res: NFTListResponse = await request(indexerUrl, query);
+      const result: CustomResponse<INFT>={
+        totalCount: res.nftEntities.totalCount,
+        data: res.nftEntities.nodes,
+        hasNextPage: res.nftEntities.pageInfo?.hasNextPage || undefined,
+        hasPreviousPage: res.nftEntities.pageInfo?.hasPreviousPage || undefined
+      }
+      return result
+    }catch(err){
+      throw new Error("Couldn't get NFTs for this serie");
+    }
+  }
+
+  /**
+   * Finds NFTs with series included in seriesIds arrayt
+   * @param seriesIds - SeriesId to find
+   * @param page? - Page number
+   * @param limit? - Number of elements per page
+   * @throws Will throw an error if nft ID doesn't exist
+   */
+   async getNFTsForSeries(seriesIds: string[], page?: string, limit?: string): Promise<CustomResponse<INFT>>{
+    try{
+      const query = QueriesBuilder.NFTsForSeries(seriesIds, limit, page)
       const res: NFTListResponse = await request(indexerUrl, query);
       const result: CustomResponse<INFT>={
         totalCount: res.nftEntities.totalCount,

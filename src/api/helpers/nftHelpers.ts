@@ -1,4 +1,4 @@
-import { ICompleteNFT, INFT } from "../../interfaces/graphQL";
+import { CustomResponse, ICompleteNFT, INFT } from "../../interfaces/graphQL";
 import UserService from "../services/user";
 import L from "../../common/logger";
 import NFTService from "../services/nft";
@@ -45,12 +45,12 @@ function parseRawNFT(NFT: INFT): INFT {
  * @param NFT - NFT object
  * @returns - NFT object with new fields
  */
-export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
+export async function populateNFT(NFT: INFT, seriesData: CustomResponse<INFT>): Promise<ICompleteNFT | INFT> {
   const retNFT: INFT = parseRawNFT(NFT);
   const timeLabel = `populateNFT-${NFT.id}-${new Date().getTime()}`
   console.time(timeLabel);
   const [serieData, creatorData, ownerData, info, categories] = await Promise.all([
-    populateSerieData(retNFT),
+    populateSerieData(retNFT, seriesData),
     populateNFTCreator(retNFT),
     populateNFTOwner(retNFT),
     populateNFTUri(retNFT),
@@ -62,7 +62,8 @@ export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
 }
 
 export async function populateSerieData(
-  NFT: INFT
+  NFT: INFT,
+  seriesData: CustomResponse<INFT>
 ): Promise<{ serieData: INFT[]; totalNft: number; totalListedNft: number; }> {
   const timeLabel = `populateSerieData-${NFT.id}-${new Date().getTime()}`
   console.time(timeLabel);
@@ -72,8 +73,8 @@ export async function populateSerieData(
       totalNft: 1,
       totalListedNft: NFT.listed
     }
-    const result = await NFTService.getNFTsForSerie(NFT)
-    const serieData = result.data.sort((a, b) => b.listed - a.listed || Number(a.price) - Number(b.price) || Number(a.priceTiime) - Number(b.priceTiime))
+    const result = seriesData.data.filter(x => x.serieId === NFT.serieId)
+    const serieData = result.sort((a, b) => b.listed - a.listed || Number(a.price) - Number(b.price) || Number(a.priceTiime) - Number(b.priceTiime))
     return { serieData, totalNft: serieData.length, totalListedNft: serieData.filter(x => x.listed).length }
   } catch (err) {
     L.error({ err }, "NFTs with same serie could not have been fetched");
