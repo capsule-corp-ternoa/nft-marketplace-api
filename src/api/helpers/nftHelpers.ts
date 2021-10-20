@@ -47,6 +47,8 @@ function parseRawNFT(NFT: INFT): INFT {
  */
 export async function populateNFT(NFT: INFT, seriesData: CustomResponse<INFT>): Promise<ICompleteNFT | INFT> {
   const retNFT: INFT = parseRawNFT(NFT);
+  const timeLabel = `populateNFT-${NFT.id}-${new Date().getTime()}`
+  console.time(timeLabel);
   const [serieData, creatorData, ownerData, info, categories] = await Promise.all([
     populateSerieData(retNFT, seriesData),
     populateNFTCreator(retNFT),
@@ -54,6 +56,8 @@ export async function populateNFT(NFT: INFT, seriesData: CustomResponse<INFT>): 
     populateNFTUri(retNFT),
     populateNFTCategories(retNFT),
   ]);
+  console.log('populateNFT');
+  console.timeEnd(timeLabel);
   return { ...retNFT, ...serieData, creatorData, ownerData, ...info, categories };
 }
 
@@ -61,6 +65,8 @@ export async function populateSerieData(
   NFT: INFT,
   seriesData: CustomResponse<INFT>
 ): Promise<{ serieData: INFT[]; totalNft: number; totalListedNft: number; }> {
+  const timeLabel = `populateSerieData-${NFT.id}-${new Date().getTime()}`
+  console.time(timeLabel);
   try {
     if (NFT.serieId === '0') return {
       serieData: [{ id: NFT.id, owner: NFT.owner, listed: NFT.listed, price: NFT.price, priceTiime: NFT.priceTiime, marketplaceId: NFT.marketplaceId }],
@@ -74,6 +80,9 @@ export async function populateSerieData(
     L.error({ err }, "NFTs with same serie could not have been fetched");
     return null;
   }
+  finally {
+    console.timeEnd(timeLabel);
+  }
 }
 
 /**
@@ -84,6 +93,8 @@ export async function populateSerieData(
 export async function populateNFTCreator(
   NFT: INFT
 ): Promise<IUser> {
+  const timeLabel = `populateNFTCreator-${NFT.id}-${new Date().getTime()}`
+  console.time(timeLabel);
   try {
     const { creator } = NFT;
     const creatorData = await UserService.findUser(creator);
@@ -91,6 +102,9 @@ export async function populateNFTCreator(
   } catch (err) {
     L.error({ err }, "NFT creator id not in database");
     return null;
+  }
+  finally {
+    console.timeEnd(timeLabel);
   }
 }
 
@@ -102,6 +116,8 @@ export async function populateNFTCreator(
 export async function populateNFTOwner(
   NFT: INFT
 ): Promise<IUser> {
+  const timeLabel = `populateNFTOwner-${NFT.id}-${new Date().getTime()}`
+  console.time(timeLabel);
   try {
     const { owner } = NFT;
     const ownerData = await UserService.findUser(owner);
@@ -109,6 +125,9 @@ export async function populateNFTOwner(
   } catch (err) {
     L.error({ err }, "NFT owner id not in database");
     return null;
+  }
+  finally {
+    console.timeEnd(timeLabel);
   }
 }
 
@@ -118,6 +137,8 @@ export async function populateNFTOwner(
  * @returns NFT object with new fields, if uri was valid, object stays untouched otherwise
  */
 export async function populateNFTUri(NFT: INFT): Promise<any> {
+  const timeLabel = `populateNFTUri-${NFT.id}-${new Date().getTime()}`
+  console.time(timeLabel);
   try {
     const response = await fetchTimeout(NFT.uri, null, Number(process.env.IPFS_REQUEST_TIMEOUT) || 8000).catch((_e) => {
       L.error('fetch error:' + _e);
@@ -139,6 +160,9 @@ export async function populateNFTUri(NFT: INFT): Promise<any> {
     L.error("invalid NFT uri:" + err);
     return {};
   }
+  finally {
+    console.timeEnd(timeLabel)
+  }
 }
 
 /**
@@ -149,6 +173,8 @@ export async function populateNFTUri(NFT: INFT): Promise<any> {
 export async function populateNFTCategories(
   NFT: INFT
 ): Promise<ICategory[]> {
+  const timeLabel = `populateNFTCategories-${NFT.id}-${new Date().getTime()}`
+  console.time(timeLabel);
   try {
     const mongoNft = await NFTService.findMongoNftFromId(NFT.id);
     if (!mongoNft) return []
@@ -157,5 +183,8 @@ export async function populateNFTCategories(
   } catch (err) {
     L.error({ err }, "error retrieving nft's categories from mongo");
     return [];
+  }
+  finally {
+    console.timeEnd(timeLabel)
   }
 }
