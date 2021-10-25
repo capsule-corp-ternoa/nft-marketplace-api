@@ -28,11 +28,8 @@ export class NFTService {
    */
   async getAllNFTs(marketplaceId: string|undefined, page?: string, limit?: string, listed?: string): Promise<CustomResponse<INFT>> {
     try {
-      console.log('getAllNFTs');
-      console.time('indexer')
       const query = QueriesBuilder.allNFTs(marketplaceId, limit, page, listed);
       const res: DistinctNFTListResponse = await request(indexerUrl, query);
-      console.timeEnd('indexer')
       const NFTs = res.distinctSerieNfts.nodes;
       const seriesData = await this.getNFTsForSeries(NFTs.map(x => x.serieId))
       res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData)))
