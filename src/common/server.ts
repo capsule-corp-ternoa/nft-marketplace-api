@@ -46,7 +46,7 @@ export default class ExpressServer {
     mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-    });
+    } as any);
     const db = mongoose.connection;
     db.on("error", (err) => L.error({ err }, "db connection error"));
     db.once("open", () => {

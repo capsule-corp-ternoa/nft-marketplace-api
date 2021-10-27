@@ -266,7 +266,7 @@ export class NFTService {
     try {
       if (codes===null){
         const query = {categories:{ $exists:true, $nin:[[] as any[], null ]} }
-        const mongoNfts = await NftModel.find(query);
+        const mongoNfts = await NftModel.find(query as any)
         const result = await this.getNFTsNotInIds(
           marketplaceId, 
           mongoNfts.map((nft) => nft.chainId),
@@ -280,12 +280,12 @@ export class NFTService {
           codes.map(async (x) => {
             const category = await CategoryService.getCategoryByCode(x)
             if (category) {
-              return mongoose.Types.ObjectId(category._id)
+              return new mongoose.Types.ObjectId(category._id)
             }
           })
         )
         const query = {categories: {$in: categories} }
-        const mongoNfts = await NftModel.find(query)
+        const mongoNfts = await NftModel.find(query as any)
         const result = await this.getNFTsFromIdsDistinct(
           marketplaceId, 
           mongoNfts.map((nft) => nft.chainId),

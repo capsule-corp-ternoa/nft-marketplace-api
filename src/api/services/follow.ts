@@ -18,7 +18,7 @@ export class FollowService {
       follow = new FollowModel({followed, follower});
       await follow.save()
       const data = await fetch(`${TERNOA_API_URL}/api/users/${followed}`)
-      const userFollowed = await data.json()
+      const userFollowed = await data.json() as IUser
       return userFollowed;
     } catch (err) {
       throw new Error("Couldn't follow user");
@@ -38,7 +38,7 @@ export class FollowService {
         await follow.delete()
         const data = await fetch(`${TERNOA_API_URL}/api/users/${followed}`)
         const userFollowed = await data.json()
-        return userFollowed;
+        return userFollowed as IUser;
       } catch (err) {
         throw new Error("Couldn't unfollow user");
       }
@@ -76,11 +76,11 @@ export class FollowService {
       if (nameOrAddressSearch) searchQuery.$and.push({$or: [{name: {$regex: nameOrAddressSearch, $options: "i"}}, {walletId: {$regex: nameOrAddressSearch, $options: "i"}}]})
       if (!page || !limit){
         const data = await fetch(`${TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}`)
-        const res: CustomResponse<IUser> = await data.json()
+        const res = await data.json() as CustomResponse<IUser>
         return res;
       }else{
         const data = await fetch(`${TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}&page=${page}&limit=${limit}`)
-        const res: CustomResponse<IUser> = await data.json()
+        const res = await data.json() as CustomResponse<IUser>
         return res;
       }
     } catch (err) {
@@ -101,11 +101,11 @@ export class FollowService {
       if (nameOrAddressSearch) searchQuery.$and.push({$or: [{name: {$regex: nameOrAddressSearch, $options: "i"}}, {walletId: {$regex: nameOrAddressSearch, $options: "i"}}]})
       if (!page || !limit){
         const data = await fetch(`${TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}`)
-        const res: CustomResponse<IUser> = await data.json()
+        const res = await data.json() as CustomResponse<IUser>
         return res;
       }else{
         const data = await fetch(`${TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}&page=${page}&limit=${limit}`)
-        const res: CustomResponse<IUser> = await data.json()
+        const res = await data.json() as CustomResponse<IUser>
         return res;
       }
     } catch (err) {

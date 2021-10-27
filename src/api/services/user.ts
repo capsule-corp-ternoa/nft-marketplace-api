@@ -36,7 +36,7 @@ export class UserService {
     }
     try {
       const data = await fetch(`${TERNOA_API_URL}/api/users/${walletId}`)
-      const user = await data.json()
+      const user = await data.json() as IUser
       let viewsCount = 0
       if (!user) throw new Error();
       if (incViews){

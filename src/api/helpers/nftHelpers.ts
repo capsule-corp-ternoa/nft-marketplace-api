@@ -124,7 +124,7 @@ export async function populateNFTUri(NFT: INFT): Promise<any> {
       throw new Error('Could not retrieve NFT data from ' + NFT.uri)
     });
     if (response) {
-      const info = await response.json();
+      const info: {media?: {url: string},cryptedMedia?: {url: string}} = await response.json();
       if (info.media.url.indexOf('/ipfs') >= 0 && info.media.url.indexOf(defaultIpfsGateway) < 0) {
         info.media.url = overwriteDefaultIpfsGateway(info.media.url);
       }
