@@ -3,10 +3,8 @@ export interface IUser {
   walletId: string;
   nbFollowers?: number;
   nbFollowing?: number;
-  likedNFTs?: string[];
+  likedNFTs?: { serieId: string, nftId: string }[];
   viewsCount?: number;
-}
-
-export interface IUserDTO {
-  walletId: string;
+  twitterName?: string;
+  twitterVerified?: boolean;
 }

@@ -5,18 +5,35 @@ import { Server } from "socket.io";
 import cors from "cors";
 import os from "os";
 import L from "./logger";
-
 import errorHandler from "../api/middlewares/error.handler";
-import redis from 'redis';
-import { createAdapter } from "socket.io-redis";
+import * as Sentry from "@sentry/node"
+import * as Tracing from "@sentry/tracing"
+import compression from "compression";
 
 const app = express();
+
+if (process.env.SENTRY_DSN){
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.SENTRY_ENV,
+    integrations: [
+      // enable HTTP calls tracing
+      new Sentry.Integrations.Http({ tracing: true }),
+      // enable Express.js middleware tracing
+      new Tracing.Integrations.Express({
+        app,
+      }),
+    ],
+    tracesSampleRate: 1.0,
+  });
+}
 
 export default class ExpressServer {
   constructor() {
     // CORS
     app.use(cors());
     // express middlewares
+    app.use(compression())
     app.use(express.json({ limit: process.env.REQUEST_LIMIT || "100kb" }));
     app.use(
       express.urlencoded({
@@ -31,7 +48,7 @@ export default class ExpressServer {
     mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-    });
+    } as any);
     const db = mongoose.connection;
     db.on("error", (err) => L.error({ err }, "db connection error"));
     db.once("open", () => {
@@ -40,7 +57,10 @@ export default class ExpressServer {
   }
 
   router(routes: (app: Application) => void): ExpressServer {
+    if (process.env.SENTRY_DSN) app.use(Sentry.Handlers.requestHandler());
+    if (process.env.SENTRY_DSN) app.use(Sentry.Handlers.tracingHandler());
     routes(app);
+    if (process.env.SENTRY_DSN) app.use(Sentry.Handlers.errorHandler());
     app.use(errorHandler);
     return this;
   }
@@ -55,27 +75,11 @@ export default class ExpressServer {
     // creates http server
     const httpServer = http.createServer(app);
 
-    // creates socket io server
-    const { REDIS_URL, REDIS_KEY, REDIS_ENABLED } = process.env;
-    L.info('REDIS URL:' + REDIS_URL);
-    L.info('REDIS_KEY:' + REDIS_KEY);
-    L.info('REDIS_ENABLED:' + REDIS_ENABLED);
-    let io = new Server(httpServer, {
+    const io = new Server(httpServer, {
       // TODO: handle CORS
       cors: { origin: "*" },
       transports: ['websocket']
     });
-    if (+(REDIS_ENABLED) === 1) {
-      const client = redis.createClient(REDIS_URL, { tls: { rejectUnauthorized: false } });
-      L.info('REDIS client build allowing TLS unauth.');
-      const redisAdapter = createAdapter({
-        key: REDIS_KEY,
-        pubClient: client,
-        subClient: client.duplicate()
-      });
-      io = io.adapter(redisAdapter);
-      L.info('REDIS Adapter added to IO ');
-    }
 
     socketInit(io);
 

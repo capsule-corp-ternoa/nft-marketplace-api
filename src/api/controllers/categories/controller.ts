@@ -1,5 +1,4 @@
-import CategoryService from "../../../services/mpServices/category";
-import L from "../../../../common/logger";
+import CategoryService from "../../services/category";
 import { NextFunction, Request, Response } from "express";
 
 export class Controller {

@@ -4,16 +4,18 @@ import { ICategory } from "./ICategory";
 export interface INFT {
   id: string;
   owner: string;
-  creator: string;
+  creator?: string;
   listed: number;
   timestampList?: string | null;
   uri?: string;
   price: string;
   priceTiime: string;
-  serieId: string;
-  totalNft: number;
-  totalListedNft: number;
-  viewsCount?: number
+  serieId?: string;
+  totalNft?: number;
+  totalListedNft?: number;
+  viewsCount?: number;
+  serieData?: INFT[];
+  marketplaceId?: string;
 }
 
 export interface ICompleteNFT extends INFT {
@@ -27,12 +29,17 @@ export interface ICompleteNFT extends INFT {
 
 export interface NFTListResponse {
   nftEntities: {
+    totalCount: number;
+    pageInfo?: {
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
+    };
     nodes: INFT[];
   };
 }
 
-export interface NFTListPaginatedResponse {
-  nftEntities: {
+export interface DistinctNFTListResponse {
+  distinctSerieNfts: {
     totalCount: number;
     pageInfo?: {
       hasNextPage: boolean;
@@ -54,9 +61,10 @@ export interface AccountResponse {
   };
 }
 
-export interface PaginationResponse<DataType> {
-  totalCount: number;
+export interface CustomResponse<DataType> {
+  totalCount?: number;
   hasNextPage?: boolean;
   hasPreviousPage?: boolean;
-  data: DataType;
+  data: DataType[];
 }
+
