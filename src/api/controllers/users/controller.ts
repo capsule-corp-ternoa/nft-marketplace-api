@@ -162,11 +162,12 @@ export class Controller {
   ): Promise<void> {
     try {
       const { id } = req.params
-      const {page, limit} = req.query
+      const {page, limit, noSeriesData } = req.query
       if (!id) throw new Error("wallet id not given")
       if (page && (isNaN(Number(page)) || Number(page) < 1)) throw new Error("Page argument is invalid")
       if (limit && (isNaN(Number(limit)) || Number(limit) < 1 || Number(limit) > LIMIT_MAX_PAGINATION)) throw new Error("Limit argument is invalid")
-      const nfts = await UserService.getLikedNfts(id as string, page as string, limit as string);
+      const noSeriesDataValue = (noSeriesData === "true")
+      const nfts = await UserService.getLikedNfts(id as string, page as string, limit as string, noSeriesDataValue);
       res.json(nfts);
     } catch (err) {
       next(err)
