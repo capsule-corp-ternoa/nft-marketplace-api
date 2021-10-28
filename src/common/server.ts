@@ -8,6 +8,7 @@ import L from "./logger";
 import errorHandler from "../api/middlewares/error.handler";
 import * as Sentry from "@sentry/node"
 import * as Tracing from "@sentry/tracing"
+import compression from "compression";
 
 const app = express();
 
@@ -32,6 +33,7 @@ export default class ExpressServer {
     // CORS
     app.use(cors());
     // express middlewares
+    app.use(compression())
     app.use(express.json({ limit: process.env.REQUEST_LIMIT || "100kb" }));
     app.use(
       express.urlencoded({
@@ -46,7 +48,7 @@ export default class ExpressServer {
     mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-    });
+    } as any);
     const db = mongoose.connection;
     db.on("error", (err) => L.error({ err }, "db connection error"));
     db.once("open", () => {

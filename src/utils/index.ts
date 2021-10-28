@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 import AbortController from "abort-controller"
 import cryptoJs from 'crypto-js'
 
-export const TIME_BETWEEN_SAME_USER_VIEWS = 10000
+export const TIME_BETWEEN_SAME_USER_VIEWS = 6 * (60 * 60 * 1000)
 export const LIMIT_MAX_PAGINATION = 50
 
 export const fetchTimeout = (url: string, options: any = null, timeoutLimit = 30000) => {
