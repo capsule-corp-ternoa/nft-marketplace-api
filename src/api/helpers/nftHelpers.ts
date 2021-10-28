@@ -45,10 +45,10 @@ function parseRawNFT(NFT: INFT): INFT {
  * @param NFT - NFT object
  * @returns - NFT object with new fields
  */
-export async function populateNFT(NFT: INFT, seriesData: CustomResponse<INFT>): Promise<ICompleteNFT | INFT> {
+export async function populateNFT(NFT: INFT, seriesData: CustomResponse<INFT>, noSeriesData: boolean = false): Promise<ICompleteNFT | INFT> {
   const retNFT: INFT = parseRawNFT(NFT);
   const [serieData, creatorData, ownerData, info, categories] = await Promise.all([
-    populateSerieData(retNFT, seriesData),
+    populateSerieData(retNFT, seriesData, noSeriesData),
     populateNFTCreator(retNFT),
     populateNFTOwner(retNFT),
     populateNFTUri(retNFT),
@@ -59,7 +59,8 @@ export async function populateNFT(NFT: INFT, seriesData: CustomResponse<INFT>): 
 
 export async function populateSerieData(
   NFT: INFT,
-  seriesData: CustomResponse<INFT>
+  seriesData: CustomResponse<INFT>,
+  noSeriesData: boolean = false
 ): Promise<{ serieData: INFT[]; totalNft: number; totalListedNft: number; }> {
   try {
     if (NFT.serieId === '0') return {
@@ -69,7 +70,7 @@ export async function populateSerieData(
     }
     const result = seriesData.data.filter(x => x.serieId === NFT.serieId)
     const serieData = result.sort((a, b) => b.listed - a.listed || Number(a.price) - Number(b.price) || Number(a.priceTiime) - Number(b.priceTiime))
-    return { serieData, totalNft: serieData.length, totalListedNft: serieData.filter(x => x.listed).length }
+    return { serieData: !noSeriesData ? serieData : [], totalNft: serieData.length, totalListedNft: serieData.filter(x => x.listed).length }
   } catch (err) {
     L.error({ err }, "NFTs with same serie could not have been fetched");
     return null;
@@ -124,7 +125,7 @@ export async function populateNFTUri(NFT: INFT): Promise<any> {
       throw new Error('Could not retrieve NFT data from ' + NFT.uri)
     });
     if (response) {
-      const info = await response.json();
+      const info: {media?: {url: string},cryptedMedia?: {url: string}} = await response.json();
       if (info.media.url.indexOf('/ipfs') >= 0 && info.media.url.indexOf(defaultIpfsGateway) < 0) {
         info.media.url = overwriteDefaultIpfsGateway(info.media.url);
       }

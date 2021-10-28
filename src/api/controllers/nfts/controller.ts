@@ -9,10 +9,11 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const {marketplaceId, page, limit, listed } = req.query;
+      const {marketplaceId, page, limit, listed, noSeriesData } = req.query;
       if (page && (isNaN(Number(page)) || Number(page) < 1)) throw new Error("Page argument is invalid")
       if (limit && (isNaN(Number(limit)) || Number(limit) < 1 || Number(limit) > LIMIT_MAX_PAGINATION)) throw new Error("Limit argument is invalid")
-      res.json(await NFTService.getAllNFTs(marketplaceId as string, page as string, limit as string, listed as string));
+      const noSeriesDataValue = (noSeriesData === "true")
+      res.json(await NFTService.getAllNFTs(marketplaceId as string, page as string, limit as string, listed as string, noSeriesDataValue));
     } catch (err) {
       next(err);
     }
@@ -20,10 +21,10 @@ export class Controller {
 
   async getNFT(req: Request, res: Response, next: NextFunction): Promise<void> {
     if (!req.params.id) next(new Error("id parameter is needed"));
-    const {incViews, viewerWalletId } = req.query
-    const { ip } = req
+    const {incViews, viewerWalletId, viewerIp, noSeriesData } = req.query
     try {
-      const nft = await NFTService.getNFT(req.params.id, incViews === "true", viewerWalletId as string, ip);
+      const noSeriesDataValue = (noSeriesData === "true")
+      const nft = await NFTService.getNFT(req.params.id, incViews === "true", viewerWalletId as string, viewerIp as string, noSeriesDataValue);
       res.json(nft);
     } catch (err) {
       next(err);
@@ -37,10 +38,11 @@ export class Controller {
   ): Promise<void> {
     if (!req.params.id) next(new Error("id param is needed"));
     try {
-      const {marketplaceId, page, limit, listed } = req.query;
+      const {marketplaceId, page, limit, listed, noSeriesData } = req.query;
       if (page && (isNaN(Number(page)) || Number(page) < 1)) throw new Error("Page argument is invalid")
       if (limit && (isNaN(Number(limit)) || Number(limit) < 1 || Number(limit) > LIMIT_MAX_PAGINATION)) throw new Error("Limit argument is invalid")
-      res.json(await NFTService.getNFTsFromOwner(marketplaceId as string, req.params.id, page as string, limit as string, listed as string));
+      const noSeriesDataValue = (noSeriesData === "true")
+      res.json(await NFTService.getNFTsFromOwner(marketplaceId as string, req.params.id, page as string, limit as string, listed as string, noSeriesDataValue));
     } catch (err) {
       next(err);
     }
@@ -53,10 +55,11 @@ export class Controller {
   ): Promise<void> {
     if (!req.params.id) next(new Error("id param is needed"));
     try {
-      const { page, limit, listed } = req.query;
+      const { page, limit, listed, noSeriesData } = req.query;
       if (page && (isNaN(Number(page)) || Number(page) < 1)) throw new Error("Page argument is invalid")
       if (limit && (isNaN(Number(limit)) || Number(limit) < 1 || Number(limit) > LIMIT_MAX_PAGINATION)) throw new Error("Limit argument is invalid")
-      res.json(await NFTService.getNFTsFromCreator(req.params.id, page as string, limit as string, listed as string));
+      const noSeriesDataValue = (noSeriesData === "true")
+      res.json(await NFTService.getNFTsFromCreator(req.params.id, page as string, limit as string, listed as string, noSeriesDataValue));
     } catch (err) {
       next(err);
     }
@@ -83,11 +86,12 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const { marketplaceId, page, limit, codes, listed } = req.query;
+      const { marketplaceId, page, limit, codes, listed, noSeriesData } = req.query;
       if (page && (isNaN(Number(page)) || Number(page) < 1)) throw new Error("Page argument is invalid")
       if (limit && (isNaN(Number(limit)) || Number(limit) < 1 || Number(limit) > LIMIT_MAX_PAGINATION)) throw new Error("Limit argument is invalid")
       const categoriesCodes = codes === undefined ? null : (typeof codes==='string' ? [codes] : codes)
-      res.json(await NFTService.getNFTsFromCategories(marketplaceId as string, categoriesCodes as string[] | null, page as string, limit as string, listed as string));
+      const noSeriesDataValue = (noSeriesData === "true")
+      res.json(await NFTService.getNFTsFromCategories(marketplaceId as string, categoriesCodes as string[] | null, page as string, limit as string, listed as string, noSeriesDataValue));
     } catch (err) {
       next(err);
     }
@@ -112,7 +116,7 @@ export class Controller {
     next: NextFunction
   ): Promise<void>{
     try {
-      const { marketplaceId, page, limit } = req.query;
+      const { page, limit } = req.query;
       if (!req.params.id) next(new Error("id parameter is needed"));
       if (page && (isNaN(Number(page)) || Number(page) < 1)) throw new Error("Page argument is invalid")
       if (limit && (isNaN(Number(limit)) || Number(limit) < 1 || Number(limit) > LIMIT_MAX_PAGINATION)) throw new Error("Limit argument is invalid")
