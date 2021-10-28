@@ -15,25 +15,25 @@ export default (io: Namespace) => {
       socket.disconnect();
     } else {
       await socket.join(session);
-      L.info('socked ' + socket.id + ' joined to session ' + session) + ' room size='+io.adapter.rooms.get(session as string).size;
-      socket.on('PGPS_READY', (data, callback)=>{
+      L.info('socked ' + socket.id + ' joined to session ' + session) + ' room size=' + io.adapter.rooms.get(session as string).size;
+      socket.on('PGPS_READY', (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("PGPS_READY", data);
         validCallback && callback({ ok: true });
       })
-      socket.on('PGPS_READY_RECEIVED', (data, callback)=>{
+      socket.on('PGPS_READY_RECEIVED', (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("PGPS_READY_RECEIVED", data);
         validCallback && callback({ ok: true });
       })
-      socket.on('RUN_NFT_MINT', (data, callback)=>{
+      socket.on('RUN_NFT_MINT', (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("RUN_NFT_MINT", data);
         validCallback && callback({ ok: true });
       })
-      socket.on('RUN_NFT_MINT_RECEIVED', (data, callback)=>{
+      socket.on('RUN_NFT_MINT_RECEIVED', (data, callback) => {
         const validCallback = callback && typeof callback === "function";
-        socket.to(`${session}`).emit("RUN_NFT_MINT_ACK_FROM_WALLET", data);
+        socket.to(`${session}`).emit("RUN_NFT_MINT_RECEIVED", data);
         validCallback && callback({ ok: true });
       })
       socket.on("MINTING_NFT", (data, callback) => {
@@ -45,6 +45,18 @@ export default (io: Namespace) => {
       socket.on("MINTING_NFT_RECEIVED", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("MINTING_NFT_RECEIVED", data);
+        // confirm success to mobile app
+        validCallback && callback({ ok: true });
+      });
+      socket.on("UPLOAD_REMAINING_TIME", (data, callback) => {
+        const validCallback = callback && typeof callback === "function";
+        socket.to(`${session}`).emit("UPLOAD_REMAINING_TIME", data);
+        // confirm success to mobile app
+        validCallback && callback({ ok: true });
+      });
+      socket.on("WALLET_READY", (data, callback) => {
+        const validCallback = callback && typeof callback === "function";
+        socket.to(`${session}`).emit("WALLET_READY", data);
         // confirm success to mobile app
         validCallback && callback({ ok: true });
       });
