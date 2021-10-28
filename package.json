@@ -1,6 +1,6 @@
 {
   "name": "nft-marketplace-back",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "ternoa nft marketplace server",
   "main": "dist/index.js",
   "scripts": {
