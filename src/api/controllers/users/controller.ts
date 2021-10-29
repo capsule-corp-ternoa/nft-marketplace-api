@@ -167,7 +167,7 @@ export class Controller {
       if (page && (isNaN(Number(page)) || Number(page) < 1)) throw new Error("Page argument is invalid")
       if (limit && (isNaN(Number(limit)) || Number(limit) < 1 || Number(limit) > LIMIT_MAX_PAGINATION)) throw new Error("Limit argument is invalid")
       const noSeriesDataValue = (noSeriesData === "true")
-      const nfts = await UserService.getLikedNfts(id as string, page as string, limit as string, noSeriesDataValue);
+      const nfts = await UserService.getLikedNfts(id as string, page ? page as string : "1", limit ? limit as string : String(LIMIT_MAX_PAGINATION), noSeriesDataValue);
       res.json(nfts);
     } catch (err) {
       next(err)

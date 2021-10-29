@@ -65,7 +65,7 @@ export class Controller {
       const {page, limit, certifiedOnly, nameOrAddressSearch} = req.query
       if (page && (isNaN(Number(page)) || Number(page) < 1)) throw new Error("Page argument is invalid")
       if (limit && (isNaN(Number(limit)) || Number(limit) < 1 || Number(limit) > LIMIT_MAX_PAGINATION)) throw new Error("Limit argument is invalid")
-      const users = await FollowService.getUserFollowers(req.params.walletId, page as string, limit as string, certifiedOnly as string, nameOrAddressSearch as string)
+      const users = await FollowService.getUserFollowers(req.params.walletId, page ? page as string : "1", limit ? limit as string : String(LIMIT_MAX_PAGINATION), certifiedOnly as string, nameOrAddressSearch as string)
       res.json(users);
     }catch(err){
       next(err);
@@ -82,7 +82,7 @@ export class Controller {
       const {page, limit, certifiedOnly, nameOrAddressSearch} = req.query
       if (page && (isNaN(Number(page)) || Number(page) < 1)) throw new Error("Page argument is invalid")
       if (limit && (isNaN(Number(limit)) || Number(limit) < 1 || Number(limit) > LIMIT_MAX_PAGINATION)) throw new Error("Limit argument is invalid")
-      const users = await FollowService.getUserFollowings(req.params.walletId, page as string, limit as string, certifiedOnly as string, nameOrAddressSearch as string)
+      const users = await FollowService.getUserFollowings(req.params.walletId, page ? page as string : "1", limit ? limit as string : String(LIMIT_MAX_PAGINATION), certifiedOnly as string, nameOrAddressSearch as string)
       res.json(users);
     }catch(err){
       next(err);
