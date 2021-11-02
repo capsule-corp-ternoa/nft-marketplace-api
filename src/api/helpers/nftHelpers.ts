@@ -45,10 +45,10 @@ function parseRawNFT(NFT: INFT): INFT {
  * @param NFT - NFT object
  * @returns - NFT object with new fields
  */
-export async function populateNFT(NFT: INFT, seriesData: CustomResponse<INFT>, noSeriesData: boolean = false): Promise<ICompleteNFT | INFT> {
+export async function populateNFT(NFT: INFT, seriesData: CustomResponse<INFT>, noSeriesData: boolean = false, marketplaceId?: string, owner?: string): Promise<ICompleteNFT | INFT> {
   const retNFT: INFT = parseRawNFT(NFT);
   const [serieData, creatorData, ownerData, info, categories] = await Promise.all([
-    populateSerieData(retNFT, seriesData, noSeriesData),
+    populateSerieData(retNFT, seriesData, noSeriesData, marketplaceId, owner),
     populateNFTCreator(retNFT),
     populateNFTOwner(retNFT),
     populateNFTUri(retNFT),
@@ -60,17 +60,47 @@ export async function populateNFT(NFT: INFT, seriesData: CustomResponse<INFT>, n
 export async function populateSerieData(
   NFT: INFT,
   seriesData: CustomResponse<INFT>,
-  noSeriesData: boolean = false
-): Promise<{ serieData: INFT[]; totalNft: number; totalListedNft: number; }> {
+  noSeriesData: boolean = false,
+  marketplaceId?: string,
+  owner?: string,
+): Promise<{ 
+    serieData: INFT[]; 
+    totalNft: number; 
+    totalListedNft: number; 
+    totalListedInMarketplace: number;
+    totalOwnedByRequestingUser: number;
+    totalOwnedListedByRequestingUser: number;
+    smallestPrice: string;
+    smallestPriceTiime: string;
+  }> {
   try {
     if (NFT.serieId === '0') return {
       serieData: [{ id: NFT.id, owner: NFT.owner, listed: NFT.listed, price: NFT.price, priceTiime: NFT.priceTiime, marketplaceId: NFT.marketplaceId }],
       totalNft: 1,
-      totalListedNft: NFT.listed
+      totalListedNft: NFT.listed,
+      totalListedInMarketplace: NFT.listed,
+      totalOwnedByRequestingUser: 1,
+      totalOwnedListedByRequestingUser: NFT.listed,
+      smallestPrice: NFT.price,
+      smallestPriceTiime: NFT.priceTiime
     }
     const result = seriesData.data.filter(x => x.serieId === NFT.serieId)
-    const serieData = result.sort((a, b) => b.listed - a.listed || Number(a.price) - Number(b.price) || Number(a.priceTiime) - Number(b.priceTiime))
-    return { serieData: !noSeriesData ? serieData : [], totalNft: serieData.length, totalListedNft: serieData.filter(x => x.listed).length }
+    const serieData = result.sort((a, b) => 
+      b.listed - a.listed || // listed first
+      (!marketplaceId ? 0 : (marketplaceId === a.marketplaceId ? -1 : (marketplaceId === b.marketplaceId ? 1 : 0))) || // marketplace id first (if defined)
+      Number(a.price) - Number(b.price) || // smallest price first
+      Number(a.priceTiime) - Number(b.priceTiime)) // smallest price tiime first
+    const listedNft = serieData.filter(x => x.listed)
+    return { 
+      serieData: !noSeriesData ? serieData : [], 
+      totalNft: serieData.length, 
+      totalListedNft: listedNft.length,
+      totalListedInMarketplace: marketplaceId ? listedNft.filter(x => x.marketplaceId===marketplaceId).length : listedNft.length,
+      totalOwnedByRequestingUser: owner ? serieData.filter(x => x.owner === owner).length : 0,
+      totalOwnedListedByRequestingUser: owner ? listedNft.filter(x => x.owner === owner).length : 0,
+      smallestPrice: serieData.length > 0 ? serieData[0].price : NFT.price,
+      smallestPriceTiime: serieData.length > 0 ? serieData[0].priceTiime : NFT.priceTiime
+    }
   } catch (err) {
     L.error({ err }, "NFTs with same serie could not have been fetched");
     return null;
