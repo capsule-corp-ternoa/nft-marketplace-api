@@ -88,7 +88,7 @@ export class UserService {
     try {
       const withSeriesData = (withSeriesDataValues === true)
       if (page && limit){
-        const data = await fetch(`${TERNOA_API_URL}/api/users/${walletId}`)
+        const data = await fetch(`${TERNOA_API_URL}/api/users/${walletId}?removeBurned=${true}`)
         const user = await data.json() as IUser
         const totalLikedNfts = user.likedNFTs.length
         const likedIndexStart = (Number(page)-1)*Number(limit)
