@@ -33,7 +33,7 @@ export class NFTService {
       const NFTs = res.distinctSerieNfts.nodes;
       const seriesData = await this.getNFTsForSeries(NFTs.map(x => x.serieId))
       const noSeriesDataValue = (noSeriesData === true)
-      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData, noSeriesDataValue)))
+      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData, noSeriesDataValue, marketplaceId)))
       const result: CustomResponse<INFT>={
         totalCount: res.distinctSerieNfts.totalCount,
         data: res.distinctSerieNfts.nodes,
@@ -60,6 +60,7 @@ export class NFTService {
     viewerWalletId: string = null,
     viewerIp: string = null, 
     noSeriesData?: boolean,
+    marketplaceId?: string,
   ): Promise<INFT> {
     try {
       const query = QueriesBuilder.NFTfromId(id);
@@ -68,7 +69,7 @@ export class NFTService {
       if (!NFT) throw new Error();
       const seriesData = await this.getNFTsForSeries([NFT.serieId])
       const noSeriesDataValue = (noSeriesData === true)
-      NFT = await populateNFT(NFT, seriesData, noSeriesDataValue);
+      NFT = await populateNFT(NFT, seriesData, noSeriesDataValue, marketplaceId);
       let viewsCount = 0
       if (incViews){
         const date = +new Date()
@@ -102,7 +103,7 @@ export class NFTService {
       const NFTs = res.distinctSerieNfts.nodes;
       const seriesData = await this.getNFTsForSeries(NFTs.map(x => x.serieId))
       const noSeriesDataValue = (noSeriesData === true)
-      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData, noSeriesDataValue)))
+      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData, noSeriesDataValue, marketplaceId, ownerId)))
       const result: CustomResponse<INFT>={
         totalCount: res.distinctSerieNfts.totalCount,
         data: res.distinctSerieNfts.nodes,
@@ -221,7 +222,7 @@ export class NFTService {
       const NFTs = res.distinctSerieNfts.nodes;
       const seriesData = await this.getNFTsForSeries(NFTs.map(x => x.serieId))
       const noSeriesDataValue = (noSeriesData === true)
-      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData, noSeriesDataValue)))
+      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData, noSeriesDataValue, marketplaceId)))
       const result: CustomResponse<INFT>={
         totalCount: res.distinctSerieNfts.totalCount,
         data: res.distinctSerieNfts.nodes,
@@ -249,7 +250,7 @@ export class NFTService {
       const NFTs = res.distinctSerieNfts.nodes;
       const seriesData = await this.getNFTsForSeries(NFTs.map(x => x.serieId))
       const noSeriesDataValue = (noSeriesData === true)
-      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData, noSeriesDataValue)))
+      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData, noSeriesDataValue, marketplaceId)))
       const result: CustomResponse<INFT>={
         totalCount: res.distinctSerieNfts.totalCount,
         data: res.distinctSerieNfts.nodes,
