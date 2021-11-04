@@ -8,7 +8,6 @@ export default express
   .get("/getUsers", controller.getUsersBywalletId) // ternoa-api
   .get("/:id", controller.getUser) // ternoa-api
   .get("/:id/caps", controller.getAccountBalance)
-  .get("/:id/liked", controller.getLikedNfts)
   .post("/create", controller.newUser) // ternoa-api
   .post("/like", controller.likeNft) // ternoa-api
   .post("/unlike", controller.unlikeNft) // ternoa-api

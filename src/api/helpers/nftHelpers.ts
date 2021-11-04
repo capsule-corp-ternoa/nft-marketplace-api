@@ -5,6 +5,7 @@ import NFTService from "../services/nft";
 import { ICategory } from "../../interfaces/ICategory";
 import { fetchTimeout, removeURLSlash } from "../../utils";
 import { IUser } from "src/interfaces/IUser";
+import { NFTsQuery } from "../validators/nftValidators";
 
 const ipfsGateways = {
   ternoaPinataIpfsGateaway: `https://ternoa.mypinata.cloud/ipfs`,
@@ -45,10 +46,10 @@ function parseRawNFT(NFT: INFT): INFT {
  * @param NFT - NFT object
  * @returns - NFT object with new fields
  */
-export async function populateNFT(NFT: INFT, seriesData: CustomResponse<INFT>, noSeriesData: boolean = false, marketplaceId?: string, owner?: string): Promise<ICompleteNFT | INFT> {
+ export async function populateNFT(NFT: INFT, seriesData: CustomResponse<INFT>, query: NFTsQuery): Promise<ICompleteNFT | INFT> {
   const retNFT: INFT = parseRawNFT(NFT);
   const [serieData, creatorData, ownerData, info, categories] = await Promise.all([
-    populateSerieData(retNFT, seriesData, noSeriesData, marketplaceId, owner),
+    populateSerieData(retNFT, seriesData, query),
     populateNFTCreator(retNFT),
     populateNFTOwner(retNFT),
     populateNFTUri(retNFT),
@@ -60,9 +61,7 @@ export async function populateNFT(NFT: INFT, seriesData: CustomResponse<INFT>, n
 export async function populateSerieData(
   NFT: INFT,
   seriesData: CustomResponse<INFT>,
-  noSeriesData: boolean = false,
-  marketplaceId?: string,
-  owner?: string,
+  query: NFTsQuery
 ): Promise<{ 
     serieData: INFT[]; 
     totalNft: number; 
@@ -74,6 +73,8 @@ export async function populateSerieData(
     smallestPriceTiime: string;
   }> {
   try {
+    const marketplaceId = query.filter?.marketplaceId
+    const owner = query.filter?.owner
     if (NFT.serieId === '0') return {
       serieData: [{ id: NFT.id, owner: NFT.owner, listed: NFT.listed, price: NFT.price, priceTiime: NFT.priceTiime, marketplaceId: NFT.marketplaceId }],
       totalNft: 1,
@@ -87,15 +88,15 @@ export async function populateSerieData(
     const result = seriesData.data.filter(x => x.serieId === NFT.serieId)
     const serieData = result.sort((a, b) => 
       b.listed - a.listed || // listed first
-      (!marketplaceId ? 0 : (marketplaceId === a.marketplaceId ? -1 : (marketplaceId === b.marketplaceId ? 1 : 0))) || // marketplace id first (if defined)
+      (!marketplaceId ? 0 : (marketplaceId === Number(a.marketplaceId) ? -1 : (marketplaceId === Number(b.marketplaceId) ? 1 : 0))) || // marketplace id first (if defined)
       Number(a.price) - Number(b.price) || // smallest price first
       Number(a.priceTiime) - Number(b.priceTiime)) // smallest price tiime first
     const listedNft = serieData.filter(x => x.listed)
     return { 
-      serieData: !noSeriesData ? serieData : [], 
+      serieData: !query.filter?.noSeriesData ? serieData : [], 
       totalNft: serieData.length, 
       totalListedNft: listedNft.length,
-      totalListedInMarketplace: marketplaceId ? listedNft.filter(x => x.marketplaceId===marketplaceId).length : listedNft.length,
+      totalListedInMarketplace: marketplaceId ? listedNft.filter(x => Number(x.marketplaceId)===marketplaceId).length : listedNft.length,
       totalOwnedByRequestingUser: owner ? serieData.filter(x => x.owner === owner).length : 0,
       totalOwnedListedByRequestingUser: owner ? listedNft.filter(x => x.owner === owner).length : 0,
       smallestPrice: serieData.length > 0 ? serieData[0].price : NFT.price,

@@ -77,41 +77,6 @@ export class UserService {
     }
   }
 
-  /**
-   * gets liked NFTs
-   * @param walletId - wallet Id
-   * @param page? - Page number
-   * @param limit? - Number of elements per page
-   * @throws Will throw an error if db can't be reached
-   */
-   async getLikedNfts(walletId: string, page?: string, limit?: string, withSeriesDataValues?: boolean): Promise<CustomResponse<INFT>> {
-    try {
-      const withSeriesData = (withSeriesDataValues === true)
-      if (page && limit){
-        const data = await fetch(`${TERNOA_API_URL}/api/users/${walletId}?removeBurned=${true}`)
-        const user = await data.json() as IUser
-        const totalLikedNfts = user.likedNFTs.length
-        const likedIndexStart = (Number(page)-1)*Number(limit)
-        const hasNextPage = likedIndexStart+Number(limit) < totalLikedNfts
-        const hasPreviousPage = Number(page) > 1 && likedIndexStart>0
-        if (likedIndexStart !== 0 && likedIndexStart >= totalLikedNfts) throw new Error("Pagination parameters are incorrect");
-        const userLikedNFTs  = totalLikedNfts===0 ? [] : user.likedNFTs.slice(likedIndexStart, likedIndexStart+Number(limit))
-        if (!userLikedNFTs) return {data: [], totalCount: 0, hasNextPage: false, hasPreviousPage:false}
-        const response = await NFTService.getNFTsFromIds(userLikedNFTs.map(x=>x.nftId), null, null, null, withSeriesData)
-        response.hasNextPage = hasNextPage
-        response.hasPreviousPage = hasPreviousPage
-        return response
-      }else{
-        const data = await fetch(`${TERNOA_API_URL}/api/users/${walletId}`)
-        const user = await data.json() as IUser
-        if (!user.likedNFTs) return {data: [], totalCount: 0}
-        const response = await NFTService.getNFTsFromIds(user.likedNFTs.map(x=>x.nftId), null, null, null, withSeriesData)
-        return response
-      }
-    } catch (err) {
-      throw new Error("Couldn't get liked NFTs");
-    }
-  }
 }
 
 export default new UserService();

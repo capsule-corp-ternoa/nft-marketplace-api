@@ -20,13 +20,13 @@ export class CategoryService {
    * @param categoryCode Code of the category to find
    * @throws Will throw an error if categories can't be fetched
    */
-  async getCategoryByCode(categoryCode: string): Promise<ICategory> {
+  async getCategoriesByCode(categoriesCode: string[]): Promise<ICategory[]> {
     try {
-      const category: any = await CategoryModel.findOne({code: categoryCode});
-      if (!category) throw new Error()
-      return category;
+      const categories: any = await CategoryModel.find({code: {$in:categoriesCode}});
+      if (!categories) throw new Error()
+      return categories;
     } catch (err) {
-      throw new Error("Category can't be fetched");
+      throw new Error("Categories can't be fetched");
     }
   }
 }

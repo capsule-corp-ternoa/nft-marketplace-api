@@ -6,8 +6,3 @@ export interface IMongoNft {
   chainId: string;
   categories: ICategory[] | mongoose.Types.ObjectId[];
 }
-
-export interface INftDto {
-  chainId: string;
-  categories?: string[];
-}

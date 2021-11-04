@@ -28,6 +28,7 @@
     "graphql": "^15.7.0",
     "graphql-request": "^3.6.1",
     "install": "^0.13.0",
+    "joi": "^17.4.2",
     "mongoose": "^6.0.12",
     "mongoose-paginate-v2": "^1.4.2",
     "node-cache": "^5.1.2",

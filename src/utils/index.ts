@@ -41,3 +41,20 @@ export const decryptCookie = (cookie: string) => {
         return ""
     }
 }
+
+
+export const convertSortString = (sortString: string) => {
+    if (sortString){
+      const sortArray = sortString.split(',')
+      let finalString = ""
+      sortArray.forEach(x => {
+        const fieldArray = x.split(":")
+        if (fieldArray[0]){
+          finalString += `${fieldArray[0].toUpperCase()}_${fieldArray[1] ? fieldArray[1].toUpperCase() : "ASC"},`
+        }
+      })
+      return finalString
+    }else{
+      return ""
+    }
+  }
