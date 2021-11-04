@@ -3,58 +3,6 @@ import { NextFunction, Request, Response } from "express";
 import { LIMIT_MAX_PAGINATION, decryptCookie } from "../../../utils";
 
 export class Controller {
-  async follow(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try{
-      const {walletIdFollowed, walletIdFollower} = req.query
-      const {cookie} = JSON.parse(req.body)
-      if (!walletIdFollowed || !walletIdFollower) next(new Error("wallet ids parameters are needed"));
-      if(cookie && decryptCookie(cookie) === walletIdFollower){
-        res.json(await FollowService.follow(walletIdFollowed as string, walletIdFollower as string));
-      }else{
-        throw new Error('Unvalid authentication')
-      }
-    }catch(err){
-      next(err);
-    }
-  }
-
-  async unfollow(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try{
-      const {walletIdFollowed, walletIdFollower} = req.query
-      const {cookie} = JSON.parse(req.body)
-      if (!walletIdFollowed || !walletIdFollower) next(new Error("wallet ids parameters are needed"));
-      if(cookie && decryptCookie(cookie) === walletIdFollower){
-        res.json(await FollowService.unfollow(walletIdFollowed as string, walletIdFollower as string));
-      }else{
-        throw new Error('Unvalid authentication')
-      }
-    }catch(err){
-      next(err);
-    }
-  }
-
-  async isUserFollowing(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try{
-      const {walletIdFollowed, walletIdFollower} = req.query
-      if (!walletIdFollowed || !walletIdFollower) next(new Error("wallet ids parameters are needed"));
-      res.json(await FollowService.isUserFollowing(walletIdFollower as string, walletIdFollowed as string));
-    }catch(err){
-      next(err);
-    }
-  }
-
   async getUserFollowers(
     req: Request,
     res: Response,
@@ -112,6 +60,58 @@ export class Controller {
       if (!req.params.walletId) next(new Error("wallet id parameter is needed"));
       const count = await FollowService.countUserFollowing(req.params.walletId)
       res.json(count);
+    }catch(err){
+      next(err);
+    }
+  }
+
+  async isUserFollowing(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try{
+      const {walletIdFollowed, walletIdFollower} = req.query
+      if (!walletIdFollowed || !walletIdFollower) next(new Error("wallet ids parameters are needed"));
+      res.json(await FollowService.isUserFollowing(walletIdFollower as string, walletIdFollowed as string));
+    }catch(err){
+      next(err);
+    }
+  }
+
+  async follow(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try{
+      const {walletIdFollowed, walletIdFollower} = req.query
+      const {cookie} = JSON.parse(req.body)
+      if (!walletIdFollowed || !walletIdFollower) next(new Error("wallet ids parameters are needed"));
+      if(cookie && decryptCookie(cookie) === walletIdFollower){
+        res.json(await FollowService.follow(walletIdFollowed as string, walletIdFollower as string));
+      }else{
+        throw new Error('Unvalid authentication')
+      }
+    }catch(err){
+      next(err);
+    }
+  }
+
+  async unfollow(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try{
+      const {walletIdFollowed, walletIdFollower} = req.query
+      const {cookie} = JSON.parse(req.body)
+      if (!walletIdFollowed || !walletIdFollower) next(new Error("wallet ids parameters are needed"));
+      if(cookie && decryptCookie(cookie) === walletIdFollower){
+        res.json(await FollowService.unfollow(walletIdFollowed as string, walletIdFollower as string));
+      }else{
+        throw new Error('Unvalid authentication')
+      }
     }catch(err){
       next(err);
     }

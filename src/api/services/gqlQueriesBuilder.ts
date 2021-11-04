@@ -177,11 +177,11 @@ export class GQLQueriesBuilder {
     }
   `;
 
-  capsBalanceFromId = (query: statNFTsUserQuery) => gql`
+  capsBalanceFromId = (id: string) => gql`
     {
       accountEntities(
         filter: {
-          id: { equalTo: "${query.id}" }
+          id: { equalTo: "${id}" }
         }
       ) {
         nodes {

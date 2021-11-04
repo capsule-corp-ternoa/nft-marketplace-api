@@ -1,10 +1,5 @@
-import { gql, request } from "graphql-request";
-import {
-  DistinctNFTListResponse,
-  INFT,
-  NFTListResponse,
-  CustomResponse,
-} from "../../interfaces/graphQL";
+import { request } from "graphql-request";
+import { DistinctNFTListResponse, INFT, NFTListResponse, CustomResponse } from "../../interfaces/graphQL";
 import fetch from "node-fetch";
 import { IMongoNft } from "../../interfaces/INft";
 import FollowModel from "../../models/follow";
@@ -17,15 +12,12 @@ import { TERNOA_API_URL, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
 import { createNFTQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
 import { IUser } from "src/interfaces/IUser";
 
-const indexerUrl =
-  process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
+const indexerUrl = process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
 
 export class NFTService {
   /**
-   * Requests all NFTs from the blockchain
-   * @param page? - Page number
-   * @param limit? - Number of elements per page
-   * @param listed? - filter for listed (1) or non listed (0), undefined gets all
+   * Requests NFTs from the indexer
+   * @param query - query (see NFTsQuery)
    * @throws Will throw an error if can't request indexer
    */
   async getNFTs(query: NFTsQuery): Promise<CustomResponse<INFT>> {
@@ -57,7 +49,6 @@ export class NFTService {
       }
       // Indexer data
       const gqlQuery = QueriesBuilder.NFTs(query);
-      console.log(gqlQuery)
       const res: DistinctNFTListResponse = await request(indexerUrl, gqlQuery);
       const NFTs = res.distinctSerieNfts.nodes;
       // Series Data
@@ -73,17 +64,13 @@ export class NFTService {
       }
       return result
     } catch (err) {
-      console.log(err)
       throw new Error("Couldn't get NFTs");
     }
   }
 
   /**
-   * Requests a single NFT from the blockchain
-   * @param id - the NFT's id
-   * @param incViews - flag to inform if view counter should be incremented
-   * @param viewerWalletId - wallet of viewer
-   * @param viewerIp - ip viewer, to prevent spam views
+   * Requests a single NFT from the indexer
+   * @param query - query (see NFTQuery)
    * @throws Will throw an error if the NFT can't be found
    */
   async getNFT(
@@ -100,7 +87,12 @@ export class NFTService {
       if (query.incViews){
         const date = +new Date()
         const views = await NftViewModel.find(NFT.serieId!=="0" ? {viewedSerie: NFT.serieId} : {viewedId: query.id})
-        if (query.viewerIp && (views.length === 0 || date - Math.max.apply(null, views.filter(x => x.viewerIp === query.viewerIp).map(x => x.date)) > TIME_BETWEEN_SAME_USER_VIEWS)){
+        if (query.viewerIp && 
+            (
+              views.length === 0 || 
+              date - Math.max.apply(null, views.filter(x => x.viewerIp === query.viewerIp).map(x => x.date)) > TIME_BETWEEN_SAME_USER_VIEWS
+            )
+        ) {
           const newView = new NftViewModel({viewedSerie: NFT.serieId, viewedId: query.id, viewer: query.viewerWalletId, viewerIp: query.viewerIp, date})
           await newView.save();
           viewsCount = views.length + 1
@@ -116,7 +108,7 @@ export class NFTService {
 
   /**
    * Gets user stat (number of owned, created, listed, not listed, followers, followed)
-   * @param userWalletId - The user's wallet address
+   * @param query - query (see statNFTsUserQuery)
    * @throws Will throw an error if can't request indexer or db or user not find
    */
    async getStatNFTsUser(query: statNFTsUserQuery): Promise<{
@@ -149,13 +141,13 @@ export class NFTService {
   }
 
   /**
-   * Creates a new nft document in DB
-   * @param nftDTO - NFT data
+   * Creates a new nft document in DB (for offchain categories)
+   * @param query - query (see createNFTQuery)
    * @throws Will throw an error if can't create NFT document
    */
   async createNFT(query: createNFTQuery): Promise<IMongoNft> {
     try {
-      const categories = await CategoryService.getCategoriesByCode(query.categories) 
+      const categories = await CategoryService.getCategoriesByCode(query.categories)
       const data = {
           chainId: query.chainId,
           categories
@@ -169,9 +161,7 @@ export class NFTService {
 
   /**
    * Finds NFTs with series included in seriesIds array
-   * @param seriesIds - SeriesId to find
-   * @param page? - Page number
-   * @param limit? - Number of elements per page
+   * @param query - query (see NFTBySeriesQuery)
    * @throws Will throw an error if nft ID doesn't exist
    */
    async getNFTsForSeries(query: NFTBySeriesQuery): Promise<CustomResponse<INFT>>{
@@ -186,7 +176,6 @@ export class NFTService {
       }
       return result
     }catch(err){
-      console.log(err)
       throw new Error("Couldn't get NFTs for this serie");
     }
   }

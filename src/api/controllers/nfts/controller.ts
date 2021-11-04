@@ -37,6 +37,19 @@ export class Controller {
       next(err);
     }
   }
+  
+  async getNFTsBySeries(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void>{
+    try {
+      const queryValues = validationNFTsBySeries(req.query)
+      res.json(await NFTService.getNFTsForSeries(queryValues));
+    } catch (err) {
+      next(err);
+    }
+  }
 
   async createNFT(
     req: Request,
@@ -46,19 +59,6 @@ export class Controller {
     try {
       const queryValues = validationCreateNFT(req.body)
       res.json(await NFTService.createNFT(queryValues));
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  async getNFTsBySeries(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void>{
-    try {
-      const queryValues = validationNFTsBySeries(req.query)
-      res.json(await NFTService.getNFTsForSeries(queryValues));
     } catch (err) {
       next(err);
     }

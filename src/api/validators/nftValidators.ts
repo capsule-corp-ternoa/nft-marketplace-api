@@ -110,6 +110,28 @@ export const validationGetStatNFTsUser = (query: any) => {
 };
 
 
+export type NFTBySeriesQuery = {
+  seriesIds: string[]
+  pagination?: {
+    page?: number
+    limit?: number
+  };
+};
+export const validationNFTsBySeries = (query: any) => {
+  let { pagination, seriesIds } = query
+  seriesIds = typeof seriesIds === "string" ? [seriesIds] : seriesIds
+  if (pagination) pagination = JSON.parse(pagination);
+  const validationSchema = Joi.object({
+    seriesIds: Joi.array().required().items(Joi.string().required()),
+    pagination: Joi.object({
+      page: Joi.number().integer().min(0),
+      limit: Joi.number().integer().min(0).max(LIMIT_MAX_PAGINATION),
+    })
+  });
+  return validateQuery(validationSchema, { pagination, seriesIds }) as NFTBySeriesQuery;
+};
+
+
 export type createNFTQuery = {
   chainId: string
   categories: string[]
@@ -120,25 +142,4 @@ export const validationCreateNFT = (query: any) => {
     categories: Joi.array().required().items(Joi.string().required())
   });
   return validateQuery(validationSchema, query) as createNFTQuery;
-};
-
-
-export type NFTBySeriesQuery = {
-  seriesIds: string[]
-  pagination?: {
-    page?: number
-    limit?: number
-  };
-};
-export const validationNFTsBySeries = (query: any) => {
-  let { pagination } = query
-  if (pagination) pagination = JSON.parse(pagination);
-  const validationSchema = Joi.object({
-    seriesIds: Joi.array().required().items(Joi.string().required()),
-    pagination: Joi.object({
-      page: Joi.number().integer().min(0),
-      limit: Joi.number().integer().min(0).max(LIMIT_MAX_PAGINATION),
-    })
-  });
-  return validateQuery(validationSchema, query) as NFTBySeriesQuery;
 };
