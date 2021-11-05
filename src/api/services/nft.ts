@@ -29,17 +29,20 @@ export class NFTService {
         const withNoCategories = query.filter.categories.includes("none")
         const categoriesCode = query.filter.categories.filter(x => x!=="none")
         const allCategories = await CategoryService.getCategories({})
+        const categories = allCategories.map(x => x.code).filter(x => categoriesCode.includes(x))
+        const mongoQuery = {categories: {$in: categories} }
+        const mongoNfts = await NftModel.find(mongoQuery as any)
+        const nftIds = mongoNfts.map((nft) => nft.chainId)
+        console.log(mongoNfts)
         if (withNoCategories){
-          const categoriesToExclude = allCategories.filter(x => !categoriesCode.includes(x.code))
-          const mongoQuery = {categories: {$in: categoriesToExclude} }
-          const mongoNfts = await NftModel.find(mongoQuery as any)
-          const nftIdsToExclude = mongoNfts.map((nft) => nft.chainId)
+          const categoriesToExclude = allCategories.map(x => x.code).filter(x => !categoriesCode.includes(x))
+          const mongoQueryExclude = {$and: [{categories: {$in: categoriesToExclude}}, {chainId: {$nin: nftIds}}]}
+          console.log(JSON.stringify(mongoQueryExclude))
+          const mongoNFTsToExclude = await NftModel.find(mongoQueryExclude as any)
+          console.log(mongoNFTsToExclude)
+          const nftIdsToExclude = mongoNFTsToExclude.map((nft) => nft.chainId)
           query.filter.idsToExcludeCategories = nftIdsToExclude
         }else{
-          const categories = allCategories.filter(x => categoriesCode.includes(x.code))
-          const mongoQuery = {categories: {$in: categories} }
-          const mongoNfts = await NftModel.find(mongoQuery as any)
-          const nftIds = mongoNfts.map((nft) => nft.chainId)
           query.filter.idsCategories = nftIds
         }
       }
@@ -66,6 +69,7 @@ export class NFTService {
       }
       return result
     } catch (err) {
+      console.log(err)
       throw new Error("Couldn't get NFTs");
     }
   }
