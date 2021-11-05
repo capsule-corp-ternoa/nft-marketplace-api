@@ -6,7 +6,7 @@ export type NFTsQuery = {
   pagination?: {
     page?: number
     limit?: number
-  };
+  }
   sort?: string
   filter?: {
     ids?: string[]
@@ -27,8 +27,8 @@ export type NFTsQuery = {
     locked?: boolean
     isCapsule?: boolean
     noSeriesData?: boolean
-  };
-};
+  }
+}
 export const validationGetNFTs = (query: any) => {
   const { sort } = query
   let { pagination, filter } = query;
@@ -57,9 +57,9 @@ export const validationGetNFTs = (query: any) => {
       isCapsule: Joi.boolean(),
       noSeriesData: Joi.boolean(),
     }),
-  });
+  })
   return validateQuery(validationSchema, { pagination, sort, filter }) as NFTsQuery;
-};
+}
 
 
 export type NFTQuery = {
@@ -70,8 +70,8 @@ export type NFTQuery = {
   filter?: {
     marketplaceId?: number
     noSeriesData?: boolean
-  };
-};
+  }
+}
 export const validationGetNFT = (query: any) => {
   const { id, incViews, viewerWalletId, viewerIp } = query;
   let { filter } = query
@@ -85,17 +85,17 @@ export const validationGetNFT = (query: any) => {
     incViews: Joi.boolean(),
     viewerWalletId: Joi.string(),
     viewerIp: Joi.string()
-  });
+  })
   return validateQuery(validationSchema, { id, filter, incViews, viewerWalletId, viewerIp }) as NFTQuery;
-};
+}
 
 
 export type statNFTsUserQuery = {
   id: string // wallet address
   filter?: {
     marketplaceId?: number
-  };
-};
+  }
+}
 export const validationGetStatNFTsUser = (query: any) => {
   const { id } = query;
   let { filter } = query
@@ -104,10 +104,10 @@ export const validationGetStatNFTsUser = (query: any) => {
     id: Joi.string().required(),
     filter: Joi.object({
       marketplaceId: Joi.number().integer().min(0),
-    }),
-  });
+    })
+  })
   return validateQuery(validationSchema, { id, filter }) as statNFTsUserQuery;
-};
+}
 
 
 export type NFTBySeriesQuery = {
@@ -115,8 +115,8 @@ export type NFTBySeriesQuery = {
   pagination?: {
     page?: number
     limit?: number
-  };
-};
+  }
+}
 export const validationNFTsBySeries = (query: any) => {
   let { pagination, seriesIds } = query
   seriesIds = typeof seriesIds === "string" ? [seriesIds] : seriesIds
@@ -127,19 +127,19 @@ export const validationNFTsBySeries = (query: any) => {
       page: Joi.number().integer().min(0),
       limit: Joi.number().integer().min(0).max(LIMIT_MAX_PAGINATION),
     })
-  });
+  })
   return validateQuery(validationSchema, { pagination, seriesIds }) as NFTBySeriesQuery;
-};
+}
 
 
 export type createNFTQuery = {
   chainId: string
   categories: string[]
-};
+}
 export const validationCreateNFT = (query: any) => {
   const validationSchema = Joi.object({
     chainId: Joi.number().required(),
     categories: Joi.array().required().items(Joi.string().required())
-  });
+  })
   return validateQuery(validationSchema, query) as createNFTQuery;
-};
+}

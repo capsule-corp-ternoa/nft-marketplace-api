@@ -10,7 +10,9 @@ import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
 import { TERNOA_API_URL, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
 import { createNFTQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
-import { IUser } from "src/interfaces/IUser";
+import { IUser } from "../../interfaces/IUser";
+import CategoryModel from "../../models/category";
+import { ICategory } from "../../interfaces/ICategory";
 
 const indexerUrl = process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
 
@@ -26,7 +28,7 @@ export class NFTService {
       if (query.filter.categories){
         const withNoCategories = query.filter.categories.includes("none")
         const categoriesCode = query.filter.categories.filter(x => x!=="none")
-        const allCategories = await CategoryService.getCategories()
+        const allCategories = await CategoryService.getCategories({})
         if (withNoCategories){
           const categoriesToExclude = allCategories.filter(x => !categoriesCode.includes(x.code))
           const mongoQuery = {categories: {$in: categoriesToExclude} }
@@ -147,15 +149,15 @@ export class NFTService {
    */
   async createNFT(query: createNFTQuery): Promise<IMongoNft> {
     try {
-      const categories = await CategoryService.getCategoriesByCode(query.categories)
+      const categories = await CategoryService.getCategories({filter: {codes: query.categories}})
       const data = {
           chainId: query.chainId,
-          categories
+          categories: categories.map(x => x.code)
       }
       const newNft = new NftModel(data);
       return await newNft.save();
     } catch (err) {
-      throw new Error("NFT can't be created");
+      throw new Error("NFT with category can't be created");
     }
   }
 
@@ -176,7 +178,7 @@ export class NFTService {
       }
       return result
     }catch(err){
-      throw new Error("Couldn't get NFTs for this serie");
+      throw new Error("Couldn't get NFTs for those series");
     }
   }
 
@@ -185,13 +187,14 @@ export class NFTService {
    * @param nftId - NFT's blockchain id
    * @throws Will throw an error if nft ID doesn't exist
    */
-  async findMongoNftFromId(nftId: string): Promise<IMongoNft> {
+  async findCategoriesFromNFTId(nftId: string): Promise<ICategory[]> {
     try {
-      const nft = await NftModel.findOne({ chainId: nftId }).populate("categories");
+      const nft = await NftModel.findOne({ chainId: nftId });
       if (!nft) return null;
-      return nft as IMongoNft;
+      const categories = await CategoryModel.find({code: {$in: nft.categories}})
+      return categories as ICategory[];
     } catch (err) {
-      throw new Error("Couldn't get mongo NFT");
+      throw new Error("Couldn't get categories for this NFT");
     }
   }
 }

@@ -182,9 +182,8 @@ export async function populateNFTCategories(
   NFT: INFT
 ): Promise<ICategory[]> {
   try {
-    const mongoNft = await NFTService.findMongoNftFromId(NFT.id);
-    if (!mongoNft) return []
-    const categories = (mongoNft.categories) as ICategory[];
+    const categories = await NFTService.findCategoriesFromNFTId(NFT.id);
+    if (!categories) return []
     return categories;
   } catch (err) {
     L.error({ err }, "error retrieving nft's categories from mongo");
