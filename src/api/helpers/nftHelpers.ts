@@ -118,7 +118,7 @@ export async function populateNFTCreator(
 ): Promise<IUser> {
   try {
     const { creator } = NFT;
-    const creatorData = await UserService.findUser(creator);
+    const creatorData = await UserService.findUser({id: creator});
     return creatorData;
   } catch (err) {
     L.error({ err }, "NFT creator id not in database");
@@ -136,7 +136,7 @@ export async function populateNFTOwner(
 ): Promise<IUser> {
   try {
     const { owner } = NFT;
-    const ownerData = await UserService.findUser(owner);
+    const ownerData = await UserService.findUser({id: owner});
     return ownerData;
   } catch (err) {
     L.error({ err }, "NFT owner id not in database");

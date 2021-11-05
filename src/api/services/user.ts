@@ -6,6 +6,7 @@ import QueriesBuilder from "./gqlQueriesBuilder";
 import { AccountResponse, Account } from "../../interfaces/graphQL";
 import NodeCache from "node-cache";
 import { TIME_BETWEEN_SAME_USER_VIEWS, TERNOA_API_URL } from "../../utils";
+import { getAccountBalanceQuery, getUserQuery } from "../validators/userValidators";
 
 const indexerUrl =
   process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
@@ -21,33 +22,29 @@ export class UserService {
    * @throws Will throw an error if wallet ID doesn't exist
    */
   async findUser(
-    walletId: string,
-    incViews: boolean = false,
-    viewerWalletId: string = null,
-    viewerIp: string = null, 
-    ignoreCache: boolean = false
+    query: getUserQuery
   ): Promise<IUser> {
-    if (!ignoreCache && !incViews) {
-      const user = usersCache.get(walletId) as IUser | undefined;
+    if (!query.ignoreCache && !query.incViews) {
+      const user = usersCache.get(query.id) as IUser | undefined;
       if (user !== undefined) return user;
     }
     try {
-      const data = await fetch(`${TERNOA_API_URL}/api/users/${walletId}`)
+      const data = await fetch(`${TERNOA_API_URL}/api/users/${query.id}`)
       const user = await data.json() as IUser
       let viewsCount = 0
       if (!user) throw new Error();
-      if (incViews){
+      if (query.incViews){
         const date = +new Date()
-        const views = await UserViewModel.find({viewed: walletId})
-        if (viewerIp && (views.length === 0 || date - Math.max.apply(null, views.filter(x => x.viewerIp === viewerIp).map(x => x.date)) > TIME_BETWEEN_SAME_USER_VIEWS)){
-          const newView = new UserViewModel({viewed: walletId, viewer: viewerWalletId, viewerIp, date})
+        const views = await UserViewModel.find({viewed: query.id})
+        if (query.viewerIp && (views.length === 0 || date - Math.max.apply(null, views.filter(x => x.viewerIp === query.viewerIp).map(x => x.date)) > TIME_BETWEEN_SAME_USER_VIEWS)){
+          const newView = new UserViewModel({viewed: query.id, viewer: query.walletIdViewer, viewerIp: query.viewerIp, date})
           await newView.save();
           viewsCount = views.length + 1
         }else{
           viewsCount = views.length
         }
       }
-      if (!usersCache.has(walletId)) usersCache.set(walletId, user);
+      if (!usersCache.has(query.id)) usersCache.set(query.id, user);
       return {...user, viewsCount};
     } catch (err) {
       throw new Error(err + "User can't be found");
@@ -60,10 +57,10 @@ export class UserService {
    * @throws Will throw an error if indexer can't be reached
    * @return A promise that resolves to the account
    */
-  async getAccountBalance(id: string): Promise<Account> {
+  async getAccountBalance(query: getAccountBalanceQuery): Promise<Account> {
     try {
-      const query = QueriesBuilder.capsBalanceFromId(id);
-      const result: AccountResponse = await request(indexerUrl, query);
+      const gqlQuery = QueriesBuilder.capsBalanceFromId(query.id);
+      const result: AccountResponse = await request(indexerUrl, gqlQuery);
       if (result && result.accountEntities && result.accountEntities.nodes && result.accountEntities.nodes.length) {
         return result.accountEntities.nodes[0];
       } else {

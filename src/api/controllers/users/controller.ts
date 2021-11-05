@@ -1,14 +1,19 @@
 import UserService from "../../services/user";
 import { NextFunction, Request, Response } from "express";
-import fetch from "node-fetch";
-import { LIMIT_MAX_PAGINATION, TERNOA_API_URL, decryptCookie } from "../../../utils";
+import { TERNOA_API_URL, decryptCookie } from "../../../utils";
+import { validationGetAccountBalance, validationGetUser, validationLikeUnlike, validationReviewRequested } from "../../validators/userValidators";
 
 export class Controller {
-  async all(req: Request, res: Response): Promise<void> {
-    const {page, limit} = req.query
-    const data = await fetch(`${TERNOA_API_URL}/api/users/?page=${page}&limit=${limit}`)
-    const response = await data.json()
-    res.json(response)
+  async all(
+    req: Request, 
+    res: Response, 
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      res.redirect(`${TERNOA_API_URL}${req.originalUrl}`)
+    } catch (err) {
+      next(err);
+    }
   }
 
   async newUser(
@@ -17,14 +22,7 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const { body } = req;
-      const stringifyBody = typeof body === 'string'? body : JSON.stringify(body)
-      const data = await fetch(`${TERNOA_API_URL}/api/users/create`,{
-        method: 'POST',
-        body : stringifyBody
-      });
-      const response = await data.json()
-      res.json(response)
+      res.redirect(307, `${TERNOA_API_URL}${req.originalUrl}`)
     } catch (err) {
       next(err);
     }
@@ -36,9 +34,8 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const { id } = req.params
-      const { incViews, walletIdViewer, viewerIp } = req.query
-      const user = await UserService.findUser(id, incViews === "true", walletIdViewer as string, viewerIp as string, true);
+      const queryValues = validationGetUser({...req.params, ...req.query})
+      const user = await UserService.findUser(queryValues);
       res.json(user);
     } catch (err) {
       next(err);
@@ -51,10 +48,7 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const walletIds = typeof req.query.walletIds === "string" ? [req.query.walletIds] : req.query.walletIds as string[]
-      const data = await fetch(`${TERNOA_API_URL}/api/users/getUsers?walletIds=${walletIds.join("&walletIds=")}`)
-      const users = await data.json()
-      res.json(users);
+      res.redirect(`${TERNOA_API_URL}${req.originalUrl}`)
     } catch (err) {
       next(err);
     }
@@ -66,13 +60,11 @@ export class Controller {
     next: NextFunction
   ): Promise<any> {
     try {
-      const {cookie} = JSON.parse(req.body)
-      if(cookie && decryptCookie(cookie) === req.params.id){
-        const data = await fetch(`${TERNOA_API_URL}/api/users/reviewRequested/${req.params.id}`,{
-          method: 'PATCH'
-        });
-        const user = await data.json()
-        res.json(user);
+      const { cookie } = JSON.parse(req.body)
+      const { walletId } = req.params
+      const queryValues = validationReviewRequested({walletId, cookie})
+      if(decryptCookie(queryValues.cookie) === queryValues.walletId){
+        res.redirect(307, `${TERNOA_API_URL}${req.originalUrl}`)
       }else{
         throw new Error('Unvalid authentication')
       }
@@ -87,8 +79,8 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const balance = await UserService.getAccountBalance(req.params.id);
-      res.json(balance);
+      const queryValues = validationGetAccountBalance(req.params)
+      res.json(await UserService.getAccountBalance(queryValues));
     } catch (err) {
       next(err);
     }
@@ -100,12 +92,7 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const data = await fetch(`${TERNOA_API_URL}/api/users/${req.params.walletId}`,{
-        method: 'POST',
-        body: JSON.stringify(req.body)
-      });
-      const user = await data.json();
-      res.json(user);
+      res.redirect(307, `${TERNOA_API_URL}${req.originalUrl}`)
     } catch (err) {
       next(err)
     }
@@ -117,14 +104,11 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const { walletId, nftId, serieId } = req.query
-      const {cookie} = JSON.parse(req.body)
-      if(cookie && decryptCookie(cookie) === walletId){
-        const data = await fetch(`${TERNOA_API_URL}/api/users/like?walletId=${walletId}&nftId=${nftId}&serieId=${serieId}`, {
-          method: 'POST',
-        })
-        const user = await data.json()
-        res.json(user);
+      const { walletId } = req.query
+      const { cookie } = JSON.parse(req.body)
+      const queryValues = validationLikeUnlike({walletId, cookie})
+      if(decryptCookie(queryValues.cookie) === queryValues.walletId){
+        res.redirect(307, `${TERNOA_API_URL}${req.originalUrl}`)
       }else{
         throw new Error('Unvalid authentication')
       }
@@ -139,17 +123,14 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const { walletId, nftId, serieId } = req.query
-      const {cookie} = JSON.parse(req.body)
-      if(cookie && decryptCookie(cookie) === walletId){
-        const data = await fetch(`${TERNOA_API_URL}/api/users/unlike?walletId=${walletId}&nftId=${nftId}&serieId=${serieId}`, {
-          method: 'POST',
-        })
-        const user = await data.json()
-        res.json(user);
+      const { walletId } = req.query
+      const { cookie } = JSON.parse(req.body)
+      const queryValues = validationLikeUnlike({walletId, cookie})
+      if(decryptCookie(queryValues.cookie) === queryValues.walletId){
+        res.redirect(307, `${TERNOA_API_URL}${req.originalUrl}`)
       }else{
-          throw new Error('Unvalid authentication')
-        }
+        throw new Error('Unvalid authentication')
+      }
     } catch (err) {
       next(err)
     }
@@ -161,8 +142,7 @@ export class Controller {
     next: NextFunction
   ): Promise<void>{
     try{
-      if (!req.params.id) throw new Error("User wallet id not given")
-      res.redirect(`${TERNOA_API_URL}/api/users/verifyTwitter/${req.params.id}`)
+      res.redirect(`${TERNOA_API_URL}${req.originalUrl}`)
     }catch(err){
       next(err)
     }

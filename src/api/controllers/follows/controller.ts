@@ -75,7 +75,7 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try{
-      const queryValues = validationFollowUnfollow({...req.query, ...JSON.parse(JSON.stringify(req.body))})
+      const queryValues = validationFollowUnfollow({...req.query, ...JSON.parse(req.body)})
       if(decryptCookie(queryValues.cookie) === queryValues.walletIdFollower){
         res.json(await FollowService.follow(queryValues));
       }else{
@@ -92,7 +92,7 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try{
-      const queryValues = validationFollowUnfollow({...req.query, ...JSON.parse(JSON.stringify(req.body))})
+      const queryValues = validationFollowUnfollow({...req.query, ...JSON.parse(req.body)})
       if(decryptCookie(queryValues.cookie) === queryValues.walletIdFollower){
         res.json(await FollowService.unfollow(queryValues));
       }else{
