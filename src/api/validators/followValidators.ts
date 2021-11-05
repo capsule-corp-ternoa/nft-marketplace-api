@@ -10,7 +10,7 @@ export type getFollowersFollowingQuery = {
     }
     filter?: {
         certifiedOnly?: boolean
-        nameOrAddressSearch?: string
+        searchText?: string
     }
 }
 export const validationGetFollowersFollowing = (query: any) => {
@@ -26,7 +26,7 @@ export const validationGetFollowersFollowing = (query: any) => {
         }),
         filter: Joi.object({
             certifiedOnly: Joi.bool(),
-            nameOrAddressSearch: Joi.string(),
+            searchText: Joi.string(),
         }),
     });
     return validateQuery(validationSchema, { walletId, filter, pagination }) as getFollowersFollowingQuery;

@@ -16,11 +16,11 @@ export class FollowService {
       const followerWalletIds: string[] = (await FollowModel.find({ followed: query.walletId })).map(x => x.follower)
       const searchQuery = {$and: [{walletId: {$in: followerWalletIds}}]} as any
       if (query.filter?.certifiedOnly) searchQuery.$and.push({verified: true})
-      if (query.filter?.nameOrAddressSearch) {
+      if (query.filter?.searchText) {
         searchQuery.$and.push(
           {$or: [
-            {name: {$regex: query.filter?.nameOrAddressSearch, $options: "i"}}, 
-            {walletId: {$regex: query.filter?.nameOrAddressSearch, $options: "i"}}
+            {name: {$regex: query.filter?.searchText, $options: "i"}}, 
+            {walletId: {$regex: query.filter?.searchText, $options: "i"}}
           ]}
         )
       }
@@ -43,11 +43,11 @@ export class FollowService {
       const followedWalletIds: string[] = (await FollowModel.find({ follower: query.walletId })).map(x => x.followed)
       const searchQuery = {$and: [{walletId: {$in: followedWalletIds}}]} as any
       if (query.filter?.certifiedOnly) searchQuery.$and.push({verified: true})
-      if (query.filter?.nameOrAddressSearch){
+      if (query.filter?.searchText){
         searchQuery.$and.push(
           {$or: [
-            {name: {$regex: query.filter.nameOrAddressSearch, $options: "i"}},
-            {walletId: {$regex: query.filter.nameOrAddressSearch, $options: "i"}}
+            {name: {$regex: query.filter.searchText, $options: "i"}},
+            {walletId: {$regex: query.filter.searchText, $options: "i"}}
           ]
         })
       }
