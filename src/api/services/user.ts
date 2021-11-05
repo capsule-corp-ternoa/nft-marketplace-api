@@ -16,9 +16,7 @@ const usersCache = new NodeCache({ stdTTL: 300 });
 export class UserService {
   /**
    * Finds a user in DB
-   * @param walletId - User's wallet ID
-   * @param incViews - Should increase views counter
-   * @param ignoreCache - Should fetch directly from database and ignore cache
+   * @param query - see getUserQuery
    * @throws Will throw an error if wallet ID doesn't exist
    */
   async findUser(
@@ -53,7 +51,7 @@ export class UserService {
 
   /**
    * Get amount of caps on wallet
-   * @param id - User's public address
+   * @param query - see getAccountBalanceQuery
    * @throws Will throw an error if indexer can't be reached
    * @return A promise that resolves to the account
    */
