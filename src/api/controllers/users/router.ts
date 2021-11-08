@@ -3,9 +3,8 @@ import controller from "./controller";
 export default express
   .Router()
   .patch("/reviewRequested/:id", controller.reviewRequested) // ternoa-api
-  .get("/", controller.all) // ternoa-api
+  .get("/", controller.getUsers) // ternoa-api
   .get("/verifyTwitter/:id", controller.verifyTwitter) // ternoa-api
-  .get("/getUsers", controller.getUsersBywalletId) // ternoa-api
   .get("/:id", controller.getUser) // ternoa-api
   .get("/:id/caps", controller.getAccountBalance)
   .post("/create", controller.newUser) // ternoa-api

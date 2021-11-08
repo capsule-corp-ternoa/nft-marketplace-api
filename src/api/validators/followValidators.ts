@@ -9,7 +9,8 @@ export type getFollowersFollowingQuery = {
         limit?: number
     }
     filter?: {
-        certifiedOnly?: boolean
+        artist?: boolean
+        verified?: boolean
         searchText?: string
     }
 }
@@ -25,7 +26,8 @@ export const validationGetFollowersFollowing = (query: any) => {
             limit: Joi.number().integer().min(0).max(LIMIT_MAX_PAGINATION),
         }),
         filter: Joi.object({
-            certifiedOnly: Joi.bool(),
+            artist: Joi.boolean(),
+            verified: Joi.boolean(),
             searchText: Joi.string(),
         }),
     });

@@ -14,19 +14,8 @@ export class FollowService {
    async getUserFollowers(query: getFollowersFollowingQuery): Promise<CustomResponse<IUser>> {
     try {
       const followerWalletIds: string[] = (await FollowModel.find({ followed: query.walletId })).map(x => x.follower)
-      const searchQuery = {$and: [{walletId: {$in: followerWalletIds}}]} as any
-      if (query.filter?.certifiedOnly) searchQuery.$and.push({verified: true})
-      if (query.filter?.searchText) {
-        searchQuery.$and.push(
-          {$or: [
-            {name: {$regex: query.filter?.searchText, $options: "i"}}, 
-            {walletId: {$regex: query.filter?.searchText, $options: "i"}}
-          ]}
-        )
-      }
-      const page = query.pagination?.page ? query.pagination.page : 1
-      const limit = query.pagination?.limit ? query.pagination.limit : LIMIT_MAX_PAGINATION
-      const data = await fetch(`${TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}&page=${page}&limit=${limit}`)
+      const filter: any = {walletIds: followerWalletIds, ...query.filter}
+      const data = await fetch(`${TERNOA_API_URL}/api/users/?filter=${JSON.stringify(filter)}&pagination=${JSON.stringify(query.pagination)}`)
       return await data.json() as CustomResponse<IUser>;
     } catch (err) {
       throw new Error("Followers can't be fetched");
@@ -41,19 +30,8 @@ export class FollowService {
   async getUserFollowings(query: getFollowersFollowingQuery): Promise<CustomResponse<IUser>> {
     try {
       const followedWalletIds: string[] = (await FollowModel.find({ follower: query.walletId })).map(x => x.followed)
-      const searchQuery = {$and: [{walletId: {$in: followedWalletIds}}]} as any
-      if (query.filter?.certifiedOnly) searchQuery.$and.push({verified: true})
-      if (query.filter?.searchText){
-        searchQuery.$and.push(
-          {$or: [
-            {name: {$regex: query.filter.searchText, $options: "i"}},
-            {walletId: {$regex: query.filter.searchText, $options: "i"}}
-          ]
-        })
-      }
-      const page = query.pagination?.page ? query.pagination.page : 1
-      const limit = query.pagination?.limit ? query.pagination.limit : LIMIT_MAX_PAGINATION
-      const data = await fetch(`${TERNOA_API_URL}/api/users/getUsers?query=${JSON.stringify(searchQuery)}&page=${page}&limit=${limit}`)
+      const filter: any = {walletIds: followedWalletIds, ...query.filter}
+      const data = await fetch(`${TERNOA_API_URL}/api/users/?filter=${JSON.stringify(filter)}&pagination=${JSON.stringify(query.pagination)}`)
       return await data.json() as CustomResponse<IUser>;
     } catch (err) {
       throw new Error("Followings can't be fetched");

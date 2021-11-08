@@ -4,7 +4,7 @@ import { TERNOA_API_URL, decryptCookie } from "../../../utils";
 import { validationGetAccountBalance, validationGetUser, validationLikeUnlike, validationReviewRequested } from "../../validators/userValidators";
 
 export class Controller {
-  async all(
+  async getUsers(
     req: Request, 
     res: Response, 
     next: NextFunction
@@ -37,18 +37,6 @@ export class Controller {
       const queryValues = validationGetUser({...req.params, ...req.query})
       const user = await UserService.findUser(queryValues);
       res.json(user);
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  async getUsersBywalletId(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      res.redirect(`${TERNOA_API_URL}${req.originalUrl}`)
     } catch (err) {
       next(err);
     }
