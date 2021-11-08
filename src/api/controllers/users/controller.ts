@@ -49,9 +49,9 @@ export class Controller {
   ): Promise<any> {
     try {
       const { cookie } = JSON.parse(req.body)
-      const { walletId } = req.params
-      const queryValues = validationReviewRequested({walletId, cookie})
-      if(decryptCookie(queryValues.cookie) === queryValues.walletId){
+      const { id } = req.params
+      const queryValues = validationReviewRequested({id, cookie})
+      if(decryptCookie(queryValues.cookie) === queryValues.id){
         res.redirect(307, `${TERNOA_API_URL}${req.originalUrl}`)
       }else{
         throw new Error('Unvalid authentication')
