@@ -1,5 +1,5 @@
 import { request } from "graphql-request";
-import { DistinctNFTListResponse, INFT, NFTListResponse, CustomResponse } from "../../interfaces/graphQL";
+import { DistinctNFTListResponse, INFT, NFTListResponse, CustomResponse, ISeries } from "../../interfaces/graphQL";
 import fetch from "node-fetch";
 import { IMongoNft } from "../../interfaces/INft";
 import FollowModel from "../../models/follow";
@@ -9,7 +9,7 @@ import CategoryService from "./category"
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
 import { TERNOA_API_URL, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
-import { createNFTQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
+import { canAddToSeriesQuery, createNFTQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
 import { IUser } from "../../interfaces/IUser";
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
@@ -25,7 +25,7 @@ export class NFTService {
   async getNFTs(query: NFTsQuery): Promise<CustomResponse<INFT>> {
     try {
       // Categories
-      if (query.filter.categories){
+      if (query.filter?.categories){
         const withNoCategories = query.filter.categories.includes("none")
         const categoriesCode = query.filter.categories.filter(x => x!=="none")
         const allCategories = await CategoryService.getCategories({})
@@ -44,7 +44,7 @@ export class NFTService {
         }
       }
       // Liked ?
-      if (query.filter.liked){
+      if (query.filter?.liked){
         const data = await fetch(`${TERNOA_API_URL}/api/users/${query.filter.liked}?removeBurned=${true}`)
         const user = await data.json() as IUser
         query.filter.likedSeries = user.likedNFTs.length > 0 ? user.likedNFTs.map(x=>x.serieId) : []
@@ -197,6 +197,44 @@ export class NFTService {
       throw new Error("Couldn't get categories for this NFT");
     }
   }
+
+  /**
+   * Finds series and return its data
+   * @param query - query (see getSeriesStatusQuery)
+   * @throws Will throw an error if seriesId is not found
+   */
+   async getSeriesStatus(query: getSeriesStatusQuery): Promise<ISeries>{
+    try{
+      const gqlQuery = QueriesBuilder.getSeries(query)
+      const res = await request(indexerUrl, gqlQuery);
+      console.log(res)
+      if (!res.serieEntities.nodes || res.serieEntities.nodes.length === 0) throw Error()
+      return res.serieEntities.nodes[0]
+    }catch(err){
+      throw new Error("Couldn't get series status");
+    }
+  }
+
+  /**
+   * Returns true if specified walletId can add to series
+   * @param query - query (see canAddToSeriesQuery)
+   * @throws Will throw an error if seriesId is not found
+   */
+     async canAddToSeries(query: canAddToSeriesQuery): Promise<boolean>{
+      try{
+        const gqlQuery = QueriesBuilder.getSeries(query)
+        const res = await request(indexerUrl, gqlQuery);
+        if (!res.serieEntities.nodes || res.serieEntities.nodes.length === 0) return true
+        const series:ISeries = res.serieEntities.nodes[0]
+        if (series.locked || series.owner!==query.walletId) return false
+        return true
+      }catch(err){
+        throw new Error("Couldn't get information about this series");
+      }
+    }
+  
+
+  
 }
 
 export default new NFTService();

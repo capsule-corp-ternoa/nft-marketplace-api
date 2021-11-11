@@ -1,6 +1,6 @@
 import { gql } from "graphql-request";
 import { convertSortString, LIMIT_MAX_PAGINATION } from "../../utils";
-import { NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
+import { getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
 
 const nodes = `
   nodes {
@@ -10,7 +10,10 @@ const nodes = `
     owner
     creator
     timestampList
-    uri
+    nftIpfs
+    capsuleIpfs
+    isCapsule
+    frozenCaps
     price
     priceTiime
     marketplaceId
@@ -51,7 +54,7 @@ export class GQLQueriesBuilder {
         }
         ${query.filter?.owner ? `owner: "${query.filter.owner}"` : ""}
         ${query.filter?.marketplaceId!==undefined ? `marketplaceId: "${query.filter.marketplaceId}"` : ""}
-        ${query.filter?.listed!==undefined ? `listed: ${query.filter.listed}` : ""}
+        ${query.filter?.listed!==undefined ? `listed: ${!query.filter.listed ? 0 : 1}` : ""}
         ${query.sort ? `orderBy: [${convertSortString(query.sort)}]` : ""}
       ) {
         totalCount
@@ -89,6 +92,7 @@ export class GQLQueriesBuilder {
         priceTiime
         marketplaceId
         serieId
+        isCapsule
       }
     `;
     return gql`
@@ -187,6 +191,23 @@ export class GQLQueriesBuilder {
         nodes {
           capsAmount
           tiimeAmount
+        }
+      }
+    }
+  `;
+
+  getSeries = (query: getSeriesStatusQuery) => gql`
+    {
+      serieEntities(
+        filter: {and:[
+          {id: {equalTo: "${query.seriesId}"}}
+        ]}
+      ){
+        totalCount
+        nodes{
+          id
+          owner
+          locked
         }
       }
     }

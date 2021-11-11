@@ -1,5 +1,4 @@
 import { IUser } from "./IUser";
-import { ICategory } from "./ICategory";
 
 export interface INFT {
   id: string;
@@ -7,7 +6,10 @@ export interface INFT {
   creator?: string;
   listed: number;
   timestampList?: string | null;
-  uri?: string;
+  nftIpfs?: string;
+  capsuleIpfs?: string;
+  isCapsule?: boolean;
+  frozenCaps?: string;
   price: string;
   priceTiime: string;
   serieId?: string;
@@ -25,6 +27,12 @@ export interface ICompleteNFT extends INFT {
   ownerData?: IUser;
   creatorData?: IUser;
   categories?: string[];
+}
+
+export interface ISeries {
+  id: string;
+  owner: string;
+  locked: boolean;
 }
 
 export interface NFTListResponse {

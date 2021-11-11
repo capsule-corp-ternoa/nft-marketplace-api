@@ -30,7 +30,7 @@ export class UserService {
       const data = await fetch(`${TERNOA_API_URL}/api/users/${query.id}`)
       const user = await data.json() as IUser
       let viewsCount = 0
-      if (!user) throw new Error();
+      if (!user || (user as any).errors?.length>0) throw new Error();
       if (query.incViews){
         const date = +new Date()
         const views = await UserViewModel.find({viewed: query.id})
@@ -45,7 +45,7 @@ export class UserService {
       if (!usersCache.has(query.id)) usersCache.set(query.id, user);
       return {...user, viewsCount};
     } catch (err) {
-      throw new Error(err + "User can't be found");
+      throw new Error("User can't be found " + err);
     }
   }
 

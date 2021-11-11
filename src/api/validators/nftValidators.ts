@@ -16,7 +16,7 @@ export type NFTsQuery = {
     liked?: string
     likedSeries?: string[]
     marketplaceId?: number
-    listed?: number
+    listed?: boolean
     categories?: string[]
     owner?: string
     creator?: string
@@ -45,7 +45,7 @@ export const validationGetNFTs = (query: any) => {
       idsToExclude: Joi.array().items(Joi.number().integer().min(0)),
       liked: Joi.string(),
       marketplaceId: Joi.number().integer().min(0),
-      listed: Joi.number().integer().min(0).max(1),
+      listed: Joi.boolean(),
       categories: Joi.array().items(Joi.string()),
       owner: Joi.string(),
       creator: Joi.string(),
@@ -143,3 +143,28 @@ export const validationCreateNFT = (query: any) => {
   })
   return validateQuery(validationSchema, query) as createNFTQuery;
 }
+
+export type getSeriesStatusQuery = {
+  seriesId: string
+}
+export const validationGetSeries = (query: any) => {
+  const validationSchema = Joi.object({
+    seriesId: Joi.string().required(),
+  })
+  return validateQuery(validationSchema, query) as getSeriesStatusQuery;
+}
+
+export type canAddToSeriesQuery = {
+  seriesId: string
+  walletId: string
+}
+export const validationCanAddToSeries = (query: any) => {
+  const validationSchema = Joi.object({
+    seriesId: Joi.string().required(),
+    walletId: Joi.string().required(),
+  })
+  return validateQuery(validationSchema, query) as canAddToSeriesQuery;
+}
+
+
+

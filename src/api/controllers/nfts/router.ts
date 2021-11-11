@@ -6,6 +6,6 @@ export default express
   .get("/:id", controller.getNFT)
   .get("/stat/:id", controller.getStatNFTsUser)
   .get("/series/data", controller.getNFTsBySeries)
-  // .get("/series/can-add", controller.getNFTsBySeries)
-  // .get("/series/status", controller.getNFTsBySeries)
+  .get("/series/status/:seriesId", controller.getSeriesStatus)
+  .get("/series/can-add", controller.canAddToSeries)
   .post("/add-nft-category", controller.createNFT)
