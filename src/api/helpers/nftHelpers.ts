@@ -15,39 +15,12 @@ const ipfsGateways = {
 const defaultIpfsGateway = ipfsGateways.ternoaIpfsGateway;
 const ipfsGatewayUri = (process.env.IPFS_GATEWAY && removeURLSlash(process.env.IPFS_GATEWAY)) || defaultIpfsGateway;
 
-/*function extractHashFromGatewayUri(uri: string) {
-  const regex: RegExp = new RegExp('(http?s:\/\/.*\/)(.*)', 'gm');
-  const ipfsLinkParts = regex.exec(uri);
-  if (ipfsLinkParts?.length === 3) {
-    return ipfsLinkParts[2];
-  } else {
-    throw new Error("Invalid IPFS hash given: " + uri);
-  }
-}
-function overwriteDefaultIpfsGateway(uri: string): string {
-  const ipfsHash: string = extractHashFromGatewayUri(uri);
-  return `${ipfsGatewayUri}/${ipfsHash}`
-}
-function parseRawNFT(NFT: INFT): INFT {
-  try {
-    const { nftIpfs } = NFT;
-    if (nftIpfs && nftIpfs.indexOf(defaultIpfsGateway) < 0) {
-      NFT.nftIpfs = overwriteDefaultIpfsGateway(nftIpfs);
-    }
-    return NFT;
-  } catch (err) {
-    L.error({ err }, "Can't parse raw nft");
-    return NFT;
-  }
-}*/
-
 /**
  * Adds information to NFT object from external sources
  * @param NFT - NFT object
  * @returns - NFT object with new fields
  */
  export async function populateNFT(NFT: INFT, seriesData: CustomResponse<INFT>, query: NFTsQuery): Promise<ICompleteNFT | INFT> {
-  // const retNFT: INFT = parseRawNFT(NFT);
   const [serieData, creatorData, ownerData, info, categories] = await Promise.all([
     populateSerieData(NFT, seriesData, query),
     populateNFTCreator(NFT),
@@ -200,12 +173,6 @@ export async function populateNFTIpfs(NFT: INFT): Promise<any> {
         info.properties.cryptedMedia.ipfs = isURL(info.properties.cryptedMedia.ipfs) ? info.properties.cryptedMedia.ipfs : `${ipfsGatewayUri}/${info.properties.cryptedMedia.ipfs}`
         info.image = isURL(info.image) ? info.image : `${ipfsGatewayUri}/${info.image}`
       }
-      /*if (info.media.url.indexOf('/ipfs') >= 0 && info.media.url.indexOf(defaultIpfsGateway) < 0) {
-        info.media.url = overwriteDefaultIpfsGateway(info.media.url);
-      }
-      if (info.cryptedMedia.url.indexOf(defaultIpfsGateway) < 0) {
-        info.cryptedMedia.url = overwriteDefaultIpfsGateway(info.cryptedMedia.url);
-      }*/
       return info;
     } else {
       return {};
