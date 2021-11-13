@@ -1,14 +1,18 @@
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
+import { createCategoryQuery, getCategoriesQuery } from "../validators/categoryValidators";
 
 export class CategoryService {
   /**
    * Returns all categories
+   * @param query - see getCategoriesQuery
    * @throws Will throw an error if categories can't be fetched
    */
-  async getCategories(): Promise<ICategory[]> {
+  async getCategories(query: getCategoriesQuery): Promise<ICategory[]> {
     try {
-      const categories: any[] = await CategoryModel.find({});
+      const mongoQuery: any = {}
+      if (query.filter?.codes) mongoQuery.code = {$in:query.filter?.codes}
+      const categories: ICategory[] = await CategoryModel.find(mongoQuery);
       return categories;
     } catch (err) {
       throw new Error("Categories can't be fetched");
@@ -16,19 +20,27 @@ export class CategoryService {
   }
 
   /**
-   * Returns category by code
-   * @param categoryCode Code of the category to find
+   * Returns all categories
+   * @param query - see createCategoryQuery
    * @throws Will throw an error if categories can't be fetched
    */
-  async getCategoryByCode(categoryCode: string): Promise<ICategory> {
+   async addCategory(query: createCategoryQuery): Promise<ICategory> {
     try {
-      const category: any = await CategoryModel.findOne({code: categoryCode});
-      if (!category) throw new Error()
-      return category;
+      const category = await CategoryModel.findOne({code: query.code})
+      if (category) throw new Error("Category code already exists")
+      const newCategory = new CategoryModel({
+        code: query.code,
+        name: query.name,
+        description: query.description,
+      })
+      await newCategory.save()
+      return newCategory;
     } catch (err) {
-      throw new Error("Category can't be fetched");
+      throw new Error("Category can't be created");
     }
   }
+  
+
 }
 
 export default new CategoryService();

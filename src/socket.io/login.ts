@@ -18,7 +18,7 @@ export default (io: Namespace) => {
         let user;
         // if user exists, retrieve it, otherwise create a new one, return error if it fails
         try {
-          user = await UserService.findUser(walletId);
+          user = await UserService.findUser({id: walletId});
         } catch (err) {
           try {
             const body = { walletId }
