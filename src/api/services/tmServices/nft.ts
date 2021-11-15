@@ -226,7 +226,10 @@ export class NFTService {
       const specialNFTsDraw = {...finalBatch}
       L.info("Give classic NFTs depending on ranking...");
       classicNFTs.forEach((nft, i) => {
-        if (users[i]) finalBatch[nft.id] = users[i]._id
+        if (users[i]) {
+          finalBatch[nft.id] = users[i]._id
+          if (i === classicNFTs.length -1) L.info(`last to get : ${users[i]._id} with time amount ${users[i].tiimeAmount}`)
+        }
         if (Object.keys(finalBatch).length >= 1000){
           finalBatches.push(finalBatch)
           fs.writeFile("./nfts-distribution/nft-distribution-"+ i +" "+ new Date().toISOString().split('T')[0] + ".json", JSON.stringify(finalBatch), (err) => {
