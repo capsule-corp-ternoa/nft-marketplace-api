@@ -166,5 +166,52 @@ export const validationCanAddToSeries = (query: any) => {
   return validateQuery(validationSchema, query) as canAddToSeriesQuery;
 }
 
+export type getHistoryQuery = {
+  seriesId: string
+  nftId: string
+  sort?: string
+  pagination?: {
+    page?: number
+    limit?: number
+  }
+  filter?: {
+    grouped?: boolean
+    onlyNftId?: boolean
+    from?: string
+    to?: string
+    typeOfTransaction?: string
+    timestamp?: Date
+    timestampFilter?: string
+    amount?: number
+    amountFilter?: string
+  }
+}
+export const validationGetHistory = (query: any) => {
+  const { sort } = query
+  let { pagination, filter } = query;
+  if (pagination) pagination = JSON.parse(pagination);
+  if (filter) filter = JSON.parse(filter);
+  const validationSchema = Joi.object({
+    seriesId: Joi.string().required(),
+    nftId: Joi.string().required(),
+    sort: Joi.string(),
+    pagination: Joi.object({
+      page: Joi.number().integer().min(0),
+      limit: Joi.number().integer().min(0).max(LIMIT_MAX_PAGINATION),
+    }),
+    filter: Joi.object({
+      grouped: Joi.boolean(),
+      onlyNftId: Joi.boolean(),
+      from: Joi.string(),
+      to: Joi.string(),
+      typeOfTransaction: Joi.string(),
+      timestamp: Joi.date(),
+      timestampFilter: Joi.string(),
+      amount: Joi.number(),
+      amountFilter: Joi.string(),
+    }),
+  })
+  return validateQuery(validationSchema, {seriesId: query.seriesId, nftId: query.nftId, pagination, sort, filter}) as getHistoryQuery;
+}
 
 
