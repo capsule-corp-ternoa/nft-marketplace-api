@@ -1,6 +1,6 @@
 import { gql } from "graphql-request";
 import { convertSortString, LIMIT_MAX_PAGINATION } from "../../utils";
-import { getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
+import { getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
 
 const nodes = `
   nodes {
@@ -212,6 +212,56 @@ export class GQLQueriesBuilder {
       }
     }
   `;
+
+  getHistory = (query: getHistoryQuery) => gql`
+  {
+    nftTransferEntities(
+      first: ${query.pagination?.limit ? Number(query.pagination.limit) : LIMIT_MAX_PAGINATION}
+      offset: ${(query.pagination?.limit && query.pagination?.page) ? (Number(query.pagination.page) - 1) * Number(query.pagination.limit) : 0}
+      orderBy: ${query.sort ? `[${convertSortString(query.sort)}]` : "TIMESTAMP_DESC"}
+      filter: {and:[
+        ${query.filter?.onlyNftId ? 
+          `{nftId: {equalTo: "${query.nftId}"}}`
+        : 
+          `{seriesId: {equalTo: "${query.seriesId}"}}`
+        }
+        ${query.filter?.from ? `{from: {equalTo: "${query.filter.from}"}}` : ``}
+        ${query.filter?.to ? `{to: {equalTo: "${query.filter.to}"}}` : ``}
+        ${query.filter?.typeOfTransaction ? `{typeOfTransaction: {equalTo: "${query.filter.typeOfTransaction}"}}` : ``}
+        ${query.filter?.timestamp ? 
+          `{timestamp: 
+            {${query.filter?.timestampFilter ? query.filter?.timestampFilter : 'greaterThanOrEqualTo'}: "${query.filter.timestamp}"}
+          }`
+        : 
+          ``
+        }
+        ${query.filter?.amount !== undefined ? 
+          `{amount: 
+            {${query.filter?.amountFilter ? query.filter.amountFilter : "isEqual"}: "${query.filter.amount}"}
+          }`
+        : 
+          ""
+        }
+      ]}
+    ){
+      totalCount
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+      }
+      nodes {
+        id
+        nftId
+        seriesId
+        from
+        to
+        timestamp
+        typeOfTransaction
+        amount
+      }
+    }
+  }
+`;
 
 }
 

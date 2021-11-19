@@ -1,5 +1,5 @@
 import { request } from "graphql-request";
-import { DistinctNFTListResponse, INFT, NFTListResponse, CustomResponse, ISeries } from "../../interfaces/graphQL";
+import { DistinctNFTListResponse, INFT, NFTListResponse, CustomResponse, ISeries, INFTTransfer } from "../../interfaces/graphQL";
 import fetch from "node-fetch";
 import { IMongoNft } from "../../interfaces/INft";
 import FollowModel from "../../models/follow";
@@ -9,7 +9,7 @@ import CategoryService from "./category"
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
 import { TERNOA_API_URL, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
-import { canAddToSeriesQuery, createNFTQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
+import { canAddToSeriesQuery, createNFTQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
 import { IUser } from "../../interfaces/IUser";
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
@@ -207,7 +207,6 @@ export class NFTService {
     try{
       const gqlQuery = QueriesBuilder.getSeries(query)
       const res = await request(indexerUrl, gqlQuery);
-      console.log(res)
       if (!res.serieEntities.nodes || res.serieEntities.nodes.length === 0) throw Error()
       return res.serieEntities.nodes[0]
     }catch(err){
@@ -232,9 +231,51 @@ export class NFTService {
         throw new Error("Couldn't get information about this series");
       }
     }
-  
 
-  
+  /**
+   * Return the history of the serie specified
+   * @param query - query (see getHistoryQuery)
+   * @throws Will throw an error if indexer is not reachable
+   */
+    async getHistory(query: getHistoryQuery): Promise<CustomResponse<INFTTransfer>>{
+    try{
+      const gqlQuery = QueriesBuilder.getHistory(query)
+      const res = await request(indexerUrl, gqlQuery);
+      const data: INFTTransfer[] = []
+      if (query.filter?.grouped){
+        let previousRow:INFTTransfer = null
+        res.nftTransferEntities.nodes.forEach((x: INFTTransfer) => {
+          const currentRow = x
+          currentRow.quantity = 1
+          if (previousRow){
+            if (
+              currentRow.from === previousRow.from &&
+              currentRow.to === previousRow.to && 
+              currentRow.amount === previousRow.amount &&
+              currentRow.seriesId === previousRow.seriesId &&
+              currentRow.typeOfTransaction === previousRow.typeOfTransaction
+            ){
+              previousRow.quantity += 1 
+            }else{
+              data.push(previousRow)
+            }
+          }
+          previousRow = currentRow
+        });
+        if (previousRow) data.push(previousRow)
+      }
+      const result: CustomResponse<INFTTransfer>={
+        totalCount: res.nftTransferEntities.totalCount,
+        data: query.filter?.grouped ? data : res.nftTransferEntities.nodes,
+        hasNextPage: res.nftTransferEntities.pageInfo?.hasNextPage || undefined,
+        hasPreviousPage: res.nftTransferEntities.pageInfo?.hasPreviousPage || undefined
+      }
+      return result
+    }catch(err){
+      console.log(err)
+      throw new Error("Couldn't get history information about this nft / series");
+    }
+  }
 }
 
 export default new NFTService();

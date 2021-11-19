@@ -35,6 +35,18 @@ export interface ISeries {
   locked: boolean;
 }
 
+export interface INFTTransfer {
+  id: string;
+  nftId: string;
+  seriesId: string;
+  from: string;
+  to: string;
+  timestamp: Date;
+  typeOfTransaction: string;
+  amount: string;
+  quantity: number;
+}
+
 export interface NFTListResponse {
   nftEntities: {
     totalCount: number;
