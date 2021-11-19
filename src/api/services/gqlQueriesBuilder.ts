@@ -25,8 +25,8 @@ export class GQLQueriesBuilder {
   NFTs = (query: NFTsQuery) => gql`
     {
       distinctSerieNfts(
-        first: ${query.pagination?.limit ? Number(query.pagination.limit) : LIMIT_MAX_PAGINATION}
-        offset: ${(query.pagination?.limit && query.pagination?.page) ? (Number(query.pagination.page) - 1) * Number(query.pagination.limit) : 0}
+        first: ${query.pagination?.limit ? query.pagination.limit : LIMIT_MAX_PAGINATION}
+        offset: ${(query.pagination?.limit && query.pagination?.page) ? (query.pagination.page - 1) * query.pagination.limit : 0}
         filter:{
           and:[
             ${query.filter?.ids ? `{id: { in: ${JSON.stringify(query.filter.ids.map(x => String(x)))} }}` : ""}
@@ -98,8 +98,8 @@ export class GQLQueriesBuilder {
     return gql`
       {
         nftEntities(
-          first: ${query.pagination?.limit ? Number(query.pagination.limit) : LIMIT_MAX_PAGINATION}
-          offset: ${(query.pagination?.limit && query.pagination?.page) ? (Number(query.pagination.page) - 1) * Number(query.pagination.limit) : 0}
+          first: ${query.pagination?.limit ? query.pagination.limit : LIMIT_MAX_PAGINATION}
+          offset: ${(query.pagination?.limit && query.pagination?.page) ? (query.pagination.page - 1) * query.pagination.limit : 0}
           filter: {
             and : [
               { timestampBurn: { isNull: true } }
@@ -216,8 +216,10 @@ export class GQLQueriesBuilder {
   getHistory = (query: getHistoryQuery) => gql`
   {
     nftTransferEntities(
-      first: ${query.pagination?.limit ? Number(query.pagination.limit) : LIMIT_MAX_PAGINATION}
-      offset: ${(query.pagination?.limit && query.pagination?.page) ? (Number(query.pagination.page) - 1) * Number(query.pagination.limit) : 0}
+      ${query.pagination?.page && query.pagination?.limit ? `
+            first: ${query.pagination.limit}
+            offset: ${(query.pagination.page - 1) * query.pagination.limit}
+        ` : ""}
       orderBy: ${query.sort ? `[${convertSortString(query.sort)}]` : "TIMESTAMP_DESC"}
       filter: {and:[
         ${query.filter?.onlyNftId ? 
