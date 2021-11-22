@@ -13,7 +13,7 @@ export class CategoryService {
       const mongoQuery: any = {}
       if (query.filter?.codes) mongoQuery.code = {$in:query.filter?.codes}
       const categories: ICategory[] = await CategoryModel.find(mongoQuery);
-      return categories;
+      return categories.filter(x => !["001","002","VR"].includes(x.code));
     } catch (err) {
       throw new Error("Categories can't be fetched");
     }
