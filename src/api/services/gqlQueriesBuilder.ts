@@ -260,6 +260,9 @@ export class GQLQueriesBuilder {
         timestamp
         typeOfTransaction
         amount
+        extrinsic{
+          id
+        }
       }
     }
   }
