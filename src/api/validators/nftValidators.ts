@@ -132,16 +132,16 @@ export const validationNFTsBySeries = (query: any) => {
 }
 
 
-export type createNFTQuery = {
-  chainId: string
+export type addCategoriesNFTsQuery = {
+  chainIds: string[]
   categories: string[]
 }
-export const validationCreateNFT = (query: any) => {
+export const validationAddCategoriesNFTs = (query: any) => {
   const validationSchema = Joi.object({
-    chainId: Joi.number().required(),
+    chainIds: Joi.array().required().items(Joi.number().required()),
     categories: Joi.array().required().items(Joi.string().required())
   })
-  return validateQuery(validationSchema, query) as createNFTQuery;
+  return validateQuery(validationSchema, query) as addCategoriesNFTsQuery;
 }
 
 export type getSeriesStatusQuery = {

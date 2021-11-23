@@ -9,7 +9,7 @@ import CategoryService from "./category"
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
 import { TERNOA_API_URL, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
-import { canAddToSeriesQuery, createNFTQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
+import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
 import { IUser } from "../../interfaces/IUser";
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
@@ -144,20 +144,18 @@ export class NFTService {
 
   /**
    * Creates a new nft document in DB (for offchain categories)
-   * @param query - query (see createNFTQuery)
+   * @param query - query (see addCategoriesNFTsQuery)
    * @throws Will throw an error if can't create NFT document
    */
-  async createNFT(query: createNFTQuery): Promise<IMongoNft> {
+  async addCategoriesNFTs(query: addCategoriesNFTsQuery): Promise<IMongoNft[]> {
     try {
       const categories = await CategoryService.getCategories({filter: {codes: query.categories}})
-      const data = {
-          chainId: query.chainId,
-          categories: categories.map(x => x.code)
-      }
-      const newNft = new NftModel(data);
-      return await newNft.save();
+      const categoriesCodes = categories.map(x => x.code)
+      const data: {chainId: string, categories: string[]}[] = query.chainIds.map(x => { return {chainId: x, categories: categoriesCodes} })
+      const mongoNFTs: IMongoNft[] = await NftModel.insertMany(data)
+      return mongoNFTs;
     } catch (err) {
-      throw new Error("NFT with category can't be created");
+      throw new Error("NFTs with categories can't be created");
     }
   }
 

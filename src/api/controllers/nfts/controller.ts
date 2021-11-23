@@ -1,6 +1,6 @@
 import NFTService from "../../services/nft";
 import { NextFunction, Request, Response } from "express";
-import { validationGetNFTs, validationGetNFT, validationGetStatNFTsUser, validationCreateNFT, validationNFTsBySeries, validationGetSeries, validationCanAddToSeries, validationGetHistory } from "../../validators/nftValidators";
+import { validationGetNFTs, validationGetNFT, validationGetStatNFTsUser, validationNFTsBySeries, validationGetSeries, validationCanAddToSeries, validationGetHistory, validationAddCategoriesNFTs } from "../../validators/nftValidators";
 
 export class Controller {
   async getNFTs(
@@ -51,14 +51,14 @@ export class Controller {
     }
   }
 
-  async createNFT(
+  async addCategoriesNFTs(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> {
     try {
-      const queryValues = validationCreateNFT(req.body)
-      res.json(await NFTService.createNFT(queryValues));
+      const queryValues = validationAddCategoriesNFTs(req.body)
+      res.json(await NFTService.addCategoriesNFTs(queryValues));
     } catch (err) {
       next(err);
     }
