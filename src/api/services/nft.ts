@@ -242,9 +242,9 @@ export class NFTService {
       const data: INFTTransfer[] = []
       if (query.filter?.grouped){
         let previousRow:INFTTransfer = null
+        let tempQty = 1
         res.nftTransferEntities.nodes.forEach((x: INFTTransfer) => {
           const currentRow = x
-          currentRow.quantity = 1
           if (previousRow){
             if (
               currentRow.from === previousRow.from &&
@@ -253,14 +253,19 @@ export class NFTService {
               currentRow.seriesId === previousRow.seriesId &&
               currentRow.typeOfTransaction === previousRow.typeOfTransaction
             ){
-              previousRow.quantity += 1 
+              tempQty += 1
             }else{
+              previousRow.quantity = tempQty
               data.push(previousRow)
+              tempQty = 1
             }
           }
           previousRow = currentRow
         });
-        if (previousRow) data.push(previousRow)
+        if (previousRow){
+          previousRow.quantity = tempQty
+          data.push(previousRow)
+        }
       }
       const result: CustomResponse<INFTTransfer>={
         totalCount: res.nftTransferEntities.totalCount,
