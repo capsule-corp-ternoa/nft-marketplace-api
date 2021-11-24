@@ -62,7 +62,7 @@ export async function populateSerieData(
     const serieData = result.sort((a, b) => 
       a.isCapsule === b.isCapsule ? 0 : (a.isCapsule ? 1 : -1) || // capsule last
       b.listed - a.listed || // listed first
-      (!marketplaceId ? 0 : (marketplaceId === Number(a.marketplaceId) ? -1 : (marketplaceId === Number(b.marketplaceId) ? 1 : 0))) || // marketplace id first (if defined)
+      ((!marketplaceId || Number(a.marketplaceId) === Number(b.marketplaceId)) ? 0 : (marketplaceId === Number(a.marketplaceId) ? -1 : (marketplaceId === Number(b.marketplaceId) ? 1 : 0))) || // marketplace id first (if defined)
       Number(a.price) - Number(b.price) || // smallest price first
       Number(a.priceTiime) - Number(b.priceTiime)) // smallest price tiime first
     const listedNft = serieData.filter(x => x.listed)
