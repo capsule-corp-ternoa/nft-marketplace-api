@@ -57,7 +57,7 @@ export class Controller {
     next: NextFunction
   ): Promise<void> {
     try {
-      const queryValues = validationAddCategoriesNFTs(req.body)
+      const queryValues = validationAddCategoriesNFTs(JSON.parse(req.body))
       res.json(await NFTService.addCategoriesNFTs(queryValues));
     } catch (err) {
       next(err);

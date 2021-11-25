@@ -8,7 +8,7 @@ import NftViewModel from "../../models/nftView";
 import CategoryService from "./category"
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
-import { TERNOA_API_URL, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
+import { decryptCookie, TERNOA_API_URL, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
 import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
 import { IUser } from "../../interfaces/IUser";
 import CategoryModel from "../../models/category";
@@ -147,13 +147,23 @@ export class NFTService {
    * @param query - query (see addCategoriesNFTsQuery)
    * @throws Will throw an error if can't create NFT document
    */
-  async addCategoriesNFTs(query: addCategoriesNFTsQuery): Promise<IMongoNft[]> {
+  async addCategoriesNFTs(query: addCategoriesNFTsQuery): Promise<boolean> {
     try {
-      const categories = await CategoryService.getCategories({filter: {codes: query.categories}})
-      const categoriesCodes = categories.map(x => x.code)
-      const data: {chainId: string, categories: string[]}[] = query.chainIds.map(x => { return {chainId: x, categories: categoriesCodes} })
-      const mongoNFTs: IMongoNft[] = await NftModel.insertMany(data)
-      return mongoNFTs;
+      const nftsAuthTokenDecrypted = decryptCookie(query.nftsAuthToken)
+      const [decryptedCreator, decryptedChainIdsString, decryptedCategoriesString] = nftsAuthTokenDecrypted.split(',')
+      if (
+        decryptedCreator === query.creator &&
+        decryptedChainIdsString === query.chainIds.join('-') &&
+        decryptedCategoriesString === query.categories.join('-')
+      ){
+        const categories = await CategoryService.getCategories({filter: {codes: query.categories}})
+        const categoriesCodes = categories.map(x => x.code)
+        const data: {chainId: string, categories: string[]}[] = query.chainIds.map(x => { return {chainId: x, categories: categoriesCodes} })
+        await NftModel.insertMany(data)
+        return true;
+      }else{
+        throw new Error("Invalid authentication")
+      }
     } catch (err) {
       throw new Error("NFTs with categories can't be created");
     }
