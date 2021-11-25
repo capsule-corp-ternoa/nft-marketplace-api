@@ -25,8 +25,10 @@ export class GQLQueriesBuilder {
   NFTs = (query: NFTsQuery) => gql`
     {
       distinctSerieNfts(
-        first: ${query.pagination?.limit ? query.pagination.limit : LIMIT_MAX_PAGINATION}
-        offset: ${(query.pagination?.limit && query.pagination?.page) ? (query.pagination.page - 1) * query.pagination.limit : 0}
+        ${query.pagination?.page && query.pagination?.limit ? `
+            first: ${query.pagination.limit}
+            offset: ${(query.pagination.page - 1) * query.pagination.limit}
+        ` : ""}
         filter:{
           and:[
             ${query.filter?.ids ? `{id: { in: ${JSON.stringify(query.filter.ids.map(x => String(x)))} }}` : ""}
