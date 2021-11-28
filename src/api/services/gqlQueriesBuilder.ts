@@ -100,8 +100,10 @@ export class GQLQueriesBuilder {
     return gql`
       {
         nftEntities(
-          first: ${query.pagination?.limit ? query.pagination.limit : LIMIT_MAX_PAGINATION}
-          offset: ${(query.pagination?.limit && query.pagination?.page) ? (query.pagination.page - 1) * query.pagination.limit : 0}
+          ${query.pagination?.page && query.pagination?.limit ? `
+            first: ${query.pagination.limit}
+            offset: ${(query.pagination.page - 1) * query.pagination.limit}
+          ` : ""}
           filter: {
             and : [
               { timestampBurn: { isNull: true } }
