@@ -2,11 +2,11 @@ import express from "express";
 import controller from "./controller";
 export default express
   .Router()
-  .get("/", controller.getAllNFTs)
-  .get("/owner/:id", controller.getUsersNFTS)
-  .get("/creator/:id", controller.getCreatorsNFTs)
-  .get("/stat/:id", controller.getStatNFTsUser)
-  .get("/category/", controller.getCategoriesNFTs)
+  .get("/", controller.getNFTs)
   .get("/:id", controller.getNFT)
-  // .post("/new", controller.createNFT)
-  .get("/getSameGroupNFTS/:id", controller.getNFTsBySerie)
+  .get("/stat/:id", controller.getStatNFTsUser)
+  .get("/series/data", controller.getNFTsBySeries)
+  .get("/series/status/:seriesId", controller.getSeriesStatus)
+  .get("/series/can-add", controller.canAddToSeries)
+  .get("/history/:seriesId/:nftId", controller.getHistory)
+  .post("/add-nfts-categories", controller.addCategoriesNFTs)
