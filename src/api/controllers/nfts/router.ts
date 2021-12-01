@@ -9,4 +9,5 @@ export default express
   .get("/series/status/:seriesId", controller.getSeriesStatus)
   .get("/series/can-add", controller.canAddToSeries)
   .get("/history/:seriesId/:nftId", controller.getHistory)
+  .get("/likes/ranking", controller.getMostLiked)
   .post("/add-nfts-categories", controller.addCategoriesNFTs)

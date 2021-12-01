@@ -1,7 +1,6 @@
 import { request } from "graphql-request";
 import { DistinctNFTListResponse, INFT, NFTListResponse, CustomResponse, ISeries, INFTTransfer } from "../../interfaces/graphQL";
 import fetch from "node-fetch";
-import { IMongoNft } from "../../interfaces/INft";
 import FollowModel from "../../models/follow";
 import NftModel from "../../models/nft";
 import NftViewModel from "../../models/nftView";
@@ -9,10 +8,11 @@ import CategoryService from "./category"
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
 import { decryptCookie, TERNOA_API_URL, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
-import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
+import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery, getMostLikedQuery } from "../validators/nftValidators";
 import { IUser } from "../../interfaces/IUser";
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
+import { AggregatePaginateResult } from "mongoose";
 
 const indexerUrl = process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
 
@@ -47,7 +47,7 @@ export class NFTService {
       if (query.filter?.liked){
         const data = await fetch(`${TERNOA_API_URL}/api/users/${query.filter.liked}?removeBurned=${true}`)
         const user = await data.json() as IUser
-        query.filter.likedSeries = user.likedNFTs.length > 0 ? user.likedNFTs.map(x=>x.serieId) : []
+        query.filter.series = user.likedNFTs.length > 0 ? user.likedNFTs.map(x=>x.serieId) : []
       }
       // Indexer data
       const gqlQuery = QueriesBuilder.NFTs(query);
@@ -287,6 +287,26 @@ export class NFTService {
     }catch(err){
       console.log(err)
       throw new Error("Couldn't get history information about this nft / series");
+    }
+  }
+
+  /**
+   * Returns most liked NFTs
+   * @param query - query (see getMostLikedQuery)
+   * @throws Will throw an error if no nft is liked
+   */
+   async getMostLiked(query: getMostLikedQuery): Promise<CustomResponse<INFT>>{
+    try{
+      const pagination = query.pagination
+      const resTernoaApi = await fetch(`${TERNOA_API_URL}/api/users/likes/ranking?pagination=${JSON.stringify(pagination)}`)
+      if (!resTernoaApi.ok) throw new Error("Error from ternoa-api")
+      const rankingData:AggregatePaginateResult<{ _id: string, count: number }> = await resTernoaApi.json()
+      const serieIdsToGet = rankingData.docs.map(x => x._id)
+      const queryGetNft = {filter: {series:serieIdsToGet}}
+      return await this.getNFTs(queryGetNft)
+    }catch(err){
+      console.log(err)
+      throw new Error("Couldn't get most liked NFTs");
     }
   }
 }

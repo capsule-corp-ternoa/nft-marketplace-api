@@ -35,7 +35,7 @@ export class GQLQueriesBuilder {
             ${query.filter?.idsToExclude ? `{id: { notIn: ${JSON.stringify(query.filter.idsToExclude.map(x => String(x)))} }}` : ""}
             ${query.filter?.idsCategories ? `{id: { in: ${JSON.stringify(query.filter.idsCategories.map(x => String(x)))} }}` : ""}
             ${query.filter?.idsToExcludeCategories ? `{id: { notIn: ${JSON.stringify(query.filter.idsToExcludeCategories.map(x => String(x)))} }}` : ""}
-            ${query.filter?.likedSeries ? `{serieId: { in: ${JSON.stringify(query.filter.likedSeries)} }}` : ""}
+            ${query.filter?.series ? `{serieId: { in: ${JSON.stringify(query.filter.series)} }}` : ""}
             ${query.filter?.creator ? `{creator: {equalTo: "${query.filter.creator}"}}` : ""}
             ${query.filter?.isCapsule !== undefined ? `{isCapsule: {isEqual: ${query.filter.isCapsule}}}` : ""}
             ${query.filter?.price !== undefined ? 

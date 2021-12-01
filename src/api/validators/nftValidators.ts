@@ -14,7 +14,7 @@ export type NFTsQuery = {
     idsCategories?: string[]
     idsToExcludeCategories?: string[]
     liked?: string
-    likedSeries?: string[]
+    series?: string[]
     marketplaceId?: number
     listed?: boolean
     categories?: string[]
@@ -216,6 +216,24 @@ export const validationGetHistory = (query: any) => {
     }),
   })
   return validateQuery(validationSchema, {seriesId: query.seriesId, nftId: query.nftId, pagination, sort, filter}) as getHistoryQuery;
+}
+
+export type getMostLikedQuery = {
+  pagination?: {
+    page?: number
+    limit?: number
+  }
+}
+export const validationGetMostLiked = (query: any) => {
+  let { pagination } = query
+  if (pagination) pagination = JSON.parse(pagination);
+  const validationSchema = Joi.object({
+    pagination: Joi.object({
+      page: Joi.number().integer().min(0),
+      limit: Joi.number().integer().min(0).max(LIMIT_MAX_PAGINATION),
+    })
+  })
+  return validateQuery(validationSchema, { pagination }) as getMostLikedQuery;
 }
 
 
