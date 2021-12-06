@@ -8,6 +8,7 @@ export type NFTsQuery = {
     limit?: number
   }
   sort?: string
+  sortMongo?: string
   filter?: {
     ids?: string[]
     idsToExclude?: string[]
@@ -30,7 +31,7 @@ export type NFTsQuery = {
   }
 }
 export const validationGetNFTs = (query: any) => {
-  const { sort } = query
+  const { sort, sortMongo } = query
   let { pagination, filter } = query;
   if (pagination) pagination = JSON.parse(pagination);
   if (filter) filter = JSON.parse(filter);
@@ -40,6 +41,7 @@ export const validationGetNFTs = (query: any) => {
       limit: Joi.number().integer().min(0).max(LIMIT_MAX_PAGINATION),
     }),
     sort: Joi.string().regex(/[a-zA-Z]{1,}:[a-zA-Z]{1,},{0,1}/),
+    sortMongo: Joi.string(),
     filter: Joi.object({
       ids: Joi.array().items(Joi.number().integer().min(0)),
       idsToExclude: Joi.array().items(Joi.number().integer().min(0)),
@@ -58,7 +60,7 @@ export const validationGetNFTs = (query: any) => {
       noSeriesData: Joi.boolean(),
     }),
   })
-  return validateQuery(validationSchema, { pagination, sort, filter }) as NFTsQuery;
+  return validateQuery(validationSchema, { pagination, sort, sortMongo, filter }) as NFTsQuery;
 }
 
 
@@ -217,23 +219,3 @@ export const validationGetHistory = (query: any) => {
   })
   return validateQuery(validationSchema, {seriesId: query.seriesId, nftId: query.nftId, pagination, sort, filter}) as getHistoryQuery;
 }
-
-export type getMostLikedQuery = {
-  pagination?: {
-    page?: number
-    limit?: number
-  }
-}
-export const validationGetMostLiked = (query: any) => {
-  let { pagination } = query
-  if (pagination) pagination = JSON.parse(pagination);
-  const validationSchema = Joi.object({
-    pagination: Joi.object({
-      page: Joi.number().integer().min(0),
-      limit: Joi.number().integer().min(0).max(LIMIT_MAX_PAGINATION),
-    })
-  })
-  return validateQuery(validationSchema, { pagination }) as getMostLikedQuery;
-}
-
-

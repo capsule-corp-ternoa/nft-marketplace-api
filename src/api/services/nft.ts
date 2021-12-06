@@ -1,4 +1,5 @@
 import { request } from "graphql-request";
+import { AggregatePaginateResult } from 'mongoose'
 import { DistinctNFTListResponse, INFT, NFTListResponse, CustomResponse, ISeries, INFTTransfer } from "../../interfaces/graphQL";
 import fetch from "node-fetch";
 import FollowModel from "../../models/follow";
@@ -8,11 +9,11 @@ import CategoryService from "./category"
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
 import { decryptCookie, TERNOA_API_URL, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
-import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery, getMostLikedQuery } from "../validators/nftValidators";
+import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
 import { IUser } from "../../interfaces/IUser";
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
-import { AggregatePaginateResult } from "mongoose";
+//import { INFTLike } from "../../interfaces/INFTLike";
 
 const indexerUrl = process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
 
@@ -24,6 +25,7 @@ export class NFTService {
    */
   async getNFTs(query: NFTsQuery): Promise<CustomResponse<INFT>> {
     try {
+      const likesData: AggregatePaginateResult<{_id: string, count: number}> | null = null
       // Categories
       if (query.filter?.categories){
         const withNoCategories = query.filter.categories.includes("none")
@@ -43,12 +45,31 @@ export class NFTService {
           query.filter.idsCategories = nftIds
         }
       }
-      // Liked ?
+      // Liked only
       if (query.filter?.liked){
-        const data = await fetch(`${TERNOA_API_URL}/api/users/${query.filter.liked}?removeBurned=${true}`)
+        const data = await fetch(`${TERNOA_API_URL}/api/users/${query.filter.liked}?populateLikes=${true}`)
         const user = await data.json() as IUser
         query.filter.series = user.likedNFTs.length > 0 ? user.likedNFTs.map(x=>x.serieId) : []
       }
+
+      // Sort mongo
+      /*if (query.sortMongo){
+        const sortArray = query.sortMongo.split(',')
+        const sortByLikes = sortArray.find(x => x.split(':')[0] === "likes")
+        if (sortByLikes){
+          const likesSort = sortByLikes.split(':')[1]
+          const likesResult = await fetch(`${TERNOA_API_URL}/api/nftLikes/&sort=${likesSort}`)
+          likesData = (await likesResult.json()).likesRanking
+          NFTs = NFTs.map(x => {
+            const likeAggregatedObject = likesData.docs.find(y => y._id === x.serieId)
+            const likesNumber = likeAggregatedObject ? likeAggregatedObject.count : 0
+            console.log(likesNumber)
+            return {...x, likesNumber}
+          })
+          .sort((a, b) => b.likesNumber - a.likesNumber)
+        }
+      }*/
+
       // Indexer data
       const gqlQuery = QueriesBuilder.NFTs(query);
       const res: DistinctNFTListResponse = await request(indexerUrl, gqlQuery);
@@ -285,28 +306,7 @@ export class NFTService {
       }
       return result
     }catch(err){
-      console.log(err)
       throw new Error("Couldn't get history information about this nft / series");
-    }
-  }
-
-  /**
-   * Returns most liked NFTs
-   * @param query - query (see getMostLikedQuery)
-   * @throws Will throw an error if no nft is liked
-   */
-   async getMostLiked(query: getMostLikedQuery): Promise<CustomResponse<INFT>>{
-    try{
-      const pagination = query.pagination
-      const resTernoaApi = await fetch(`${TERNOA_API_URL}/api/users/likes/ranking?pagination=${JSON.stringify(pagination)}`)
-      if (!resTernoaApi.ok) throw new Error("Error from ternoa-api")
-      const rankingData:AggregatePaginateResult<{ _id: string, count: number }> = await resTernoaApi.json()
-      const serieIdsToGet = rankingData.docs.map(x => x._id)
-      const queryGetNft = {filter: {series:serieIdsToGet}}
-      return await this.getNFTs(queryGetNft)
-    }catch(err){
-      console.log(err)
-      throw new Error("Couldn't get most liked NFTs");
     }
   }
 }

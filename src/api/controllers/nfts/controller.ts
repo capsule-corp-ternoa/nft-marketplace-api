@@ -1,6 +1,6 @@
 import NFTService from "../../services/nft";
 import { NextFunction, Request, Response } from "express";
-import { validationGetNFTs, validationGetNFT, validationGetStatNFTsUser, validationNFTsBySeries, validationGetSeries, validationCanAddToSeries, validationGetHistory, validationAddCategoriesNFTs, validationGetMostLiked } from "../../validators/nftValidators";
+import { validationGetNFTs, validationGetNFT, validationGetStatNFTsUser, validationNFTsBySeries, validationGetSeries, validationCanAddToSeries, validationGetHistory, validationAddCategoriesNFTs } from "../../validators/nftValidators";
 
 export class Controller {
   async getNFTs(
@@ -98,19 +98,6 @@ export class Controller {
     try {
       const queryValues = validationGetHistory({...req.query, ...req.params})
       res.json(await NFTService.getHistory(queryValues));
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  async getMostLiked(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void>{
-    try {
-      const queryValues = validationGetMostLiked(req.query)
-      res.json(await NFTService.getMostLiked(queryValues));
     } catch (err) {
       next(err);
     }
