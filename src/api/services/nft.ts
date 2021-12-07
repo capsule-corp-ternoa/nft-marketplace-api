@@ -1,7 +1,7 @@
 import { request } from "graphql-request";
+import { AggregatePaginateResult } from 'mongoose'
 import { DistinctNFTListResponse, INFT, NFTListResponse, CustomResponse, ISeries, INFTTransfer } from "../../interfaces/graphQL";
 import fetch from "node-fetch";
-import { IMongoNft } from "../../interfaces/INft";
 import FollowModel from "../../models/follow";
 import NftModel from "../../models/nft";
 import NftViewModel from "../../models/nftView";
@@ -13,6 +13,7 @@ import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeries
 import { IUser } from "../../interfaces/IUser";
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
+//import { INFTLike } from "../../interfaces/INFTLike";
 
 const indexerUrl = process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
 
@@ -24,6 +25,7 @@ export class NFTService {
    */
   async getNFTs(query: NFTsQuery): Promise<CustomResponse<INFT>> {
     try {
+      const likesData: AggregatePaginateResult<{_id: string, count: number}> | null = null
       // Categories
       if (query.filter?.categories){
         const withNoCategories = query.filter.categories.includes("none")
@@ -43,12 +45,31 @@ export class NFTService {
           query.filter.idsCategories = nftIds
         }
       }
-      // Liked ?
+      // Liked only
       if (query.filter?.liked){
-        const data = await fetch(`${TERNOA_API_URL}/api/users/${query.filter.liked}?removeBurned=${true}`)
+        const data = await fetch(`${TERNOA_API_URL}/api/users/${query.filter.liked}?populateLikes=${true}`)
         const user = await data.json() as IUser
-        query.filter.likedSeries = user.likedNFTs.length > 0 ? user.likedNFTs.map(x=>x.serieId) : []
+        query.filter.series = user.likedNFTs.length > 0 ? user.likedNFTs.map(x=>x.serieId) : []
       }
+
+      // Sort mongo
+      /*if (query.sortMongo){
+        const sortArray = query.sortMongo.split(',')
+        const sortByLikes = sortArray.find(x => x.split(':')[0] === "likes")
+        if (sortByLikes){
+          const likesSort = sortByLikes.split(':')[1]
+          const likesResult = await fetch(`${TERNOA_API_URL}/api/nftLikes/&sort=${likesSort}`)
+          likesData = (await likesResult.json()).likesRanking
+          NFTs = NFTs.map(x => {
+            const likeAggregatedObject = likesData.docs.find(y => y._id === x.serieId)
+            const likesNumber = likeAggregatedObject ? likeAggregatedObject.count : 0
+            console.log(likesNumber)
+            return {...x, likesNumber}
+          })
+          .sort((a, b) => b.likesNumber - a.likesNumber)
+        }
+      }*/
+
       // Indexer data
       const gqlQuery = QueriesBuilder.NFTs(query);
       const res: DistinctNFTListResponse = await request(indexerUrl, gqlQuery);
@@ -285,7 +306,6 @@ export class NFTService {
       }
       return result
     }catch(err){
-      console.log(err)
       throw new Error("Couldn't get history information about this nft / series");
     }
   }
