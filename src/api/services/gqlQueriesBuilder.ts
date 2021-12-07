@@ -25,17 +25,15 @@ export class GQLQueriesBuilder {
   NFTs = (query: NFTsQuery) => gql`
     {
       distinctSerieNfts(
-        ${query.pagination?.page && query.pagination?.limit ? `
-            first: ${query.pagination.limit}
-            offset: ${(query.pagination.page - 1) * query.pagination.limit}
-        ` : ""}
+        first: ${query.pagination?.limit ? query.pagination.limit : LIMIT_MAX_PAGINATION}
+        offset: ${query.pagination?.page && query.pagination?.limit ? (query.pagination.page - 1) * query.pagination.limit : 0}
         filter:{
           and:[
             ${query.filter?.ids ? `{id: { in: ${JSON.stringify(query.filter.ids.map(x => String(x)))} }}` : ""}
             ${query.filter?.idsToExclude ? `{id: { notIn: ${JSON.stringify(query.filter.idsToExclude.map(x => String(x)))} }}` : ""}
             ${query.filter?.idsCategories ? `{id: { in: ${JSON.stringify(query.filter.idsCategories.map(x => String(x)))} }}` : ""}
             ${query.filter?.idsToExcludeCategories ? `{id: { notIn: ${JSON.stringify(query.filter.idsToExcludeCategories.map(x => String(x)))} }}` : ""}
-            ${query.filter?.likedSeries ? `{serieId: { in: ${JSON.stringify(query.filter.likedSeries)} }}` : ""}
+            ${query.filter?.series ? `{serieId: { in: ${JSON.stringify(query.filter.series)} }}` : ""}
             ${query.filter?.creator ? `{creator: {equalTo: "${query.filter.creator}"}}` : ""}
             ${query.filter?.isCapsule !== undefined ? `{isCapsule: {isEqual: ${query.filter.isCapsule}}}` : ""}
             ${query.filter?.price !== undefined ? 
