@@ -13,7 +13,7 @@ import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeries
 import { IUser } from "../../interfaces/IUser";
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
-//import { INFTLike } from "../../interfaces/INFTLike";
+// import { INFTLike } from "../../interfaces/INFTLike";
 
 const indexerUrl = process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
 
