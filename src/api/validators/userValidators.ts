@@ -7,14 +7,16 @@ export type getUserQuery = {
     walletIdViewer?: string,
     viewerIp?: string, 
     ignoreCache?: boolean,
+    populateLikes?: boolean
 }
 export const validationGetUser = (query: any) => {
     const validationSchema = Joi.object({
         id: Joi.string().required(),
-        incViews: Joi.bool(),
+        incViews: Joi.boolean(),
         walletIdViewer: Joi.string(),
         viewerIp: Joi.string(),
-        ignoreCache: Joi.bool(),
+        ignoreCache: Joi.boolean(),
+        populateLikes: Joi.boolean(),
     });
     return validateQuery(validationSchema, query) as getUserQuery;
 };
