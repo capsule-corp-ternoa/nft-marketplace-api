@@ -22,12 +22,12 @@ export class UserService {
   async findUser(
     query: getUserQuery
   ): Promise<IUser> {
-    if (!query.ignoreCache && !query.incViews) {
+    if (!query.ignoreCache && !query.incViews && !query.populateLikes) {
       const user = usersCache.get(query.id) as IUser | undefined;
       if (user !== undefined) return user;
     }
     try {
-      const data = await fetch(`${TERNOA_API_URL}/api/users/${query.id}`)
+      const data = await fetch(`${TERNOA_API_URL}/api/users/${query.id}?populateLikes=${query.populateLikes ? query.populateLikes : false}`)
       const user = await data.json() as IUser
       let viewsCount = 0
       if (!user || (user as any).errors?.length>0) throw new Error();
