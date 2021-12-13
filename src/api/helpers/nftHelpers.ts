@@ -27,15 +27,16 @@ export async function populateNFT(
   seriesData: CustomResponse<INFT>,
   query: NFTsQuery
 ): Promise<ICompleteNFT | INFT> {
-  const [serieData, creatorData, ownerData, info, categories] =
+  const [serieData, creatorData, ownerData, info, categories, locked] =
     await Promise.all([
       populateSerieData(NFT, seriesData, query),
       populateNFTCreator(NFT),
       populateNFTOwner(NFT),
       populateNFTIpfs(NFT),
       populateNFTCategories(NFT),
+      populateNFTSeriesObject(NFT.serieId)
     ]);
-  return { ...NFT, ...serieData, creatorData, ownerData, ...info, categories };
+  return { ...NFT, ...serieData, creatorData, ownerData, ...info, categories, locked};
 }
 
 export async function populateSerieData(
@@ -238,5 +239,23 @@ export async function populateNFTCategories(NFT: INFT): Promise<ICategory[]> {
   } catch (err) {
     L.error({ err }, "error retrieving nft's categories from mongo");
     return [];
+  }
+}
+
+
+/**
+ * Populates an NFT object with series object from indexer
+ * @param seriesId - Series Id of NFT
+ * @returns True if series is locked, false if unlocked, null if can't get data
+ */
+ export async function populateNFTSeriesObject(seriesId: string | null): Promise<boolean | null> {
+  try {
+    if (!seriesId) return null
+    const data = await NFTService.getSeriesStatus({seriesId})
+    if (!data) return null
+    return data.locked
+  } catch (err) {
+    L.error({ err }, "error retrieving nft's series object");
+    return null;
   }
 }
