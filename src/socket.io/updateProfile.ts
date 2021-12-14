@@ -28,9 +28,7 @@ export default (io: Namespace) => {
       L.info('socked ' + socket.id + ' joined to session ' + session) + ' room size='+io.adapter.rooms.get(session as string).size;
       socket.on("PROFILE_UPDATED", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
-        // send mobile app response to nft marketplace
         socket.to(`${session}`).emit("PROFILE_UPDATED", data);
-        // confirm success to mobile app
         validCallback && callback({ ok: true });
       });
       socket.on('PROFILE_UPDATED_RECEIVED', (data, callback) => {
