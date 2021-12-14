@@ -20,6 +20,7 @@ export default (io: Namespace) => {
         const socketRooms = await io.adapter.fetchSockets({
           rooms: new Set(session),
         });
+        L.info(`on DISCONNECT: eval socket room size = ${socketRooms.length} - room = ${session} - disconnected socket id = ${socket.id}`;
         socketRooms.forEach(async socketRoom => {
           await socketRoom.disconnect();
           L.info('socked ' + socket.id + ' in session ' + session + ' was disconnected by server due to another room socket was disconnected.');
