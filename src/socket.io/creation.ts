@@ -54,31 +54,26 @@ export default (io: Namespace) => {
       socket.on("MINTING_NFT", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("MINTING_NFT", data);
-        // confirm success to mobile app
         validCallback && callback({ ok: true });
       });
       socket.on("MINTING_NFT_RECEIVED", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("MINTING_NFT_RECEIVED", data);
-        // confirm success to mobile app
         validCallback && callback({ ok: true });
       });
       socket.on("MINTING_NFT_ERROR", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
-        socket.to(`${session}`).emit("MINTING_NFT_RECEIVED", data);
-        // confirm success to mobile app
+        socket.to(`${session}`).emit("MINTING_NFT_ERROR", data);
         validCallback && callback({ ok: true });
       });
       socket.on("UPLOAD_REMAINING_TIME", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("UPLOAD_REMAINING_TIME", data);
-        // confirm success to mobile app
         validCallback && callback({ ok: true });
       });
       socket.on("WALLET_READY", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("WALLET_READY", data);
-        // confirm success to mobile app
         validCallback && callback({ ok: true });
       });
       io.to(socket.id).emit("CONNECTION_SUCCESS", {

@@ -28,9 +28,7 @@ export default (io: Namespace) => {
       L.info('socked ' + socket.id + ' joined to session ' + session) + ' room size='+io.adapter.rooms.get(session as string).size;
       socket.on("NFT_BUY", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
-        // send mobile app response to nft marketplace
         socket.to(`${session}`).emit("NFT_BUY", data);
-        // confirm success to mobile app
         validCallback && callback({ ok: true });
       });
       socket.on('NFT_BUY_RECEIVED', (data, callback) => {
