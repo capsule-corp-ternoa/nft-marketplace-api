@@ -16,6 +16,15 @@ export default (io: Namespace) => {
     } else {
       await socket.join(session);
       L.info('socked ' + socket.id + ' joined to session ' + session) + ' room size=' + io.adapter.rooms.get(session as string).size;
+      socket.on('disconnect', async (_r) => {
+        const socketRooms = await io.adapter.fetchSockets({
+          rooms: new Set(session),
+        });
+        socketRooms.forEach(async socketRoom => {
+          await socketRoom.disconnect();
+          L.info('socked ' + socket.id + ' in session ' + session + ' was disconnected by server due to another room socket was disconnected.');
+        });
+      });
       socket.on('PGPS_READY', (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("PGPS_READY", data);
