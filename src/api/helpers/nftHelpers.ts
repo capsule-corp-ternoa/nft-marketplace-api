@@ -1,74 +1,110 @@
-import { ICompleteNFT, INFT } from "../../interfaces/graphQL";
+import { CustomResponse, ICompleteNFT, INFT } from "../../interfaces/graphQL";
 import UserService from "../services/user";
 import L from "../../common/logger";
 import NFTService from "../services/nft";
 import { ICategory } from "../../interfaces/ICategory";
-import { fetchTimeout } from "../../utils";
+import { fetchTimeout, isURL, removeURLSlash } from "../../utils";
 import { IUser } from "src/interfaces/IUser";
+import { NFTsQuery } from "../validators/nftValidators";
 
 const ipfsGateways = {
   ternoaPinataIpfsGateaway: `https://ternoa.mypinata.cloud/ipfs`,
   cloudfareIpfsGateaway: `https://cloudflare-ipfs.com/ipfs`,
   ternoaIpfsGateway: `https://ipfs.ternoa.dev/ipfs`,
-}
+};
 const defaultIpfsGateway = ipfsGateways.ternoaIpfsGateway;
-const ipfsGatewayUri = process.env.IPFS_GATEWAY || defaultIpfsGateway;
-
-function extractHashFromGatewayUri(uri: string) {
-  const regex: RegExp = new RegExp('(http?s:\/\/.*\/)(.*)', 'gm');
-  const ipfsLinkParts = regex.exec(uri);
-  if (ipfsLinkParts?.length === 3) {
-    return ipfsLinkParts[2];
-  } else {
-    throw new Error("Invalid IPFS hash given: " + uri);
-  }
-}
-function overwriteDefaultIpfsGateway(uri: string): string {
-  const ipfsHash: string = extractHashFromGatewayUri(uri);
-  return `${ipfsGatewayUri}/${ipfsHash}`
-}
-function parseRawNFT(NFT: INFT): INFT {
-  try {
-    const { uri } = NFT;
-    if (uri && uri.indexOf(defaultIpfsGateway) < 0) {
-      NFT.uri = overwriteDefaultIpfsGateway(uri);
-    }
-    return NFT;
-  } catch (err) {
-    L.error({ err }, "Can't parse raw nft");
-    return NFT;
-  }
-}
+const ipfsGatewayUri =
+  (process.env.IPFS_GATEWAY && removeURLSlash(process.env.IPFS_GATEWAY)) ||
+  defaultIpfsGateway;
 
 /**
  * Adds information to NFT object from external sources
  * @param NFT - NFT object
  * @returns - NFT object with new fields
  */
-export async function populateNFT(NFT: INFT): Promise<ICompleteNFT | INFT> {
-  const retNFT: INFT = parseRawNFT(NFT);
-  const [serieData, creatorData, ownerData, info, categories] = await Promise.all([
-    populateSerieData(retNFT),
-    populateNFTCreator(retNFT),
-    populateNFTOwner(retNFT),
-    populateNFTUri(retNFT),
-    populateNFTCategories(retNFT),
-  ]);
-  return { ...retNFT, ...serieData, creatorData, ownerData, ...info, categories };
+export async function populateNFT(
+  NFT: INFT,
+  seriesData: CustomResponse<INFT>,
+  query: NFTsQuery
+): Promise<ICompleteNFT | INFT> {
+  const [serieData, creatorData, ownerData, info, categories, locked] =
+    await Promise.all([
+      populateSerieData(NFT, seriesData, query),
+      populateNFTCreator(NFT),
+      populateNFTOwner(NFT),
+      populateNFTIpfs(NFT),
+      populateNFTCategories(NFT),
+      populateNFTSeriesObject(NFT.serieId)
+    ]);
+  return { ...NFT, ...serieData, creatorData, ownerData, ...info, categories, locked};
 }
 
 export async function populateSerieData(
-  NFT: INFT
-): Promise<{ serieData: INFT[]; totalNft: number; totalListedNft: number; }> {
+  NFT: INFT,
+  seriesData: CustomResponse<INFT>,
+  query: NFTsQuery
+): Promise<{
+  serieData: INFT[];
+  totalNft: number;
+  totalListedNft: number;
+  totalListedInMarketplace: number;
+  totalOwnedByRequestingUser: number;
+  totalOwnedListedByRequestingUser: number;
+  smallestPrice: string;
+  smallestPriceTiime: string;
+}> {
   try {
-    if (NFT.serieId === '0') return {
-      serieData: [{ id: NFT.id, owner: NFT.owner, listed: NFT.listed, price: NFT.price, priceTiime: NFT.priceTiime }],
-      totalNft: 1,
-      totalListedNft: NFT.listed
-    }
-    const result = await NFTService.getNFTsForSerie(NFT)
-    const serieData = result.nftEntities.nodes.sort((a, b) => b.listed - a.listed || Number(a.price) - Number(b.price) || Number(a.priceTiime) - Number(b.priceTiime))
-    return { serieData, totalNft: serieData.length, totalListedNft: serieData.filter(x => x.listed).length }
+    const marketplaceId = query.filter?.marketplaceId;
+    const owner = query.filter?.owner;
+    if (NFT.serieId === "0")
+      return {
+        serieData: [
+          {
+            id: NFT.id,
+            owner: NFT.owner,
+            listed: NFT.listed,
+            price: NFT.price,
+            priceTiime: NFT.priceTiime,
+            marketplaceId: NFT.marketplaceId,
+          },
+        ],
+        totalNft: 1,
+        totalListedNft: NFT.listed,
+        totalListedInMarketplace: NFT.listed,
+        totalOwnedByRequestingUser: 1,
+        totalOwnedListedByRequestingUser: NFT.listed,
+        smallestPrice: NFT.price,
+        smallestPriceTiime: NFT.priceTiime,
+      };
+    const result = seriesData.data.filter((x) => x.serieId === NFT.serieId);
+    const serieData = result.sort(
+      (a, b) =>
+        (a.isCapsule !== b.isCapsule && (a.isCapsule ? 1 : -1)) || // capsule last
+        b.listed - a.listed || // listed first
+        (marketplaceId && Number(a.marketplaceId) !== Number(b.marketplaceId) && (Number(a.marketplaceId) === marketplaceId || Number(b.marketplaceId) === marketplaceId) &&
+          marketplaceId === Number(a.marketplaceId) ? -1 : 1) || // marketplace id corresponding to request first
+        Number(a.price) - Number(b.price) || // smallest price first
+        Number(a.priceTiime) - Number(b.priceTiime)
+    ); // smallest price tiime first
+    const listedNft = serieData.filter((x) => x.listed);
+    return {
+      serieData: !query.filter?.noSeriesData ? serieData : [],
+      totalNft: serieData.length,
+      totalListedNft: listedNft.length,
+      totalListedInMarketplace: marketplaceId
+        ? listedNft.filter((x) => Number(x.marketplaceId) === marketplaceId)
+            .length
+        : listedNft.length,
+      totalOwnedByRequestingUser: owner
+        ? serieData.filter((x) => x.owner === owner).length
+        : 0,
+      totalOwnedListedByRequestingUser: owner
+        ? listedNft.filter((x) => x.owner === owner).length
+        : 0,
+      smallestPrice: serieData.length > 0 ? serieData[0].price : NFT.price,
+      smallestPriceTiime:
+        serieData.length > 0 ? serieData[0].priceTiime : NFT.priceTiime,
+    };
   } catch (err) {
     L.error({ err }, "NFTs with same serie could not have been fetched");
     return null;
@@ -80,12 +116,10 @@ export async function populateSerieData(
  * @param NFT - NFT object with creator field
  * @returns NFT object with new creactorData field, if creator's id was valid, object stays untouched otherwise
  */
-export async function populateNFTCreator(
-  NFT: INFT
-): Promise<IUser> {
+export async function populateNFTCreator(NFT: INFT): Promise<IUser> {
   try {
     const { creator } = NFT;
-    const creatorData = await UserService.findUser(creator);
+    const creatorData = await UserService.findUser({ id: creator });
     return creatorData;
   } catch (err) {
     L.error({ err }, "NFT creator id not in database");
@@ -98,12 +132,10 @@ export async function populateNFTCreator(
  * @param NFT - NFT object with owner field
  * @returns NFT object with new ownerData field, if owner's id was valid, object stays untouched otherwise
  */
-export async function populateNFTOwner(
-  NFT: INFT
-): Promise<IUser> {
+export async function populateNFTOwner(NFT: INFT): Promise<IUser> {
   try {
     const { owner } = NFT;
-    const ownerData = await UserService.findUser(owner);
+    const ownerData = await UserService.findUser({ id: owner });
     return ownerData;
   } catch (err) {
     L.error({ err }, "NFT owner id not in database");
@@ -112,30 +144,84 @@ export async function populateNFTOwner(
 }
 
 /**
- * Populates an NFT object with data from its URI JSON
- * @param NFT - NFT object with uri field
- * @returns NFT object with new fields, if uri was valid, object stays untouched otherwise
+ * Populates an NFT object with data from its nfts ipfs JSON
+ * @param NFT - NFT object with nfts ipfs field
+ * @returns NFT object with new fields, if nftIpfs was valid, object stays untouched otherwise
  */
-export async function populateNFTUri(NFT: INFT): Promise<any> {
+export async function populateNFTIpfs(NFT: INFT): Promise<any> {
   try {
-    const response = await fetchTimeout(NFT.uri, null, Number(process.env.IPFS_REQUEST_TIMEOUT) || 8000).catch((_e) => {
-      L.error('fetch error:' + _e);
-      throw new Error('Could not retrieve NFT data from ' + NFT.uri)
+    const fetchUrl = isURL(NFT.nftIpfs)
+      ? NFT.nftIpfs
+      : `${ipfsGatewayUri}/${NFT.nftIpfs}`;
+    const response = await fetchTimeout(
+      fetchUrl,
+      null,
+      Number(process.env.IPFS_REQUEST_TIMEOUT) || 8000
+    ).catch((_e) => {
+      L.error("fetch error:" + _e);
+      throw new Error("Could not retrieve NFT data from " + NFT.nftIpfs);
     });
     if (response) {
-      const info = await response.json();
-      if (info.media.url.indexOf('/ipfs') >= 0 && info.media.url.indexOf(defaultIpfsGateway) < 0) {
-        info.media.url = overwriteDefaultIpfsGateway(info.media.url);
+      const info: {
+        name?: string;
+        media?: { url: string }; // old for backward compatibility
+        cryptedMedia?: { url: string }; // old for backward compatibility
+        image?: string;
+        publicPGP?: string;
+        title?: string;
+        properties?: {
+          preview?: { ipfs: string };
+          cryptedMedia?: { ipfs: string };
+          publicPGP?: string;
+        };
+      } = await response.json();
+      // backward compatibility
+      if (!info.properties && !info.title && !info.image) {
+        info.properties = {};
+        // set preview
+        info.properties.preview = { ipfs: info.media.url };
+        info.properties.preview = { ...info.properties.preview, ...info.media };
+        delete (info.properties.preview as any).url;
+        // set cryptedMedia
+        info.properties.cryptedMedia = { ipfs: info.cryptedMedia.url };
+        info.properties.cryptedMedia = {
+          ...info.properties.cryptedMedia,
+          ...info.cryptedMedia,
+        };
+        // set pgp in property
+        if (!info.properties.publicPGP)
+          info.properties.publicPGP = info.publicPGP;
+        // set image
+        info.image = info.properties.preview.ipfs;
+        // set title
+        info.title = info.name;
+        // delete old properties
+        delete (info.properties.cryptedMedia as any).url;
+        delete info.media;
+        delete info.cryptedMedia;
+        delete info.publicPGP;
+        delete info.name;
       }
-      if (info.cryptedMedia.url.indexOf(defaultIpfsGateway) < 0) {
-        info.cryptedMedia.url = overwriteDefaultIpfsGateway(info.cryptedMedia.url);
+      if (info.properties) {
+        // set url format
+        info.properties.preview.ipfs = isURL(info.properties.preview.ipfs)
+          ? info.properties.preview.ipfs
+          : `${ipfsGatewayUri}/${info.properties.preview.ipfs}`;
+        info.properties.cryptedMedia.ipfs = isURL(
+          info.properties.cryptedMedia.ipfs
+        )
+          ? info.properties.cryptedMedia.ipfs
+          : `${ipfsGatewayUri}/${info.properties.cryptedMedia.ipfs}`;
+        info.image = isURL(info.image)
+          ? info.image
+          : `${ipfsGatewayUri}/${info.image}`;
       }
       return info;
     } else {
       return {};
     }
   } catch (err) {
-    L.error("invalid NFT uri:" + err);
+    L.error("invalid NFT ipfs:" + err);
     return {};
   }
 }
@@ -145,16 +231,31 @@ export async function populateNFTUri(NFT: INFT): Promise<any> {
  * @param NFT - NFT object with id field
  * @returns NFT object with new categories field from db
  */
-export async function populateNFTCategories(
-  NFT: INFT
-): Promise<ICategory[]> {
+export async function populateNFTCategories(NFT: INFT): Promise<ICategory[]> {
   try {
-    const mongoNft = await NFTService.findMongoNftFromId(NFT.id);
-    if (!mongoNft) return []
-    const categories = (mongoNft.categories) as ICategory[];
+    const categories = await NFTService.findCategoriesFromNFTId(NFT.id);
+    if (!categories) return [];
     return categories;
   } catch (err) {
     L.error({ err }, "error retrieving nft's categories from mongo");
     return [];
+  }
+}
+
+
+/**
+ * Populates an NFT object with series object from indexer
+ * @param seriesId - Series Id of NFT
+ * @returns True if series is locked, false if unlocked, null if can't get data
+ */
+ export async function populateNFTSeriesObject(seriesId: string | null): Promise<boolean | null> {
+  try {
+    if (!seriesId) return null
+    const data = await NFTService.getSeriesStatus({seriesId})
+    if (!data) return null
+    return data.locked
+  } catch (err) {
+    L.error({ err }, "error retrieving nft's series object");
+    return null;
   }
 }

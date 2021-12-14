@@ -1,29 +1,82 @@
 import FollowModel from "../../models/follow";
 import { IUser } from "../../interfaces/IUser";
-import UserModel from "../../models/user";
-import { IFollow } from "src/interfaces/IFollow";
-import { PaginateResult } from "mongoose";
+import { CustomResponse } from "../../interfaces/graphQL";
+import fetch from "node-fetch";
+import { LIMIT_MAX_PAGINATION, TERNOA_API_URL } from '../../utils'
+import { countFollowersFollowingQuery, followUnfollowQuery, getFollowersFollowingQuery, isUserFollowingQuery } from "../validators/followValidators";
 
 export class FollowService {
   /**
+   * Returns all of user's followers
+   * @param query - see getFollowersFollowingQuery
+   * @throws Will throw an error if followers can't be fetched
+   */
+   async getUserFollowers(query: getFollowersFollowingQuery): Promise<CustomResponse<IUser>> {
+    try {
+      const followerWalletIds: string[] = (await FollowModel.find({ followed: query.walletId })).map(x => x.follower)
+      const filter: any = {walletIds: followerWalletIds, ...query.filter}
+      const data = await fetch(`${TERNOA_API_URL}/api/users/?filter=${JSON.stringify(filter)}&pagination=${JSON.stringify(query.pagination)}`)
+      return await data.json() as CustomResponse<IUser>;
+    } catch (err) {
+      throw new Error("Followers can't be fetched");
+    }
+  }
+
+  /**
+   * Returns all of users' followings
+   * @param query - see getFollowersFollowingQuery
+   * @throws Will throw an error if followings can't be fetched
+   */
+  async getUserFollowings(query: getFollowersFollowingQuery): Promise<CustomResponse<IUser>> {
+    try {
+      const followedWalletIds: string[] = (await FollowModel.find({ follower: query.walletId })).map(x => x.followed)
+      const filter: any = {walletIds: followedWalletIds, ...query.filter}
+      const data = await fetch(`${TERNOA_API_URL}/api/users/?filter=${JSON.stringify(filter)}&pagination=${JSON.stringify(query.pagination)}`)
+      return await data.json() as CustomResponse<IUser>;
+    } catch (err) {
+      throw new Error("Followings can't be fetched");
+    }
+  }
+
+  /**
+   * count user's followers
+   * @param query - see countFollowersFollowingQuery
+   * @throws Will throw an error if followers can't be fetched
+   */
+   async countUserFollowers(query: countFollowersFollowingQuery): Promise<number> {
+    try {
+      return (await FollowModel.find({ followed: query.walletId })).length
+    } catch (err) {
+      throw new Error("Followers number can't be fetched");
+    }
+  }
+
+  /**
+   * count user's followers
+   * @param query - see countFollowersFollowingQuery
+   * @throws Will throw an error if followers can't be fetched
+   */
+   async countUserFollowing(query: countFollowersFollowingQuery): Promise<number> {
+    try {
+      return (await FollowModel.find({ follower: query.walletId })).length
+    } catch (err) {
+      throw new Error("Followed number can't be fetched");
+    }
+  }
+
+  /**
    * Create a new follow
-   * @param followed - The followed's wallet id
-   * @param follower - The follower's wallet id
+   * @param query - see followUnfollowQuery
    * @throws Will throw an error if user can't be followed
    */
-  async follow(followed: string, follower: string): Promise<IUser> {
+  async follow(query: followUnfollowQuery): Promise<IUser> {
     try {
-      const userFollowed = await UserModel.findOne({walletId: followed}) 
-      const userFollower = await UserModel.findOne({walletId: follower}) 
-      if (!userFollowed || !userFollower) throw new Error()
-      let follow = await FollowModel.findOne({followed: userFollowed._id, follower: userFollower._id})
-      if (follow) throw new Error()
-      follow = new FollowModel({followed: userFollowed._id, follower: userFollower._id});
-      userFollowed.nbFollowers += 1
-      userFollower.nbFollowing += 1
+      let follow = await FollowModel.findOne({followed: query.walletIdFollowed, follower: query.walletIdFollower})
+      if (follow) throw new Error("user is already following")
+      follow = new FollowModel({followed: query.walletIdFollowed, follower: query.walletIdFollower});
       await follow.save()
-      await userFollowed.save()
-      await userFollower.save()
+      const data = await fetch(`${TERNOA_API_URL}/api/users/${query.walletIdFollowed}`)
+      const userFollowed = await data.json() as IUser
       return userFollowed;
     } catch (err) {
       throw new Error("Couldn't follow user");
@@ -32,24 +85,17 @@ export class FollowService {
 
   /**
    * Delete a follow
-   * @param followed - The followed's wallet id
-   * @param follower - The follower's wallet id
-   * @throws Will throw an error if user can't be followed
+   * @param query - see followUnfollowQuery
+   * @throws Will throw an error if user can't be unfollowed
    */
-     async unfollow(followed: string, follower: string): Promise<IUser> {
+     async unfollow(query: followUnfollowQuery): Promise<IUser> {
       try {
-        
-        const userFollowed = await UserModel.findOne({walletId: followed}) 
-        const userFollower = await UserModel.findOne({walletId: follower}) 
-        if (!userFollowed || !userFollower) throw new Error()
-        const follow = await FollowModel.findOne({followed: userFollowed._id, follower: userFollower._id})
-        if (!follow) throw new Error()
-        userFollowed.nbFollowers -= 1
-        userFollower.nbFollowing -= 1
+        const follow = await FollowModel.findOne({followed: query.walletIdFollowed, follower: query.walletIdFollower})
+        if (!follow) throw new Error("user is already not following")
         await follow.delete()
-        await userFollowed.save()
-        await userFollower.save()
-        return userFollowed
+        const data = await fetch(`${TERNOA_API_URL}/api/users/${query.walletIdFollowed}`)
+        const userFollowed = await data.json()
+        return userFollowed as IUser;
       } catch (err) {
         throw new Error("Couldn't unfollow user");
       }
@@ -57,84 +103,21 @@ export class FollowService {
 
   /**
    * Check if follower follows followed
-   * @param followed - The followed's wallet id
-   * @param follower - The follower's wallet id
+   * @param query - see isUserFollowingQuery
    * @throws Will throw an error if user can't be followed
    */
-    async isUserFollowing(follower: string, followed: string): Promise<{isFollowing: boolean}> {
+    async isUserFollowing(query: isUserFollowingQuery): Promise<{isFollowing: boolean}> {
       try {
-        const userFollowed = await UserModel.findOne({walletId: followed}) 
-        const userFollower = await UserModel.findOne({walletId: follower}) 
-        if (!userFollowed || !userFollower) throw new Error()
-        const follow = await FollowModel.findOne({followed: userFollowed._id, follower: userFollower._id})
+        const follow = await FollowModel.findOne({followed: query.walletIdFollowed, follower: query.walletIdFollower})
         if (follow){
           return {isFollowing: true}
         }else{
           return {isFollowing: false}
         }
       } catch (err) {
-        throw new Error("Couldn't follow user");
+        throw new Error("Couldn't retrieve follow");
       }
     }
-
-  /**
-   * Returns all of user's followers
-   * @param walletId - The user's wallet id
-   * @throws Will throw an error if followers can't be fetched
-   */
-  async getUserFollowers(walletId: string, page?: string, limit?: string): Promise<IFollow[] | PaginateResult<IFollow>> {
-    try {
-      const user = await UserModel.findOne({walletId}) 
-      if (!user) throw new Error()
-      if (!page || !limit){
-        const follows: any[] = await FollowModel.find({ followed: user._id })
-          .populate("follower");
-        return follows;
-      }else{
-        const follows: PaginateResult<IFollow> = await FollowModel.paginate(
-          { followed: user._id }, 
-          {
-            page: Number(page), 
-            limit: Number(limit),
-            populate: "follower"
-          }
-        )
-        return follows;
-      }
-      
-    } catch (err) {
-      throw new Error("Followers can't be fetched");
-    }
-  }
-
-  /**
-   * Returns all of users' followings
-   * @param walletId - The user's wallet id
-   * @throws Will throw an error if followings can't be fetched
-   */
-  async getUserFollowings(walletId: string, page?: string, limit?: string): Promise<IFollow[] | PaginateResult<IFollow>> {
-    try {
-      const user = await UserModel.findOne({walletId}) 
-      if (!user) throw new Error()
-      if (!page || !limit){
-        const follows: any[] = await FollowModel.find({ follower: user._id })
-          .populate("followed");
-        return follows;
-      }else{
-        const follows: PaginateResult<IFollow> = await FollowModel.paginate(
-          { follower: user._id }, 
-          {
-            page: Number(page), 
-            limit: Number(limit),
-            populate: "followed"
-          }
-        )
-        return follows;
-      }
-    } catch (err) {
-      throw new Error("Followings can't be fetched");
-    }
-  }
 }
 
 export default new FollowService();

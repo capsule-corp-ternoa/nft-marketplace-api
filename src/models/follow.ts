@@ -6,13 +6,11 @@ import mongoosePaginate from "mongoose-paginate-v2";
 
 const Follow = new mongoose.Schema({
   followed: {
-    type: mongoose.Types.ObjectId,
-    ref: "User",
+    type: String,
     required: true,
   },
   follower: {
-    type: mongoose.Types.ObjectId,
-    ref: "User",
+    type: String,
     required: true,
   },
 });

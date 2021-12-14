@@ -3,6 +3,8 @@
 import { Namespace, Socket } from "socket.io";
 import UserService from "../api/services/user";
 import L from "../common/logger";
+import { TERNOA_API_URL } from "../utils";
+
 export default (io: Namespace) => {
   io.on("connection", async (socket: Socket) => {
     const emitWalletId = async (walletId: string, _session: string, callback: (args: any) => void | null = null) => {
@@ -16,10 +18,15 @@ export default (io: Namespace) => {
         let user;
         // if user exists, retrieve it, otherwise create a new one, return error if it fails
         try {
-          user = await UserService.findUser(walletId);
+          user = await UserService.findUser({id: walletId});
         } catch (err) {
           try {
-            user = await UserService.createUser({ walletId });
+            const body = { walletId }
+            const data = await fetch(`${TERNOA_API_URL}/api/users/create`, {
+              method: 'POST',
+              body: JSON.stringify(body)
+            })
+            user = data.json()
           } catch (err) {
             validCallback &&
               callback({ error: "500", msg: "Something went wrong" });
