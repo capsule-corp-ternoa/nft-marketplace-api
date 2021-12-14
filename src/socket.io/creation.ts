@@ -63,6 +63,12 @@ export default (io: Namespace) => {
         // confirm success to mobile app
         validCallback && callback({ ok: true });
       });
+      socket.on("MINTING_NFT_ERROR", (data, callback) => {
+        const validCallback = callback && typeof callback === "function";
+        socket.to(`${session}`).emit("MINTING_NFT_RECEIVED", data);
+        // confirm success to mobile app
+        validCallback && callback({ ok: true });
+      });
       socket.on("UPLOAD_REMAINING_TIME", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("UPLOAD_REMAINING_TIME", data);
