@@ -232,14 +232,14 @@ export class NFTService {
         }
         if (Object.keys(finalBatch).length >= 1000){
           finalBatches.push(finalBatch)
-          fs.writeFile("./nfts-distribution/nft-distribution-"+ i +" "+ new Date().toISOString().split('T')[0] + ".json", JSON.stringify(finalBatch), (err) => {
+          fs.writeFile("./nfts-distribution/nft-distribution-"+ i +"-"+ new Date().toISOString().split('T')[0] + ".json", JSON.stringify(finalBatch), (err) => {
             if (err) throw err
           })
           finalBatch={}
         }
       });
       finalBatches.push(finalBatch)
-      fs.writeFile("./nfts-distribution/nft-distribution-last" +" "+ new Date().toISOString().split('T')[0] + ".json", JSON.stringify(finalBatch), (err) => {
+      fs.writeFile("./nfts-distribution/nft-distribution-last" +"-"+ new Date().toISOString().split('T')[0] + ".json", JSON.stringify(finalBatch), (err) => {
         if (err) throw err
       })
       L.info("response ok");
