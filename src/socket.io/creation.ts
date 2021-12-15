@@ -16,6 +16,16 @@ export default (io: Namespace) => {
     } else {
       await socket.join(session);
       L.info('socked ' + socket.id + ' joined to session ' + session) + ' room size=' + io.adapter.rooms.get(session as string).size;
+      socket.on('disconnect', async (_r) => {
+        const socketRooms = await io.adapter.fetchSockets({
+          rooms: new Set(session),
+        });
+        L.info(`on DISCONNECT: eval socket room size = ${socketRooms.length} - room = ${session} - disconnected socket id = ${socket.id}`);
+        socketRooms.forEach(async socketRoom => {
+          await socketRoom.disconnect();
+          L.info('socked ' + socket.id + ' in session ' + session + ' was disconnected by server due to another room socket was disconnected.');
+        });
+      });
       socket.on('PGPS_READY', (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("PGPS_READY", data);
@@ -44,25 +54,26 @@ export default (io: Namespace) => {
       socket.on("MINTING_NFT", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("MINTING_NFT", data);
-        // confirm success to mobile app
         validCallback && callback({ ok: true });
       });
       socket.on("MINTING_NFT_RECEIVED", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("MINTING_NFT_RECEIVED", data);
-        // confirm success to mobile app
+        validCallback && callback({ ok: true });
+      });
+      socket.on("MINTING_NFT_ERROR", (data, callback) => {
+        const validCallback = callback && typeof callback === "function";
+        socket.to(`${session}`).emit("MINTING_NFT_ERROR", data);
         validCallback && callback({ ok: true });
       });
       socket.on("UPLOAD_REMAINING_TIME", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("UPLOAD_REMAINING_TIME", data);
-        // confirm success to mobile app
         validCallback && callback({ ok: true });
       });
       socket.on("WALLET_READY", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
         socket.to(`${session}`).emit("WALLET_READY", data);
-        // confirm success to mobile app
         validCallback && callback({ ok: true });
       });
       io.to(socket.id).emit("CONNECTION_SUCCESS", {
