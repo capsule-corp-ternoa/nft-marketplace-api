@@ -15,12 +15,20 @@ export default (io: Namespace) => {
       socket.disconnect();
     } else {
       await socket.join(session);
+      L.info('socked ' + socket.id + ' joined to session ' + session) + ' room size=' + io.adapter.rooms.get(session as string).size;
+      socket.on('disconnect', async (_r) => {
+        const socketRooms = await io.adapter.fetchSockets({
+          rooms: new Set(session),
+        });
+        socketRooms.forEach(async socketRoom => {
+          await socketRoom.disconnect();
+          L.info('socked ' + socket.id + ' in session ' + session + ' was disconnected by server due to another room socket was disconnected.');
+        });
+      });
       L.info('socked ' + socket.id + ' joined to session ' + session) + ' room size='+io.adapter.rooms.get(session as string).size;
       socket.on("PROFILE_UPDATED", (data, callback) => {
         const validCallback = callback && typeof callback === "function";
-        // send mobile app response to nft marketplace
         socket.to(`${session}`).emit("PROFILE_UPDATED", data);
-        // confirm success to mobile app
         validCallback && callback({ ok: true });
       });
       socket.on('PROFILE_UPDATED_RECEIVED', (data, callback) => {
