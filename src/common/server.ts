@@ -9,10 +9,13 @@ import errorHandler from "../api/middlewares/error.handler";
 import * as Sentry from "@sentry/node"
 import * as Tracing from "@sentry/tracing"
 import compression from "compression";
+import apicache from 'apicache';
+
 
 const app = express();
+const cache = apicache.middleware
 
-if (process.env.SENTRY_DSN){
+if (process.env.SENTRY_DSN) {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
     environment: process.env.SENTRY_ENV,
@@ -42,6 +45,10 @@ export default class ExpressServer {
       })
     );
     app.use(express.text({ limit: process.env.REQUEST_LIMIT || "100kb" }));
+    if (process.env.CACHE_DURATION) {
+      app.use(cache(process.env.CACHE_DURATION))
+      console.info(`caching requests for entire api calls - duration: ${process.env.CACHE_DURATION}`);
+    }
 
     // mongo connection
 
