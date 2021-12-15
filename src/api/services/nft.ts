@@ -25,7 +25,7 @@ export class NFTService {
    */
   async getNFTs(query: NFTsQuery): Promise<CustomResponse<INFT>> {
     try {
-      const likesData: AggregatePaginateResult<{_id: string, count: number}> | null = null
+      // const likesData: AggregatePaginateResult<{_id: string, count: number}> | null = null
       // Categories
       if (query.filter?.categories){
         const withNoCategories = query.filter.categories.includes("none")

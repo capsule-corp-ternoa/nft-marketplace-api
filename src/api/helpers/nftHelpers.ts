@@ -204,17 +204,15 @@ export async function populateNFTIpfs(NFT: INFT): Promise<any> {
       }
       if (info.properties) {
         // set url format
-        info.properties.preview.ipfs = isURL(info.properties.preview.ipfs)
-          ? info.properties.preview.ipfs
-          : `${ipfsGatewayUri}/${info.properties.preview.ipfs}`;
-        info.properties.cryptedMedia.ipfs = isURL(
-          info.properties.cryptedMedia.ipfs
-        )
-          ? info.properties.cryptedMedia.ipfs
-          : `${ipfsGatewayUri}/${info.properties.cryptedMedia.ipfs}`;
-        info.image = isURL(info.image)
-          ? info.image
-          : `${ipfsGatewayUri}/${info.image}`;
+        info.properties.preview.ipfs = isURL(info.properties.preview.ipfs) ? info.properties.preview.ipfs : `${ipfsGatewayUri}/${info.properties.preview.ipfs}`;
+        info.properties.cryptedMedia.ipfs = isURL(info.properties.cryptedMedia.ipfs) ? info.properties.cryptedMedia.ipfs : `${ipfsGatewayUri}/${info.properties.cryptedMedia.ipfs}`;
+        const imageHash = isURL(info.image) ? `${info.image.split('/')[info.image.split('/').length - 1]}` : `${info.image}`
+        const thumbnailHash = getHappyTiimeThumbnails(imageHash)
+        if (thumbnailHash){
+          info.image = `${ipfsGatewayUri}/${thumbnailHash}`;
+        }else{
+          info.image = isURL(info.image) ? info.image : `${ipfsGatewayUri}/${info.image}`;
+        }
       }
       return info;
     } else {
@@ -259,3 +257,40 @@ export async function populateNFTCategories(NFT: INFT): Promise<ICategory[]> {
     return null;
   }
 }
+
+/**
+ * Populates an NFT object with series object from indexer
+ * @param seriesId - Series Id of NFT
+ * @returns True if series is locked, false if unlocked, null if can't get data
+ */
+ export function getHappyTiimeThumbnails(videoHash: string): string | null {
+    switch(videoHash){
+      case "QmanaNsDaBYuDy1Z3joTcfBAB4zieu2R9VAHwxaGEzcAnb":
+        return "QmRSWzv3jgTppCsDHjTdgY2aVPpMD66D28Dbyj3N65Nnfh"
+      case "QmdSNPssUEAVG9jkBQAXCBrNM5zSgofXkrdkD83DqxCxhZ":
+        return "QmfQCe5hgcngZkFcbS6rktaiPZ4U1ZiBiuJHbA73CJfi2P"
+      case "QmQde4iLJyuLKQwPmfeFMr7AdS5wDv1haCxsbv1RgfURBC":
+        return "QmRJJ9ghsoz6aNSnet1bPNJE8RrAC74oNoiQhQ3cYxHhwM"
+      case "QmSREPYVpK73oBoJR15kUREDiJf9X2okjgFqyze8UNu4WX":
+        return "QmQbFAxq59Yastjvfh9CWmrekhvZaHJfGN4vPYaPH52rXA"
+      case "QmTL4Uraj8mRREETwgv1hNo3pzJZ2WzuxYqnEDQueLjjAa":
+        return "QmXHfwE4paGT7MnW5Fv9ZcuYDn6M1B4PCxFtpgmSbUE9VB"
+      case "QmU9McQUt7VbHaq3CBcn7DJSFMPzjHRarWV6JNHGf4Nq3k":
+        return "QmXQfKSkUdEzPn7UgXmTkpAf6TDNys2vjVCcTWTj42jmet"
+      case "QmUboC1BcvwBPQBGk6QSphrAmBHzt1SQwZcVSYGhxzT7Lr":
+        return "QmTBwSFBytRkwCednLhfsW6DG4ZCNSzo5ZigRQXsAGts4W"
+      case "QmUrEXCCF7Bj2sXo929y1HMTMXmXkpLgtusU9LYu9qNUhA":
+        return "QmWL7DzDimUrPpk4VCu84qkaH1RJhZhkcEVgDG784w2bsk"
+      case "QmWeB6raYMksDPpd6oQhJ4BAb5AzP3zwWnQKNeXA8nEPyw":
+        return "QmUURuK76k7HDiMeZAw1rXkmhESMLtha7VMHsDiSRxZFPi"
+      case "QmXF5ESZm91fvQeE1Mc9sW93s4ptHhnrN8bF4MCv1eYtc8":
+        return "QmQ4fsPE8F2YtpEVs45sfsb9tfnb3NDtFqnoMfZx6UhgPH"
+      case "QmY34PMF2rVJvUcn1x2ibfVGYeHNFFYXeukhYneiihEV2o":
+        return "QmQDCQmFXPDJGfjkRnQ37ao4L1ZuFEUR2EdMFbk4QyH1fW"
+      case "QmZJSSjVXocxSTYysw12Rm58LMAB5czHtRuf9QaUyDwMAN":
+        return "QmbQRRJ9grn6kCGRp4SYE7Z2ZUvs95mLCN1Dg4iN5Jt6Qw"
+      default:
+        return null
+    }
+}
+

@@ -46,6 +46,7 @@ export const validationGetNFTs = (query: any) => {
       ids: Joi.array().items(Joi.number().integer().min(0)),
       idsToExclude: Joi.array().items(Joi.number().integer().min(0)),
       liked: Joi.string(),
+      series: Joi.array().items(Joi.string()),
       marketplaceId: Joi.number().integer().min(0),
       listed: Joi.boolean(),
       categories: Joi.array().items(Joi.string()),
