@@ -25,7 +25,7 @@ export type NFTsQuery = {
     priceFilter?: string
     priceTiime?: string
     priceTiimeFilter?: string
-    locked?: boolean
+    seriesLocked?: boolean
     isCapsule?: boolean
     noSeriesData?: boolean
   }
@@ -55,7 +55,7 @@ export const validationGetNFTs = (query: any) => {
       priceFilter: Joi.string(),
       priceTiime: Joi.string(),
       priceTiimeFilter: Joi.string(),
-      locked: Joi.boolean(),
+      seriesLocked: Joi.boolean(),
       isCapsule: Joi.boolean(),
       noSeriesData: Joi.boolean(),
     }),

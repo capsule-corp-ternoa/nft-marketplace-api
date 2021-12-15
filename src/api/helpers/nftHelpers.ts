@@ -27,7 +27,7 @@ export async function populateNFT(
   seriesData: CustomResponse<INFT>,
   query: NFTsQuery
 ): Promise<ICompleteNFT | INFT> {
-  const [serieData, creatorData, ownerData, info, categories, locked] =
+  const [serieData, creatorData, ownerData, info, categories, seriesLocked] =
     await Promise.all([
       populateSerieData(NFT, seriesData, query),
       populateNFTCreator(NFT),
@@ -36,7 +36,7 @@ export async function populateNFT(
       populateNFTCategories(NFT),
       populateNFTSeriesObject(NFT.serieId)
     ]);
-  return { ...NFT, ...serieData, creatorData, ownerData, ...info, categories, locked};
+  return { ...NFT, ...serieData, creatorData, ownerData, ...info, categories, seriesLocked};
 }
 
 export async function populateSerieData(
