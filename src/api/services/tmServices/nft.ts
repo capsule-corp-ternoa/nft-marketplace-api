@@ -271,6 +271,8 @@ export class NFTService {
       const result: NFTListPaginatedResponse = await request(indexerUrl, query);
       return result
     }catch(err){
+      // tslint:disable-next-line:no-console
+      console.log(err)
       throw new Error("Couldn't get total NFT");
     }
   }

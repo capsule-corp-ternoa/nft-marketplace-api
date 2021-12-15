@@ -7,9 +7,6 @@ const nodes = `
     creator
     listed
     timestampList
-    uri
-    price
-    priceTiime
     serieId
   }
 `;
