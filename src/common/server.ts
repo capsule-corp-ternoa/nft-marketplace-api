@@ -14,6 +14,7 @@ import apicache from 'apicache';
 
 const app = express();
 const cache = apicache.middleware
+apicache.options({debug: true})
 
 if (process.env.SENTRY_DSN) {
   Sentry.init({
@@ -33,25 +34,28 @@ if (process.env.SENTRY_DSN) {
 
 export default class ExpressServer {
   constructor() {
+    app.use(cache('5 minutes'))
+    /* express middlewares */
     // CORS
     app.use(cors());
-    // express middlewares
+    // Compression
     app.use(compression())
+    // payload limit
     app.use(express.json({ limit: process.env.REQUEST_LIMIT || "100kb" }));
+    app.use(express.text({ limit: process.env.REQUEST_LIMIT || "100kb" }));
     app.use(
       express.urlencoded({
         extended: true,
         limit: process.env.REQUEST_LIMIT || "100kb",
       })
     );
-    app.use(express.text({ limit: process.env.REQUEST_LIMIT || "100kb" }));
+    // cache
     if (process.env.CACHE_DURATION) {
+      // app.use(readyCache)
       app.use(cache(process.env.CACHE_DURATION))
-      console.info(`caching requests for entire api calls - duration: ${process.env.CACHE_DURATION}`);
+      L.info(`caching requests for entire api calls - duration: ${process.env.CACHE_DURATION}, query param checked: useCache`);
     }
-
     // mongo connection
-
     mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
