@@ -4,14 +4,12 @@ import { IUser } from "../../interfaces/IUser";
 import UserViewModel from "../../models/userView";
 import QueriesBuilder from "./gqlQueriesBuilder";
 import { AccountResponse, Account } from "../../interfaces/graphQL";
-import NodeCache from "node-cache";
 import { TIME_BETWEEN_SAME_USER_VIEWS, TERNOA_API_URL } from "../../utils";
 import { getAccountBalanceQuery, getUserQuery } from "../validators/userValidators";
 
 const indexerUrl =
   process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
 
-const usersCache = new NodeCache({ stdTTL: 300 });
 
 export class UserService {
   /**
@@ -22,10 +20,6 @@ export class UserService {
   async findUser(
     query: getUserQuery
   ): Promise<IUser> {
-    if (!query.ignoreCache && !query.incViews && !query.populateLikes) {
-      const user = usersCache.get(query.id) as IUser | undefined;
-      if (user !== undefined) return user;
-    }
     try {
       const data = await fetch(`${TERNOA_API_URL}/api/users/${query.id}?populateLikes=${query.populateLikes ? query.populateLikes : false}`)
       const user = await data.json() as IUser
@@ -42,7 +36,6 @@ export class UserService {
           viewsCount = views.length
         }
       }
-      if (!usersCache.has(query.id)) usersCache.set(query.id, user);
       return {...user, viewsCount};
     } catch (err) {
       throw new Error("User can't be found " + err);
