@@ -225,9 +225,9 @@ export class GQLQueriesBuilder {
       orderBy: ${query.sort ? `[${convertSortString(query.sort)}]` : "TIMESTAMP_DESC"}
       filter: {and:[
         ${query.filter?.onlyNftId ? 
-          `{nftId: {equalTo: "${query.nftId}"}}`
+          `{nftId: {equalTo: "${query.filter.nftId}"}}`
         : 
-          `{seriesId: {equalTo: "${query.seriesId}"}}`
+          `{seriesId: {equalTo: "${query.filter.seriesId}"}}`
         }
         ${query.filter?.from ? `{from: {equalTo: "${query.filter.from}"}}` : ``}
         ${query.filter?.to ? `{to: {equalTo: "${query.filter.to}"}}` : ``}
