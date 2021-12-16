@@ -9,12 +9,9 @@ import errorHandler from "../api/middlewares/error.handler";
 import * as Sentry from "@sentry/node"
 import * as Tracing from "@sentry/tracing"
 import compression from "compression";
-import apicache from 'apicache';
-
+import { readyCache } from "../utils/cache";
 
 const app = express();
-const cache = apicache.middleware
-apicache.options({debug: true})
 
 if (process.env.SENTRY_DSN) {
   Sentry.init({
@@ -34,7 +31,6 @@ if (process.env.SENTRY_DSN) {
 
 export default class ExpressServer {
   constructor() {
-    app.use(cache('5 minutes'))
     /* express middlewares */
     // CORS
     app.use(cors());
@@ -51,8 +47,7 @@ export default class ExpressServer {
     );
     // cache
     if (process.env.CACHE_DURATION) {
-      // app.use(readyCache)
-      app.use(cache(process.env.CACHE_DURATION))
+      app.use(readyCache)
       L.info(`caching requests for entire api calls - duration: ${process.env.CACHE_DURATION}, query param checked: useCache`);
     }
     // mongo connection
