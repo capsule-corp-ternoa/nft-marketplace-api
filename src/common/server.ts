@@ -9,7 +9,7 @@ import errorHandler from "../api/middlewares/error.handler";
 import * as Sentry from "@sentry/node"
 import * as Tracing from "@sentry/tracing"
 import compression from "compression";
-import { readyCache } from "../utils/cache";
+import { cacheMiddleware } from "../utils/cache";
 
 const app = express();
 
@@ -46,10 +46,7 @@ export default class ExpressServer {
       })
     );
     // cache
-    if (process.env.CACHE_DURATION) {
-      app.use(readyCache)
-      L.info(`caching requests for entire api calls - duration: ${process.env.CACHE_DURATION}, query param checked: useCache`);
-    }
+    app.use(cacheMiddleware)
     // mongo connection
     mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
