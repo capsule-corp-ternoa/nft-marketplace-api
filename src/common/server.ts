@@ -9,10 +9,11 @@ import errorHandler from "../api/middlewares/error.handler";
 import * as Sentry from "@sentry/node"
 import * as Tracing from "@sentry/tracing"
 import compression from "compression";
+import { cacheMiddleware } from "../utils/cache";
 
 const app = express();
 
-if (process.env.SENTRY_DSN){
+if (process.env.SENTRY_DSN) {
   Sentry.init({
     dsn: process.env.SENTRY_DSN,
     environment: process.env.SENTRY_ENV,
@@ -30,21 +31,23 @@ if (process.env.SENTRY_DSN){
 
 export default class ExpressServer {
   constructor() {
+    /* express middlewares */
     // CORS
     app.use(cors());
-    // express middlewares
+    // Compression
     app.use(compression())
+    // payload limit
     app.use(express.json({ limit: process.env.REQUEST_LIMIT || "100kb" }));
+    app.use(express.text({ limit: process.env.REQUEST_LIMIT || "100kb" }));
     app.use(
       express.urlencoded({
         extended: true,
         limit: process.env.REQUEST_LIMIT || "100kb",
       })
     );
-    app.use(express.text({ limit: process.env.REQUEST_LIMIT || "100kb" }));
-
+    // cache
+    app.use(cacheMiddleware)
     // mongo connection
-
     mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,

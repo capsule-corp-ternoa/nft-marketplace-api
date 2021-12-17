@@ -96,7 +96,7 @@ export class Controller {
     next: NextFunction
   ): Promise<void>{
     try {
-      const queryValues = validationGetHistory({...req.query, ...req.params})
+      const queryValues = validationGetHistory({ ...req.query })
       res.json(await NFTService.getHistory(queryValues));
     } catch (err) {
       next(err);
