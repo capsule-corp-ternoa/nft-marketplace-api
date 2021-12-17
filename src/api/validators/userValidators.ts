@@ -6,7 +6,6 @@ export type getUserQuery = {
     incViews?: boolean,
     walletIdViewer?: string,
     viewerIp?: string, 
-    ignoreCache?: boolean,
     populateLikes?: boolean
 }
 export const validationGetUser = (query: any) => {
@@ -15,7 +14,6 @@ export const validationGetUser = (query: any) => {
         incViews: Joi.boolean(),
         walletIdViewer: Joi.string(),
         viewerIp: Joi.string(),
-        ignoreCache: Joi.boolean(),
         populateLikes: Joi.boolean(),
     });
     return validateQuery(validationSchema, query) as getUserQuery;

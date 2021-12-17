@@ -174,14 +174,14 @@ export const validationCanAddToSeries = (query: any) => {
 }
 
 export type getHistoryQuery = {
-  seriesId: string
-  nftId: string
   sort?: string
   pagination?: {
     page?: number
     limit?: number
   }
-  filter?: {
+  filter: {
+    seriesId: string
+    nftId: string
     grouped?: boolean
     onlyNftId?: boolean
     from?: string
@@ -199,14 +199,14 @@ export const validationGetHistory = (query: any) => {
   if (pagination) pagination = JSON.parse(pagination);
   if (filter) filter = JSON.parse(filter);
   const validationSchema = Joi.object({
-    seriesId: Joi.string().required(),
-    nftId: Joi.string().required(),
     sort: Joi.string(),
     pagination: Joi.object({
       page: Joi.number().integer().min(0),
       limit: Joi.number().integer().min(0).max(LIMIT_MAX_PAGINATION),
     }),
     filter: Joi.object({
+      seriesId: Joi.string().required(),
+      nftId: Joi.string().required(),
       grouped: Joi.boolean(),
       onlyNftId: Joi.boolean(),
       from: Joi.string(),
@@ -216,7 +216,7 @@ export const validationGetHistory = (query: any) => {
       timestampFilter: Joi.string(),
       amount: Joi.number(),
       amountFilter: Joi.string(),
-    }),
+    }).required(),
   })
-  return validateQuery(validationSchema, {seriesId: query.seriesId, nftId: query.nftId, pagination, sort, filter}) as getHistoryQuery;
+  return validateQuery(validationSchema, {pagination, sort, filter}) as getHistoryQuery;
 }
