@@ -14,6 +14,7 @@ const cache8 = apicache.clone().middleware
 
 export const cacheMiddleware = (req:Request, res: Response, next: NextFunction) => {
     const paramName = firstQueryCacheParam(req.query)
+    deleteParams(req)
     switch(paramName){
         case "useCache15":
             cache15(req, res, next);
@@ -40,7 +41,6 @@ export const cacheMiddleware = (req:Request, res: Response, next: NextFunction) 
             cache1800(req, res, next);
             break;
         default:
-            deleteParams(req)
             next();
             break;
     }
@@ -69,8 +69,7 @@ const deleteParams = (req: Request) => {
     delete req.query.useCache1800
 }
 
-const shouldCache = (req:Request, res: Response) => {
-    deleteParams(req)
+const shouldCache = (_req:Request, res: Response) => {
     return res.statusCode.toString()[0] !== "4" && res.statusCode.toString()[0] !== "5"
 }
 const cacheMultiplier = process.env.CACHE_MULTIPLIER ? Number(process.env.CACHE_MULTIPLIER) : 1
@@ -84,4 +83,3 @@ const cache300 = cache5(cacheDuration(300), shouldCache)
 const cache600 = cache6(cacheDuration(600), shouldCache)
 const cache900 = cache7(cacheDuration(900), shouldCache)
 const cache1800 = cache8(cacheDuration(1800), shouldCache)
-
