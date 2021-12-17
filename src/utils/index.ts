@@ -5,7 +5,7 @@ import cryptoJs from "crypto-js";
 export const TIME_BETWEEN_SAME_USER_VIEWS = 6 * (60 * 60 * 1000);
 export const LIMIT_MAX_PAGINATION = 50;
 
-export const fetchTimeout = (
+export const fetchTimeout = async  (
   url: string,
   options: any = null,
   timeoutLimit = 30000
