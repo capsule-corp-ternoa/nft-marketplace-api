@@ -51,7 +51,6 @@ export async function populateSerieData(
   totalOwnedByRequestingUser: number;
   totalOwnedListedByRequestingUser: number;
   smallestPrice: string;
-  smallestPriceTiime: string;
 }> {
   try {
     const marketplaceId = query.filter?.marketplaceId;
@@ -64,7 +63,6 @@ export async function populateSerieData(
             owner: NFT.owner,
             listed: NFT.listed,
             price: NFT.price,
-            priceTiime: NFT.priceTiime,
             marketplaceId: NFT.marketplaceId,
           },
         ],
@@ -74,18 +72,16 @@ export async function populateSerieData(
         totalOwnedByRequestingUser: 1,
         totalOwnedListedByRequestingUser: NFT.listed,
         smallestPrice: NFT.price,
-        smallestPriceTiime: NFT.priceTiime,
       };
-    const result = seriesData.data.filter((x) => x.serieId === NFT.serieId);
+    const result = seriesData.data.filter((x) => x.serieId === NFT.serieId).map(({serieId, ...rest}) => rest);
     const serieData = result.sort(
       (a, b) =>
         (a.isCapsule !== b.isCapsule && (a.isCapsule ? 1 : -1)) || // capsule last
         b.listed - a.listed || // listed first
         (marketplaceId && Number(a.marketplaceId) !== Number(b.marketplaceId) && (Number(a.marketplaceId) === marketplaceId || Number(b.marketplaceId) === marketplaceId) &&
           marketplaceId === Number(a.marketplaceId) ? -1 : 1) || // marketplace id corresponding to request first
-        Number(a.price) - Number(b.price) || // smallest price first
-        Number(a.priceTiime) - Number(b.priceTiime)
-    ); // smallest price tiime first
+        Number(a.price) - Number(b.price) // smallest price first
+    );
     const listedNft = serieData.filter((x) => x.listed);
     return {
       serieData: !query.filter?.noSeriesData ? serieData : [],
@@ -101,9 +97,7 @@ export async function populateSerieData(
       totalOwnedListedByRequestingUser: owner
         ? listedNft.filter((x) => x.owner === owner).length
         : 0,
-      smallestPrice: serieData.length > 0 ? serieData[0].price : NFT.price,
-      smallestPriceTiime:
-        serieData.length > 0 ? serieData[0].priceTiime : NFT.priceTiime,
+      smallestPrice: serieData.length > 0 ? serieData[0].price : NFT.price
     };
   } catch (err) {
     L.error({ err }, "NFTs with same serie could not have been fetched");
