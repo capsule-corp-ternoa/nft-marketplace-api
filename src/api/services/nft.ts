@@ -75,10 +75,8 @@ export class NFTService {
       const gqlQuery = QueriesBuilder.NFTs(query);
       const res: DistinctNFTListResponse = await request(indexerUrl, gqlQuery);
       const NFTs = res.distinctSerieNfts.nodes;
-      L.info(`'NFTs length:${NFTs.length}`)
       // Series Data
       const seriesData = await this.getNFTsForSeriesByOwner({ seriesIds: NFTs.map(x => x.serieId), owner: query?.filter?.owner })
-      L.info(seriesData)
       // Populate
       res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData, query)))
       // Result formatting
@@ -225,7 +223,6 @@ export class NFTService {
    */
   async getNFTsForSeriesByOwner(query: NFTBySeriesQuery): Promise<CustomResponse<INFT>> {
     try {
-      L.info(`query::${JSON.stringify(query)}`)
       const gqlQuery = QueriesBuilder.NFTsForSeries(query)
       const res: NFTListResponse = await request(indexerUrl, gqlQuery);
       const result: CustomResponse<INFT> = {
@@ -236,7 +233,7 @@ export class NFTService {
       }
       return result
     } catch (err) {
-      L.info(`series error:: ${JSON.stringify(err)}`)
+      L.info(`getNFTsForSeriesByOwner error:: ${JSON.stringify(err)}`)
       throw new Error("Couldn't get NFTs for those series");
     }
   }
