@@ -1,6 +1,7 @@
 import { gql } from "graphql-request";
 import { convertSortString, LIMIT_MAX_PAGINATION } from "../../utils";
 import { getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
+// import L from '../../common/logger';
 
 const nodes = `
   nodes {
@@ -29,7 +30,6 @@ export class GQLQueriesBuilder {
         offset: ${query.pagination?.page && query.pagination?.limit ? (query.pagination.page - 1) * query.pagination.limit : 0}
         filter:{
           and:[
-            { serieId: { notEqualTo: "Ternoa Xmas 2021" } }
             ${query.filter?.ids ? `{id: { in: ${JSON.stringify(query.filter.ids.map(x => String(x)))} }}` : ""}
             ${query.filter?.idsToExclude ? `{id: { notIn: ${JSON.stringify(query.filter.idsToExclude.map(x => String(x)))} }}` : ""}
             ${query.filter?.idsCategories ? `{id: { in: ${JSON.stringify(query.filter.idsCategories.map(x => String(x)))} }}` : ""}
@@ -73,7 +73,6 @@ export class GQLQueriesBuilder {
       nftEntities(
         filter: { 
           and: [
-            { serieId: { notEqualTo: "Ternoa Xmas 2021" } }
             { timestampBurn: { isNull: true } }
             { id: { equalTo: "${query.id}" } }
           ]
@@ -85,6 +84,7 @@ export class GQLQueriesBuilder {
   `;
 
   NFTsForSeries = (query: NFTBySeriesQuery) => {
+    // L.info(`NFTsForSeries Query gql::${JSON.stringify(query)}`)
     const nodesSerieData = `
       nodes {
         id
@@ -105,9 +105,9 @@ export class GQLQueriesBuilder {
           ` : ""}
           filter: {
             and : [
-              { serieId: { notEqualTo: "Ternoa Xmas 2021" } }
               { timestampBurn: { isNull: true } }
               { serieId:{ in:${JSON.stringify(query.seriesIds)} } }
+              ${query.owner ? `{ owner: { equalTo: "${query.owner}" } }` : ""}
             ]
           }
         )

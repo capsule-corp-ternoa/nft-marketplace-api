@@ -14,6 +14,7 @@ import { IUser } from "../../interfaces/IUser";
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
 // import { INFTLike } from "../../interfaces/INFTLike";
+import L from "../../common/logger";
 
 const indexerUrl = process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
 
@@ -27,29 +28,29 @@ export class NFTService {
     try {
       // const likesData: AggregatePaginateResult<{_id: string, count: number}> | null = null
       // Categories
-      if (query.filter?.categories){
+      if (query.filter?.categories) {
         const withNoCategories = query.filter.categories.includes("none")
-        const categoriesCode = query.filter.categories.filter(x => x!=="none")
+        const categoriesCode = query.filter.categories.filter(x => x !== "none")
         const allCategories = await CategoryService.getCategories({})
         const categories = allCategories.map(x => x.code).filter(x => categoriesCode.includes(x))
-        const mongoQuery = {categories: {$in: categories} }
+        const mongoQuery = { categories: { $in: categories } }
         const mongoNfts = await NftModel.find(mongoQuery as any)
         const nftIds = mongoNfts.map((nft) => nft.chainId)
-        if (withNoCategories){
+        if (withNoCategories) {
           const categoriesToExclude = allCategories.map(x => x.code).filter(x => !categoriesCode.includes(x))
-          const mongoQueryExclude = {$and: [{categories: {$in: categoriesToExclude}}, {chainId: {$nin: nftIds}}]}
+          const mongoQueryExclude = { $and: [{ categories: { $in: categoriesToExclude } }, { chainId: { $nin: nftIds } }] }
           const mongoNFTsToExclude = await NftModel.find(mongoQueryExclude as any)
           const nftIdsToExclude = mongoNFTsToExclude.map((nft) => nft.chainId)
           query.filter.idsToExcludeCategories = nftIdsToExclude
-        }else{
+        } else {
           query.filter.idsCategories = nftIds
         }
       }
       // Liked only
-      if (query.filter?.liked){
+      if (query.filter?.liked) {
         const data = await fetch(`${TERNOA_API_URL}/api/users/${query.filter.liked}?populateLikes=${true}`)
         const user = await data.json() as IUser
-        query.filter.series = user.likedNFTs.length > 0 ? user.likedNFTs.map(x=>x.serieId) : []
+        query.filter.series = user.likedNFTs.length > 0 ? user.likedNFTs.map(x => x.serieId) : []
       }
 
       // Sort mongo
@@ -74,12 +75,14 @@ export class NFTService {
       const gqlQuery = QueriesBuilder.NFTs(query);
       const res: DistinctNFTListResponse = await request(indexerUrl, gqlQuery);
       const NFTs = res.distinctSerieNfts.nodes;
+      L.info(`'NFTs length:${NFTs.length}`)
       // Series Data
-      const seriesData = await this.getNFTsForSeries({seriesIds: NFTs.map(x => x.serieId)})
+      const seriesData = await this.getNFTsForSeriesByOwner({ seriesIds: NFTs.map(x => x.serieId), owner: query?.filter?.owner })
+      L.info(seriesData)
       // Populate
       res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData, query)))
       // Result formatting
-      const result: CustomResponse<INFT>={
+      const result: CustomResponse<INFT> = {
         totalCount: res.distinctSerieNfts.totalCount,
         data: res.distinctSerieNfts.nodes,
         hasNextPage: res.distinctSerieNfts.pageInfo?.hasNextPage || undefined,
@@ -104,26 +107,31 @@ export class NFTService {
       const result: NFTListResponse = await request(indexerUrl, gqlQuery);
       let NFT = result.nftEntities.nodes[0];
       if (!NFT) throw new Error();
-      const seriesData = await this.getNFTsForSeries({seriesIds: [NFT.serieId]})
+      let seriesData;
+      if (query && query.filter && query.filter.owner) {
+        seriesData = await this.getNFTsForSeriesByOwner({ seriesIds: [NFT.serieId], owner: query.filter.owner })
+      } else {
+        seriesData = await this.getNFTsForSeries({ seriesIds: [NFT.serieId] })
+      }
       NFT = await populateNFT(NFT, seriesData, query);
       let viewsCount = 0
-      if (query.incViews){
+      if (query.incViews) {
         const date = +new Date()
-        const views = await NftViewModel.find(NFT.serieId!=="0" ? {viewedSerie: NFT.serieId} : {viewedId: query.id})
-        if (query.viewerIp && 
-            (
-              views.length === 0 || 
-              date - Math.max.apply(null, views.filter(x => x.viewerIp === query.viewerIp).map(x => x.date)) > TIME_BETWEEN_SAME_USER_VIEWS
-            )
+        const views = await NftViewModel.find(NFT.serieId !== "0" ? { viewedSerie: NFT.serieId } : { viewedId: query.id })
+        if (query.viewerIp &&
+          (
+            views.length === 0 ||
+            date - Math.max.apply(null, views.filter(x => x.viewerIp === query.viewerIp).map(x => x.date)) > TIME_BETWEEN_SAME_USER_VIEWS
+          )
         ) {
-          const newView = new NftViewModel({viewedSerie: NFT.serieId, viewedId: query.id, viewer: query.viewerWalletId, viewerIp: query.viewerIp, date})
+          const newView = new NftViewModel({ viewedSerie: NFT.serieId, viewedId: query.id, viewer: query.viewerWalletId, viewerIp: query.viewerIp, date })
           await newView.save();
           viewsCount = views.length + 1
-        }else{
+        } else {
           viewsCount = views.length
         }
       }
-      return { ...NFT, viewsCount};
+      return { ...NFT, viewsCount };
     } catch (err) {
       throw new Error("Couldn't get NFT");
     }
@@ -134,14 +142,14 @@ export class NFTService {
    * @param query - query (see statNFTsUserQuery)
    * @throws Will throw an error if can't request indexer or db or user not find
    */
-   async getStatNFTsUser(query: statNFTsUserQuery): Promise<{
-    countOwned: number, 
-    countOwnedListed: number, 
-    countOwnedUnlisted: number, 
-    countCreated: number, 
-    countFollowers: number, 
+  async getStatNFTsUser(query: statNFTsUserQuery): Promise<{
+    countOwned: number,
+    countOwnedListed: number,
+    countOwnedUnlisted: number,
+    countCreated: number,
+    countFollowers: number,
     countFollowed: number
-   }> {
+  }> {
     try {
       const [owned, ownedListed, ownedUnlisted, created, followers, followed] = await Promise.all([
         request(indexerUrl, QueriesBuilder.countOwnerOwned(query)),
@@ -157,7 +165,7 @@ export class NFTService {
       const countCreated: number = created.nftEntities.totalCount;
       const countFollowers: number = followers.length
       const countFollowed: number = followed.length
-      return {countOwned, countOwnedListed, countOwnedUnlisted, countCreated, countFollowers, countFollowed}
+      return { countOwned, countOwnedListed, countOwnedUnlisted, countCreated, countFollowers, countFollowed }
     } catch (err) {
       throw new Error("Couldn't get users stat");
     }
@@ -176,13 +184,13 @@ export class NFTService {
         decryptedCreator === query.creator &&
         decryptedChainIdsString === query.chainIds.join('-') &&
         decryptedCategoriesString === query.categories.join('-')
-      ){
-        const categories = await CategoryService.getCategories({filter: {codes: query.categories}})
+      ) {
+        const categories = await CategoryService.getCategories({ filter: { codes: query.categories } })
         const categoriesCodes = categories.map(x => x.code)
-        const data: {chainId: string, categories: string[]}[] = query.chainIds.map(x => { return {chainId: x, categories: categoriesCodes} })
+        const data: { chainId: string, categories: string[] }[] = query.chainIds.map(x => { return { chainId: x, categories: categoriesCodes } })
         await NftModel.insertMany(data)
         return true;
-      }else{
+      } else {
         throw new Error("Invalid authentication")
       }
     } catch (err) {
@@ -195,18 +203,40 @@ export class NFTService {
    * @param query - query (see NFTBySeriesQuery)
    * @throws Will throw an error if nft ID doesn't exist
    */
-   async getNFTsForSeries(query: NFTBySeriesQuery): Promise<CustomResponse<INFT>>{
-    try{
+  async getNFTsForSeries(query: NFTBySeriesQuery): Promise<CustomResponse<INFT>> {
+    try {
       const gqlQuery = QueriesBuilder.NFTsForSeries(query)
       const res: NFTListResponse = await request(indexerUrl, gqlQuery);
-      const result: CustomResponse<INFT>={
+      const result: CustomResponse<INFT> = {
         totalCount: res.nftEntities.totalCount,
         data: res.nftEntities.nodes,
         hasNextPage: res.nftEntities.pageInfo?.hasNextPage || undefined,
         hasPreviousPage: res.nftEntities.pageInfo?.hasPreviousPage || undefined
       }
       return result
-    }catch(err){
+    } catch (err) {
+      throw new Error("Couldn't get NFTs for those series");
+    }
+  }
+  /**
+   * Finds NFTs with series included in seriesIds array
+   * @param query - query (see NFTBySeriesQuery)
+   * @throws Will throw an error if nft ID doesn't exist
+   */
+  async getNFTsForSeriesByOwner(query: NFTBySeriesQuery): Promise<CustomResponse<INFT>> {
+    try {
+      L.info(`query::${JSON.stringify(query)}`)
+      const gqlQuery = QueriesBuilder.NFTsForSeries(query)
+      const res: NFTListResponse = await request(indexerUrl, gqlQuery);
+      const result: CustomResponse<INFT> = {
+        totalCount: res.nftEntities.totalCount,
+        data: res.nftEntities.nodes,
+        hasNextPage: res.nftEntities.pageInfo?.hasNextPage || undefined,
+        hasPreviousPage: res.nftEntities.pageInfo?.hasPreviousPage || undefined
+      }
+      return result
+    } catch (err) {
+      L.info(`series error:: ${JSON.stringify(err)}`)
       throw new Error("Couldn't get NFTs for those series");
     }
   }
@@ -220,7 +250,7 @@ export class NFTService {
     try {
       const nft = await NftModel.findOne({ chainId: nftId });
       if (!nft) return null;
-      const categories = await CategoryModel.find({code: {$in: nft.categories}})
+      const categories = await CategoryModel.find({ code: { $in: nft.categories } })
       return categories as ICategory[];
     } catch (err) {
       throw new Error("Couldn't get categories for this NFT");
@@ -232,13 +262,13 @@ export class NFTService {
    * @param query - query (see getSeriesStatusQuery)
    * @throws Will throw an error if seriesId is not found
    */
-   async getSeriesStatus(query: getSeriesStatusQuery): Promise<ISeries>{
-    try{
+  async getSeriesStatus(query: getSeriesStatusQuery): Promise<ISeries> {
+    try {
       const gqlQuery = QueriesBuilder.getSeries(query)
       const res = await request(indexerUrl, gqlQuery);
       if (!res.serieEntities.nodes || res.serieEntities.nodes.length === 0) throw Error()
       return res.serieEntities.nodes[0]
-    }catch(err){
+    } catch (err) {
       throw new Error("Couldn't get series status");
     }
   }
@@ -248,44 +278,44 @@ export class NFTService {
    * @param query - query (see canAddToSeriesQuery)
    * @throws Will throw an error if seriesId is not found
    */
-     async canAddToSeries(query: canAddToSeriesQuery): Promise<boolean>{
-      try{
-        const gqlQuery = QueriesBuilder.getSeries(query)
-        const res = await request(indexerUrl, gqlQuery);
-        if (!res.serieEntities.nodes || res.serieEntities.nodes.length === 0) return true
-        const series:ISeries = res.serieEntities.nodes[0]
-        if (series.locked || series.owner!==query.walletId) return false
-        return true
-      }catch(err){
-        throw new Error("Couldn't get information about this series");
-      }
+  async canAddToSeries(query: canAddToSeriesQuery): Promise<boolean> {
+    try {
+      const gqlQuery = QueriesBuilder.getSeries(query)
+      const res = await request(indexerUrl, gqlQuery);
+      if (!res.serieEntities.nodes || res.serieEntities.nodes.length === 0) return true
+      const series: ISeries = res.serieEntities.nodes[0]
+      if (series.locked || series.owner !== query.walletId) return false
+      return true
+    } catch (err) {
+      throw new Error("Couldn't get information about this series");
     }
+  }
 
   /**
    * Return the history of the serie specified
    * @param query - query (see getHistoryQuery)
    * @throws Will throw an error if indexer is not reachable
    */
-    async getHistory(query: getHistoryQuery): Promise<CustomResponse<INFTTransfer>>{
-    try{
+  async getHistory(query: getHistoryQuery): Promise<CustomResponse<INFTTransfer>> {
+    try {
       const gqlQuery = QueriesBuilder.getHistory(query)
       const res = await request(indexerUrl, gqlQuery);
       const data: INFTTransfer[] = []
-      if (query.filter?.grouped){
-        let previousRow:INFTTransfer = null
+      if (query.filter?.grouped) {
+        let previousRow: INFTTransfer = null
         let tempQty = 1
         res.nftTransferEntities.nodes.forEach((x: INFTTransfer) => {
           const currentRow = x
-          if (previousRow){
+          if (previousRow) {
             if (
               currentRow.from === previousRow.from &&
-              currentRow.to === previousRow.to && 
+              currentRow.to === previousRow.to &&
               currentRow.amount === previousRow.amount &&
               currentRow.seriesId === previousRow.seriesId &&
               currentRow.typeOfTransaction === previousRow.typeOfTransaction
-            ){
+            ) {
               tempQty += 1
-            }else{
+            } else {
               previousRow.quantity = tempQty
               data.push(previousRow)
               tempQty = 1
@@ -293,19 +323,19 @@ export class NFTService {
           }
           previousRow = currentRow
         });
-        if (previousRow){
+        if (previousRow) {
           previousRow.quantity = tempQty
           data.push(previousRow)
         }
       }
-      const result: CustomResponse<INFTTransfer>={
+      const result: CustomResponse<INFTTransfer> = {
         totalCount: res.nftTransferEntities.totalCount,
         data: query.filter?.grouped ? data : res.nftTransferEntities.nodes,
         hasNextPage: res.nftTransferEntities.pageInfo?.hasNextPage || undefined,
         hasPreviousPage: res.nftTransferEntities.pageInfo?.hasPreviousPage || undefined
       }
       return result
-    }catch(err){
+    } catch (err) {
       throw new Error("Couldn't get history information about this nft / series");
     }
   }

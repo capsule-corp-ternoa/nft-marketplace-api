@@ -72,7 +72,8 @@ export type NFTQuery = {
   incViews?: boolean
   filter?: {
     marketplaceId?: number
-    noSeriesData?: boolean
+    noSeriesData?: boolean,
+    owner?:string,
   }
 }
 export const validationGetNFT = (query: any) => {
@@ -84,6 +85,7 @@ export const validationGetNFT = (query: any) => {
     filter: Joi.object({
       marketplaceId: Joi.number().integer().min(0),
       noSeriesData: Joi.boolean(),
+      owner:Joi.string(),
     }),
     incViews: Joi.boolean(),
     viewerWalletId: Joi.string(),
@@ -119,7 +121,9 @@ export type NFTBySeriesQuery = {
     page?: number
     limit?: number
   }
+  owner?: string
 }
+
 export const validationNFTsBySeries = (query: any) => {
   let { pagination, seriesIds } = query
   seriesIds = typeof seriesIds === "string" ? [seriesIds] : seriesIds
