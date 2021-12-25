@@ -89,7 +89,6 @@ export class GQLQueriesBuilder {
         owner
         listed
         price
-        priceTiime
         marketplaceId
         serieId
         isCapsule
