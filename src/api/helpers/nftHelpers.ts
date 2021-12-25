@@ -73,7 +73,7 @@ export async function populateSerieData(
         totalOwnedListedByRequestingUser: NFT.listed,
         smallestPrice: NFT.price,
       };
-    const result = seriesData.data.filter((x) => x.serieId === NFT.serieId);
+    const result = seriesData.data.filter((x) => x.serieId === NFT.serieId).map(({serieId, ...rest}) => rest);
     const serieData = result.sort(
       (a, b) =>
         (a.isCapsule !== b.isCapsule && (a.isCapsule ? 1 : -1)) || // capsule last
@@ -82,9 +82,6 @@ export async function populateSerieData(
           marketplaceId === Number(a.marketplaceId) ? -1 : 1) || // marketplace id corresponding to request first
         Number(a.price) - Number(b.price) // smallest price first
     );
-    serieData.forEach(x => {
-      delete x.serieId
-    })
     const listedNft = serieData.filter((x) => x.listed);
     return {
       serieData: !query.filter?.noSeriesData ? serieData : [],
