@@ -26,7 +26,6 @@ export class NFTService {
    */
   async getNFTs(query: NFTsQuery): Promise<CustomResponse<INFT>> {
     try {
-      // const likesData: AggregatePaginateResult<{_id: string, count: number}> | null = null
       // Categories
       if (query.filter?.categories) {
         const withNoCategories = query.filter.categories.includes("none")
@@ -53,7 +52,8 @@ export class NFTService {
         query.filter.series = user.likedNFTs.length > 0 ? user.likedNFTs.map(x => x.serieId) : []
       }
 
-      // Sort mongo
+      // Sort mongo -> BLOCKED CAUSE OF DATASTRUCTURE
+      // const likesData: AggregatePaginateResult<{_id: string, count: number}> | null = null
       /*if (query.sortMongo){
         const sortArray = query.sortMongo.split(',')
         const sortByLikes = sortArray.find(x => x.split(':')[0] === "likes")
@@ -75,10 +75,8 @@ export class NFTService {
       const gqlQuery = QueriesBuilder.NFTs(query);
       const res: DistinctNFTListResponse = await request(indexerUrl, gqlQuery);
       const NFTs = res.distinctSerieNfts.nodes;
-      // Series Data
-      const seriesData = await this.getNFTsForSeriesByOwner({ seriesIds: NFTs.map(x => x.serieId), owner: query?.filter?.owner })
       // Populate
-      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, seriesData, query)))
+      res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, query)))
       // Result formatting
       const result: CustomResponse<INFT> = {
         totalCount: res.distinctSerieNfts.totalCount,
@@ -105,13 +103,7 @@ export class NFTService {
       const result: NFTListResponse = await request(indexerUrl, gqlQuery);
       let NFT = result.nftEntities.nodes[0];
       if (!NFT) throw new Error();
-      let seriesData;
-      if (query && query.filter && query.filter.owner) {
-        seriesData = await this.getNFTsForSeriesByOwner({ seriesIds: [NFT.serieId], owner: query.filter.owner })
-      } else {
-        seriesData = await this.getNFTsForSeries({ seriesIds: [NFT.serieId] })
-      }
-      NFT = await populateNFT(NFT, seriesData, query);
+      NFT = await populateNFT(NFT, query);
       let viewsCount = 0
       if (query.incViews) {
         const date = +new Date()
@@ -170,6 +162,49 @@ export class NFTService {
   }
 
   /**
+   * Gets nft stat (total, total listed, listed, total listed on marketplace, owned by user, owned by user listed, smallest price)
+   * @param seriesId - Series Id of nft to get stat for
+   * @param marketplaceId - marketplace id (optional)
+   * @param owner - owner (optional)
+   * @throws Will throw an error if can't request indexer
+   */
+     async getStatNFT(seriesId:string, marketplaceId:number=null, owner:string=null): Promise<{
+      totalNft: number,
+      totalListedNft: number,
+      totalListedInMarketplace: number,
+      totalOwnedByRequestingUser: number,
+      totalOwnedListedByRequestingUser: number,
+      totalOwnedListedInMarketplaceByRequestingUser: number,
+      smallestPrice: string
+    }> {
+      try {
+        const [totalRequest, totalListedRequest, totalListedInMarketplaceRequest, totalOwnedByRequestingUserRequest, totalOwnedListedByRequestingUserRequest, totalOwnedListedInMarketplaceByRequestingUserRequest, smallestPriceRequest] = await Promise.all([
+          request(indexerUrl, QueriesBuilder.countTotal(seriesId)),
+          request(indexerUrl, QueriesBuilder.countTotalListed(seriesId)),
+          marketplaceId!==null ? request(indexerUrl, QueriesBuilder.countTotalListedInMarketplace(seriesId, marketplaceId)) : 0,
+          owner ? request(indexerUrl, QueriesBuilder.countTotalOwned(seriesId, owner)) : null,
+          owner ? request(indexerUrl, QueriesBuilder.countTotalOwnedListed(seriesId, owner)) : null,
+          owner && marketplaceId!==null ? request(indexerUrl, QueriesBuilder.countTotalOwnedListedInMarketplace(seriesId, owner, marketplaceId)) : null,
+          request(indexerUrl, QueriesBuilder.countSmallestPrice(seriesId, marketplaceId)),
+        ])
+        const totalNft: number = totalRequest.nftEntities.totalCount;
+        const totalListedNft: number = totalListedRequest.nftEntities.totalCount;
+        const totalListedInMarketplace: number = totalListedInMarketplaceRequest ? totalListedInMarketplaceRequest.nftEntities.totalCount : 0;
+        const totalOwnedByRequestingUser: number = totalOwnedByRequestingUserRequest ? totalOwnedByRequestingUserRequest.nftEntities.totalCount : 0;
+        const totalOwnedListedByRequestingUser: number = totalOwnedListedByRequestingUserRequest ? totalOwnedListedByRequestingUserRequest.nftEntities.totalCount : 0;
+        const totalOwnedListedInMarketplaceByRequestingUser: number = totalOwnedListedInMarketplaceByRequestingUserRequest ? totalOwnedListedInMarketplaceByRequestingUserRequest.nftEntities.totalCount : 0;
+        const smallestPrice: string = smallestPriceRequest.nftEntities.nodes.length > 0 ? 
+          smallestPriceRequest.nftEntities.nodes.sort((a:INFT,b:INFT) => Number(a.price) - Number(b.price))[0].price
+        : 
+          "0"
+        ;
+        return { totalNft, totalListedNft, totalListedInMarketplace, totalOwnedByRequestingUser, totalOwnedListedByRequestingUser, totalOwnedListedInMarketplaceByRequestingUser, smallestPrice }
+      } catch (err) {
+        throw new Error("Couldn't get NFT stat");
+      }
+    }
+
+  /**
    * Creates a new nft document in DB (for offchain categories)
    * @param query - query (see addCategoriesNFTsQuery)
    * @throws Will throw an error if can't create NFT document
@@ -203,37 +238,22 @@ export class NFTService {
    */
   async getNFTsForSeries(query: NFTBySeriesQuery): Promise<CustomResponse<INFT>> {
     try {
+      const marketplaceId = query.filter?.marketplaceId;
       const gqlQuery = QueriesBuilder.NFTsForSeries(query)
       const res: NFTListResponse = await request(indexerUrl, gqlQuery);
+      const seriesData = res.nftEntities.nodes.sort((a, b) =>
+        (marketplaceId && Number(a.marketplaceId) !== Number(b.marketplaceId) && (Number(a.marketplaceId) === marketplaceId || Number(b.marketplaceId) === marketplaceId) &&
+        marketplaceId === Number(a.marketplaceId) ? -1 : 1) || // marketplace id corresponding to request first
+        Number(a.price) - Number(b.price) // smallest price first
+      )
       const result: CustomResponse<INFT> = {
         totalCount: res.nftEntities.totalCount,
-        data: res.nftEntities.nodes,
+        data: seriesData,
         hasNextPage: res.nftEntities.pageInfo?.hasNextPage || undefined,
         hasPreviousPage: res.nftEntities.pageInfo?.hasPreviousPage || undefined
       }
       return result
     } catch (err) {
-      throw new Error("Couldn't get NFTs for those series");
-    }
-  }
-  /**
-   * Finds NFTs with series included in seriesIds array
-   * @param query - query (see NFTBySeriesQuery)
-   * @throws Will throw an error if nft ID doesn't exist
-   */
-  async getNFTsForSeriesByOwner(query: NFTBySeriesQuery): Promise<CustomResponse<INFT>> {
-    try {
-      const gqlQuery = QueriesBuilder.NFTsForSeries(query)
-      const res: NFTListResponse = await request(indexerUrl, gqlQuery);
-      const result: CustomResponse<INFT> = {
-        totalCount: res.nftEntities.totalCount,
-        data: res.nftEntities.nodes,
-        hasNextPage: res.nftEntities.pageInfo?.hasNextPage || undefined,
-        hasPreviousPage: res.nftEntities.pageInfo?.hasPreviousPage || undefined
-      }
-      return result
-    } catch (err) {
-      L.info(`getNFTsForSeriesByOwner error:: ${JSON.stringify(err)}`)
       throw new Error("Couldn't get NFTs for those series");
     }
   }

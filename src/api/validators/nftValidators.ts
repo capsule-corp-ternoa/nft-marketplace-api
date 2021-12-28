@@ -27,7 +27,6 @@ export type NFTsQuery = {
     priceTiimeFilter?: string
     seriesLocked?: boolean
     isCapsule?: boolean
-    noSeriesData?: boolean
   }
 }
 export const validationGetNFTs = (query: any) => {
@@ -58,7 +57,6 @@ export const validationGetNFTs = (query: any) => {
       priceTiimeFilter: Joi.string(),
       seriesLocked: Joi.boolean(),
       isCapsule: Joi.boolean(),
-      noSeriesData: Joi.boolean(),
     }),
   })
   return validateQuery(validationSchema, { pagination, sort, sortMongo, filter }) as NFTsQuery;
@@ -72,7 +70,6 @@ export type NFTQuery = {
   incViews?: boolean
   filter?: {
     marketplaceId?: number
-    noSeriesData?: boolean,
     owner?:string,
   }
 }
@@ -84,7 +81,6 @@ export const validationGetNFT = (query: any) => {
     id: Joi.number().required().integer().min(0),
     filter: Joi.object({
       marketplaceId: Joi.number().integer().min(0),
-      noSeriesData: Joi.boolean(),
       owner:Joi.string(),
     }),
     incViews: Joi.boolean(),
@@ -121,21 +117,29 @@ export type NFTBySeriesQuery = {
     page?: number
     limit?: number
   }
-  owner?: string
+  filter?:{
+    owner?: string
+    marketplaceId?: number
+  }
 }
 
 export const validationNFTsBySeries = (query: any) => {
-  let { pagination, seriesIds } = query
+  let { pagination, seriesIds, filter } = query
   seriesIds = typeof seriesIds === "string" ? [seriesIds] : seriesIds
   if (pagination) pagination = JSON.parse(pagination);
+  if (filter) filter = JSON.parse(filter);
   const validationSchema = Joi.object({
     seriesIds: Joi.array().required().items(Joi.string().required()),
     pagination: Joi.object({
       page: Joi.number().integer().min(0),
       limit: Joi.number().integer().min(0).max(LIMIT_MAX_PAGINATION),
-    })
+    }),
+    filter: Joi.object({
+      owner: Joi.string(),
+      marketplaceId: Joi.number().integer(),
+    }),
   })
-  return validateQuery(validationSchema, { pagination, seriesIds }) as NFTBySeriesQuery;
+  return validateQuery(validationSchema, { pagination, seriesIds, filter }) as NFTBySeriesQuery;
 }
 
 
