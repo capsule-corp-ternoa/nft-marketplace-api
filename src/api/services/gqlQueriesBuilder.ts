@@ -30,6 +30,14 @@ export class GQLQueriesBuilder {
         filter:{
           and:[
             { serieId: { notEqualTo: "Ternoa Xmas 2021" } }
+            { serieId: { notEqualTo: "Ternoa Private - 1" } }
+            { serieId: { notEqualTo: "Ternoa Private - 2" } }
+            { serieId: { notEqualTo: "Ternoa Private - 3" } }
+            { serieId: { notEqualTo: "Ternoa Private - 4" } }
+            { serieId: { notEqualTo: "Ternoa Private - 5" } }
+            { serieId: { notEqualTo: "Ternoa Private - 6" } }
+            { serieId: { notEqualTo: "Ternoa Private - 7" } }
+            { serieId: { notEqualTo: "Ternoa Private - 8" } }
             ${query.filter?.ids ? `{id: { in: ${JSON.stringify(query.filter.ids.map(x => String(x)))} }}` : ""}
             ${query.filter?.idsToExclude ? `{id: { notIn: ${JSON.stringify(query.filter.idsToExclude.map(x => String(x)))} }}` : ""}
             ${query.filter?.idsCategories ? `{id: { in: ${JSON.stringify(query.filter.idsCategories.map(x => String(x)))} }}` : ""}
@@ -74,6 +82,14 @@ export class GQLQueriesBuilder {
         filter: { 
           and: [
             { serieId: { notEqualTo: "Ternoa Xmas 2021" } }
+            { serieId: { notEqualTo: "Ternoa Private - 1" } }
+            { serieId: { notEqualTo: "Ternoa Private - 2" } }
+            { serieId: { notEqualTo: "Ternoa Private - 3" } }
+            { serieId: { notEqualTo: "Ternoa Private - 4" } }
+            { serieId: { notEqualTo: "Ternoa Private - 5" } }
+            { serieId: { notEqualTo: "Ternoa Private - 6" } }
+            { serieId: { notEqualTo: "Ternoa Private - 7" } }
+            { serieId: { notEqualTo: "Ternoa Private - 8" } }
             { timestampBurn: { isNull: true } }
             { id: { equalTo: "${query.id}" } }
           ]
@@ -106,6 +122,14 @@ export class GQLQueriesBuilder {
           filter: {
             and : [
               { serieId: { notEqualTo: "Ternoa Xmas 2021" } }
+              { serieId: { notEqualTo: "Ternoa Private - 1" } }
+            { serieId: { notEqualTo: "Ternoa Private - 2" } }
+            { serieId: { notEqualTo: "Ternoa Private - 3" } }
+            { serieId: { notEqualTo: "Ternoa Private - 4" } }
+            { serieId: { notEqualTo: "Ternoa Private - 5" } }
+            { serieId: { notEqualTo: "Ternoa Private - 6" } }
+            { serieId: { notEqualTo: "Ternoa Private - 7" } }
+            { serieId: { notEqualTo: "Ternoa Private - 8" } }
               { timestampBurn: { isNull: true } }
               { serieId:{ in:${JSON.stringify(query.seriesIds)} } }
             ]
@@ -129,6 +153,14 @@ export class GQLQueriesBuilder {
         filter: { 
           and: [
             { serieId: { notEqualTo: "Ternoa Xmas 2021" } }
+            { serieId: { notEqualTo: "Ternoa Private - 1" } }
+            { serieId: { notEqualTo: "Ternoa Private - 2" } }
+            { serieId: { notEqualTo: "Ternoa Private - 3" } }
+            { serieId: { notEqualTo: "Ternoa Private - 4" } }
+            { serieId: { notEqualTo: "Ternoa Private - 5" } }
+            { serieId: { notEqualTo: "Ternoa Private - 6" } }
+            { serieId: { notEqualTo: "Ternoa Private - 7" } }
+            { serieId: { notEqualTo: "Ternoa Private - 8" } }
             { timestampBurn: { isNull: true } }
             { owner: { equalTo: "${query.id}" } }
           ]
@@ -144,6 +176,14 @@ export class GQLQueriesBuilder {
         filter: { 
           and: [
             { serieId: { notEqualTo: "Ternoa Xmas 2021" } }
+            { serieId: { notEqualTo: "Ternoa Private - 1" } }
+            { serieId: { notEqualTo: "Ternoa Private - 2" } }
+            { serieId: { notEqualTo: "Ternoa Private - 3" } }
+            { serieId: { notEqualTo: "Ternoa Private - 4" } }
+            { serieId: { notEqualTo: "Ternoa Private - 5" } }
+            { serieId: { notEqualTo: "Ternoa Private - 6" } }
+            { serieId: { notEqualTo: "Ternoa Private - 7" } }
+            { serieId: { notEqualTo: "Ternoa Private - 8" } }
             { timestampBurn: { isNull: true } }
             ${query.filter?.marketplaceId ? `{ marketplaceId: { equalTo: "${query.filter.marketplaceId}"} }` : ""}
             { owner: { equalTo: "${query.id}" } }
@@ -162,6 +202,14 @@ export class GQLQueriesBuilder {
         filter: { 
           and: [
             { serieId: { notEqualTo: "Ternoa Xmas 2021" } }
+            { serieId: { notEqualTo: "Ternoa Private - 1" } }
+            { serieId: { notEqualTo: "Ternoa Private - 2" } }
+            { serieId: { notEqualTo: "Ternoa Private - 3" } }
+            { serieId: { notEqualTo: "Ternoa Private - 4" } }
+            { serieId: { notEqualTo: "Ternoa Private - 5" } }
+            { serieId: { notEqualTo: "Ternoa Private - 6" } }
+            { serieId: { notEqualTo: "Ternoa Private - 7" } }
+            { serieId: { notEqualTo: "Ternoa Private - 8" } }
             { timestampBurn: { isNull: true } }
             { owner: { equalTo: "${query.id}" } }
             {listed: { equalTo: 0}}
@@ -179,6 +227,14 @@ export class GQLQueriesBuilder {
         filter: { 
           and: [
             { serieId: { notEqualTo: "Ternoa Xmas 2021" } }
+            { serieId: { notEqualTo: "Ternoa Private - 1" } }
+            { serieId: { notEqualTo: "Ternoa Private - 2" } }
+            { serieId: { notEqualTo: "Ternoa Private - 3" } }
+            { serieId: { notEqualTo: "Ternoa Private - 4" } }
+            { serieId: { notEqualTo: "Ternoa Private - 5" } }
+            { serieId: { notEqualTo: "Ternoa Private - 6" } }
+            { serieId: { notEqualTo: "Ternoa Private - 7" } }
+            { serieId: { notEqualTo: "Ternoa Private - 8" } }
             { timestampBurn: { isNull: true } }
             { creator: { equalTo: "${query.id}" } }
           ]
