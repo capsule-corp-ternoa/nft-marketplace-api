@@ -1,6 +1,7 @@
 import { gql } from "graphql-request";
 import { convertSortString, LIMIT_MAX_PAGINATION } from "../../utils";
 import { getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
+// import L from '../../common/logger';
 
 const nodes = `
   nodes {
@@ -29,7 +30,6 @@ export class GQLQueriesBuilder {
         offset: ${query.pagination?.page && query.pagination?.limit ? (query.pagination.page - 1) * query.pagination.limit : 0}
         filter:{
           and:[
-            { serieId: { notEqualTo: "Ternoa Xmas 2021" } }
             ${query.filter?.ids ? `{id: { in: ${JSON.stringify(query.filter.ids.map(x => String(x)))} }}` : ""}
             ${query.filter?.idsToExclude ? `{id: { notIn: ${JSON.stringify(query.filter.idsToExclude.map(x => String(x)))} }}` : ""}
             ${query.filter?.idsCategories ? `{id: { in: ${JSON.stringify(query.filter.idsCategories.map(x => String(x)))} }}` : ""}
@@ -73,7 +73,6 @@ export class GQLQueriesBuilder {
       nftEntities(
         filter: { 
           and: [
-            { serieId: { notEqualTo: "Ternoa Xmas 2021" } }
             { timestampBurn: { isNull: true } }
             { id: { equalTo: "${query.id}" } }
           ]
@@ -92,7 +91,6 @@ export class GQLQueriesBuilder {
         listed
         price
         marketplaceId
-        serieId
         isCapsule
       }
     `;
@@ -105,11 +103,12 @@ export class GQLQueriesBuilder {
           ` : ""}
           filter: {
             and : [
-              { serieId: { notEqualTo: "Ternoa Xmas 2021" } }
               { timestampBurn: { isNull: true } }
               { serieId:{ in:${JSON.stringify(query.seriesIds)} } }
+              ${query.filter?.owner ? `{ owner: { equalTo: "${query.filter.owner}" } }` : ""}
             ]
           }
+          orderBy: [IS_CAPSULE_ASC, LISTED_DESC]
         )
         {
           totalCount
@@ -128,7 +127,6 @@ export class GQLQueriesBuilder {
       nftEntities(
         filter: { 
           and: [
-            { serieId: { notEqualTo: "Ternoa Xmas 2021" } }
             { timestampBurn: { isNull: true } }
             { owner: { equalTo: "${query.id}" } }
           ]
@@ -143,7 +141,6 @@ export class GQLQueriesBuilder {
       nftEntities(
         filter: { 
           and: [
-            { serieId: { notEqualTo: "Ternoa Xmas 2021" } }
             { timestampBurn: { isNull: true } }
             ${query.filter?.marketplaceId ? `{ marketplaceId: { equalTo: "${query.filter.marketplaceId}"} }` : ""}
             { owner: { equalTo: "${query.id}" } }
@@ -161,7 +158,6 @@ export class GQLQueriesBuilder {
       nftEntities(
         filter: { 
           and: [
-            { serieId: { notEqualTo: "Ternoa Xmas 2021" } }
             { timestampBurn: { isNull: true } }
             { owner: { equalTo: "${query.id}" } }
             {listed: { equalTo: 0}}
@@ -178,7 +174,6 @@ export class GQLQueriesBuilder {
       nftEntities(
         filter: { 
           and: [
-            { serieId: { notEqualTo: "Ternoa Xmas 2021" } }
             { timestampBurn: { isNull: true } }
             { creator: { equalTo: "${query.id}" } }
           ]
@@ -272,6 +267,140 @@ export class GQLQueriesBuilder {
           id
         }
       }
+    }
+  }
+`;
+
+countTotal = (seriesId: string) => gql`
+  {
+    nftEntities(
+      filter: { 
+        and: [
+          { timestampBurn: { isNull: true } }
+          { serieId: { equalTo: "${seriesId}" } }
+        ]
+      }
+    ) {
+      totalCount
+    }
+  }
+`;
+
+countTotalListed = (seriesId: string) => gql`
+  {
+    nftEntities(
+      filter: { 
+        and: [
+          { timestampBurn: { isNull: true } }
+          { serieId: { equalTo: "${seriesId}" } }
+          { listed: { equalTo: 1} }
+        ]
+      }
+    ) {
+      totalCount
+    }
+  }
+`;
+
+countTotalListedInMarketplace = (seriesId: string, marketplaceId: number) => gql`
+  {
+    nftEntities(
+      filter: { 
+        and: [
+          { timestampBurn: { isNull: true } }
+          { serieId: { equalTo: "${seriesId}" } }
+          { listed: { equalTo: 1} }
+          { marketplaceId: { equalTo: "${marketplaceId}" } }
+        ]
+      }
+    ) {
+      totalCount
+    }
+  }
+`;
+
+countTotalOwned = (seriesId: string, owner: string) => gql`
+  {
+    nftEntities(
+      filter: { 
+        and: [
+          { timestampBurn: { isNull: true } }
+          { serieId: { equalTo: "${seriesId}" } }
+          { owner: { equalTo: "${owner}" } }
+        ]
+      }
+    ) {
+      totalCount
+    }
+  }
+`;
+
+countTotalOwnedListed = (seriesId: string, owner: string) => gql`
+  {
+    nftEntities(
+      filter: { 
+        and: [
+          { timestampBurn: { isNull: true } }
+          { serieId: { equalTo: "${seriesId}" } }
+          { listed: { equalTo: 1} }
+          { owner: { equalTo: "${owner}" } }
+        ]
+      }
+    ) {
+      totalCount
+    }
+  }
+`;
+
+countTotalOwnedListedInMarketplace = (seriesId: string, owner: string, marketplaceId: number) => gql`
+  {
+    nftEntities(
+      filter: { 
+        and: [
+          { timestampBurn: { isNull: true } }
+          { serieId: { equalTo: "${seriesId}" } }
+          { listed: { equalTo: 1} }
+          { owner: { equalTo: "${owner}" } }
+          { marketplaceId: { equalTo: "${marketplaceId}" } }
+        ]
+      }
+    ) {
+      totalCount
+    }
+  }
+`;
+
+countSmallestPrice = (seriesId: string, marketplaceId: number=null) => gql`
+  {
+    nftEntities(
+      filter: { 
+        and: [
+          { timestampBurn: { isNull: true } }
+          { serieId: { equalTo: "${seriesId}" } }
+          { listed: { equalTo: 1} }
+          ${marketplaceId ? `{ marketplaceId: {equalTo: ${marketplaceId}} }` : ``}
+        ]
+      }
+    ) {
+      nodes{
+        price
+      }
+    }
+  }
+`;
+
+countAllListedInMarketplace = (marketplaceId: number) => gql`
+  {
+    nftEntities(
+      filter: { 
+        and: [
+          { timestampBurn: { isNull: true } }
+          { listed: { equalTo: 1} }
+          { marketplaceId: { equalTo: "${marketplaceId}" } }
+        ]
+      }
+    ) {
+      totalCount
     }
   }
 `;

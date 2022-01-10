@@ -4,6 +4,7 @@ export default express
   .Router()
   .get("/", controller.getNFTs)
   .get("/history", controller.getHistory)
+  .get("/total-on-sale", controller.getTotalOnSale)
   .get("/:id", controller.getNFT)
   .get("/stat/:id", controller.getStatNFTsUser)
   .get("/series/data", controller.getNFTsBySeries)
