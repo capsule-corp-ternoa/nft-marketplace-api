@@ -228,3 +228,13 @@ export const validationGetHistory = (query: any) => {
   })
   return validateQuery(validationSchema, {pagination, sort, filter}) as getHistoryQuery;
 }
+
+export type getTotalOnSaleQuery = {
+  marketplaceId: number
+}
+export const validationGetTotalOnSale = (query: any) => {
+  const validationSchema = Joi.object({
+    marketplaceId: Joi.number().required(),
+  })
+  return validateQuery(validationSchema, query) as getTotalOnSaleQuery;
+}

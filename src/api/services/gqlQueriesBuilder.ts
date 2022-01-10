@@ -389,6 +389,22 @@ countSmallestPrice = (seriesId: string, marketplaceId: number=null) => gql`
   }
 `;
 
+countAllListedInMarketplace = (marketplaceId: number) => gql`
+  {
+    nftEntities(
+      filter: { 
+        and: [
+          { timestampBurn: { isNull: true } }
+          { listed: { equalTo: 1} }
+          { marketplaceId: { equalTo: "${marketplaceId}" } }
+        ]
+      }
+    ) {
+      totalCount
+    }
+  }
+`;
+
 }
 
 export default new GQLQueriesBuilder();

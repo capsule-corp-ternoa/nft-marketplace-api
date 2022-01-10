@@ -9,7 +9,7 @@ import CategoryService from "./category"
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
 import { decryptCookie, TERNOA_API_URL, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
-import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
+import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery, getTotalOnSaleQuery } from "../validators/nftValidators";
 import { IUser } from "../../interfaces/IUser";
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
@@ -354,6 +354,22 @@ export class NFTService {
       return result
     } catch (err) {
       throw new Error("Couldn't get history information about this nft / series");
+    }
+  }
+  
+  /**
+   * Returns the
+   * @param query - query (see getTotalOnSaleQuery)
+   * @throws Will throw an error if seriesId is not found
+   */
+   async getTotalOnSale(query: getTotalOnSaleQuery): Promise<boolean> {
+    try {
+      const gqlQuery = QueriesBuilder.countAllListedInMarketplace(query.marketplaceId)
+      const res = await request(indexerUrl, gqlQuery);
+      if (!res.nftEntities.totalCount) throw new Error()
+      return res.nftEntities.totalCount
+    } catch (err) {
+      throw new Error("Count could not have been fetched");
     }
   }
 }
