@@ -1,20 +1,17 @@
 import { request } from "graphql-request";
-import { AggregatePaginateResult } from 'mongoose'
 import { DistinctNFTListResponse, INFT, NFTListResponse, CustomResponse, ISeries, INFTTransfer } from "../../interfaces/graphQL";
-import fetch from "node-fetch";
 import FollowModel from "../../models/follow";
 import NftModel from "../../models/nft";
 import NftViewModel from "../../models/nftView";
+import NftLikeModel from "../../models/nftLike";
 import CategoryService from "./category"
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
-import { decryptCookie, TERNOA_API_URL, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
-import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery, getTotalOnSaleQuery } from "../validators/nftValidators";
-import { IUser } from "../../interfaces/IUser";
+import { decryptCookie, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
+import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery, getTotalOnSaleQuery, likeUnlikeQuery } from "../validators/nftValidators";
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
-// import { INFTLike } from "../../interfaces/INFTLike";
-import L from "../../common/logger";
+import { INftLike } from "src/interfaces/INftLikee";
 
 const indexerUrl = process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
 
@@ -47,30 +44,9 @@ export class NFTService {
       }
       // Liked only
       if (query.filter?.liked) {
-        const data = await fetch(`${TERNOA_API_URL}/api/users/${query.filter.liked}?populateLikes=${true}`)
-        const user = await data.json() as IUser
-        query.filter.series = user.likedNFTs.length > 0 ? user.likedNFTs.map(x => x.serieId) : []
+        const likes = await NftLikeModel.find({walletId: query.filter.liked})
+        query.filter.series = likes.length > 0 ? likes.map(x => x.serieId) : []
       }
-
-      // Sort mongo -> BLOCKED CAUSE OF DATASTRUCTURE
-      // const likesData: AggregatePaginateResult<{_id: string, count: number}> | null = null
-      /*if (query.sortMongo){
-        const sortArray = query.sortMongo.split(',')
-        const sortByLikes = sortArray.find(x => x.split(':')[0] === "likes")
-        if (sortByLikes){
-          const likesSort = sortByLikes.split(':')[1]
-          const likesResult = await fetch(`${TERNOA_API_URL}/api/nftLikes/&sort=${likesSort}`)
-          likesData = (await likesResult.json()).likesRanking
-          NFTs = NFTs.map(x => {
-            const likeAggregatedObject = likesData.docs.find(y => y._id === x.serieId)
-            const likesNumber = likeAggregatedObject ? likeAggregatedObject.count : 0
-            console.log(likesNumber)
-            return {...x, likesNumber}
-          })
-          .sort((a, b) => b.likesNumber - a.likesNumber)
-        }
-      }*/
-
       // Indexer data
       const gqlQuery = QueriesBuilder.NFTs(query);
       const res: DistinctNFTListResponse = await request(indexerUrl, gqlQuery);
@@ -370,6 +346,41 @@ export class NFTService {
       return res.nftEntities.totalCount
     } catch (err) {
       throw new Error("Count could not have been fetched");
+    }
+  }
+
+  /**
+   * Like an NFT
+   * @param query - see likeUnlikeQuery
+   * @throws Will throw an error if already liked or if db can't be reached
+   */
+   async likeNft(query: likeUnlikeQuery): Promise<INftLike> {
+    try {
+      const data = {serieId: query.seriesId, walletId: query.walletId}
+      const nftLike  = await NftLikeModel.findOne(data);
+      if (nftLike) throw new Error("NFT already liked")
+      const newLike = new NftLikeModel({nftId: query.nftId, serieId: query.seriesId, walletId: query.walletId})
+      await newLike.save()
+      return newLike
+    } catch (err) {
+      throw new Error("Couldn't like NFT");
+    }
+  }
+
+  /**
+   * Unlike an NFT
+   * @param query - see likeUnlikeQuery
+   * @throws Will throw an error if already liked or if db can't be reached
+   */
+   async unlikeNft(query: likeUnlikeQuery): Promise<INftLike> {
+    try {
+      const data = {serieId: query.seriesId, walletId: query.walletId}
+      const nftLike  = await NftLikeModel.findOne(data);
+      if (!nftLike) throw new Error("NFT already not liked")
+      await NftLikeModel.deleteOne(data)
+      return nftLike
+    } catch (err) {
+      throw new Error("Couldn't unlike NFT");
     }
   }
 }

@@ -3,15 +3,41 @@ import fetch from "node-fetch";
 import { IUser } from "../../interfaces/IUser";
 import UserViewModel from "../../models/userView";
 import QueriesBuilder from "./gqlQueriesBuilder";
-import { AccountResponse, Account } from "../../interfaces/graphQL";
+import { AccountResponse, Account, CustomResponse } from "../../interfaces/graphQL";
 import { TIME_BETWEEN_SAME_USER_VIEWS, TERNOA_API_URL } from "../../utils";
-import { getAccountBalanceQuery, getUserQuery } from "../validators/userValidators";
+import { getAccountBalanceQuery, getUserQuery, getUsersQuery } from "../validators/userValidators";
+import NftLikeModel from "src/models/nftLike";
 
 const indexerUrl =
   process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
 
 
 export class UserService {
+  /**
+   * Finds a users in DB
+   * @param query - see getUserQuery
+   * @throws Will throw an error if wallet ID doesn't exist
+   */
+   async findUsers(
+    query: getUsersQuery,
+    originalUrl: string,
+  ): Promise<CustomResponse<IUser>> {
+    try {
+      const res = await fetch(`${TERNOA_API_URL}${originalUrl}`)
+      if (!res.ok) throw new Error();
+      const response: CustomResponse<IUser> = await res.json();
+      if (query.populateLikes){
+        const likedNFTs = await NftLikeModel.find({walletId: {$in: response.data.map(x => x.walletId)}})
+        response.data.forEach(x => {
+          x.likedNFTs = likedNFTs.filter(y => y.walletId === x.walletId)
+        })
+      }
+      return response
+    } catch (err) {
+      throw new Error("Users can't be found : " + err);
+    }
+  }
+
   /**
    * Finds a user in DB
    * @param query - see getUserQuery
@@ -21,10 +47,15 @@ export class UserService {
     query: getUserQuery
   ): Promise<IUser> {
     try {
-      const data = await fetch(`${TERNOA_API_URL}/api/users/${query.id}?populateLikes=${query.populateLikes ? query.populateLikes : false}`)
+      const data = await fetch(`${TERNOA_API_URL}/api/users/${query.id}`)
       const user = await data.json() as IUser
+      let likedNFTs
       let viewsCount = 0
       if (!user || (user as any).errors?.length>0) throw new Error();
+      if (query.populateLikes){
+        likedNFTs = await NftLikeModel.find({walletId: query.id})
+        // user = {...((user as any)._doc as IUser), likedNFTs}
+      }
       if (query.incViews){
         const date = +new Date()
         const views = await UserViewModel.find({viewed: query.id})
@@ -36,7 +67,7 @@ export class UserService {
           viewsCount = views.length
         }
       }
-      return {...user, viewsCount};
+      return {...user, viewsCount, likedNFTs};
     } catch (err) {
       throw new Error("User can't be found " + err);
     }

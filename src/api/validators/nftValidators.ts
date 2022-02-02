@@ -238,3 +238,19 @@ export const validationGetTotalOnSale = (query: any) => {
   })
   return validateQuery(validationSchema, query) as getTotalOnSaleQuery;
 }
+
+export type likeUnlikeQuery = {
+  walletId: string,
+  cookie: string,
+  nftId: string, 
+  seriesId: string,
+}
+export const validationLikeUnlike = (query: any) => {
+  const validationSchema = Joi.object({
+      walletId: Joi.string().required(),
+      cookie: Joi.string().required(),
+      nftId: Joi.string().required(),
+      seriesId: Joi.string().required(),
+  });
+  return validateQuery(validationSchema, query) as likeUnlikeQuery;
+};

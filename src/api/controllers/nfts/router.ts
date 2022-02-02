@@ -5,6 +5,8 @@ export default express
   .get("/", controller.getNFTs)
   .get("/history", controller.getHistory)
   .get("/total-on-sale", controller.getTotalOnSale)
+  .post("/like", controller.likeNft)
+  .post("/unlike", controller.unlikeNft)
   .get("/:id", controller.getNFT)
   .get("/stat/:id", controller.getStatNFTsUser)
   .get("/series/data", controller.getNFTsBySeries)

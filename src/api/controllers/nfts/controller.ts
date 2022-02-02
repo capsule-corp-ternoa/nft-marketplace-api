@@ -1,6 +1,7 @@
 import NFTService from "../../services/nft";
 import { NextFunction, Request, Response } from "express";
-import { validationGetNFTs, validationGetNFT, validationGetStatNFTsUser, validationNFTsBySeries, validationGetSeries, validationCanAddToSeries, validationGetHistory, validationAddCategoriesNFTs, validationGetTotalOnSale } from "../../validators/nftValidators";
+import { validationGetNFTs, validationGetNFT, validationGetStatNFTsUser, validationNFTsBySeries, validationGetSeries, validationCanAddToSeries, validationGetHistory, validationAddCategoriesNFTs, validationGetTotalOnSale, validationLikeUnlike } from "../../validators/nftValidators";
+import { decryptCookie } from "src/utils";
 
 export class Controller {
   async getNFTs(
@@ -113,6 +114,42 @@ export class Controller {
       res.json(await NFTService.getTotalOnSale(queryValues));
     } catch (err) {
       next(err);
+    }
+  }
+
+  async likeNft(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { cookie } = JSON.parse(req.body)
+      const queryValues = validationLikeUnlike({cookie, ...req.query})
+      if(decryptCookie(queryValues.cookie) === queryValues.walletId){
+        res.json(await NFTService.likeNft(queryValues));
+      }else{
+        throw new Error('Unvalid authentication')
+      }
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  async unlikeNft(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { cookie } = JSON.parse(req.body)
+      const queryValues = validationLikeUnlike({cookie, ...req.query})
+      if(decryptCookie(queryValues.cookie) === queryValues.walletId){
+        res.json(await NFTService.unlikeNft(queryValues));
+      }else{
+        throw new Error('Unvalid authentication')
+      }
+    } catch (err) {
+      next(err)
     }
   }
 }

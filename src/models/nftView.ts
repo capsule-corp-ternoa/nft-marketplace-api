@@ -28,7 +28,7 @@ NftView.plugin(mongoosePaginate);
 const NftViewModel = mongoose.model<INftView & mongoose.Document>(
   "NftView",
   NftView,
-  "nft-view"
+  "nft-views"
 ) as PaginateModel<INftView & mongoose.Document>;
 
 export default NftViewModel;
