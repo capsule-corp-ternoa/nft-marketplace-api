@@ -2,11 +2,11 @@ import { request } from "graphql-request";
 import fetch from "node-fetch";
 import { IUser } from "../../interfaces/IUser";
 import UserViewModel from "../../models/userView";
+import NftLikeModel from "../../models/nftLike";
 import QueriesBuilder from "./gqlQueriesBuilder";
 import { AccountResponse, Account, CustomResponse } from "../../interfaces/graphQL";
 import { TIME_BETWEEN_SAME_USER_VIEWS, TERNOA_API_URL } from "../../utils";
 import { getAccountBalanceQuery, getUserQuery, getUsersQuery } from "../validators/userValidators";
-import NftLikeModel from "src/models/nftLike";
 
 const indexerUrl =
   process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";

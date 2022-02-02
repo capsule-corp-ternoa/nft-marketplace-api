@@ -1,7 +1,7 @@
 import NFTService from "../../services/nft";
 import { NextFunction, Request, Response } from "express";
 import { validationGetNFTs, validationGetNFT, validationGetStatNFTsUser, validationNFTsBySeries, validationGetSeries, validationCanAddToSeries, validationGetHistory, validationAddCategoriesNFTs, validationGetTotalOnSale, validationLikeUnlike } from "../../validators/nftValidators";
-import { decryptCookie } from "src/utils";
+import { decryptCookie } from "../../../utils";
 
 export class Controller {
   async getNFTs(
