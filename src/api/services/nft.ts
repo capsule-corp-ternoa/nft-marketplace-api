@@ -11,7 +11,7 @@ import { decryptCookie, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
 import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery, getTotalOnSaleQuery, likeUnlikeQuery } from "../validators/nftValidators";
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
-import { INftLike } from "src/interfaces/INftLikee";
+import { INftLike } from "src/interfaces/INftLike";
 
 const indexerUrl = process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
 
