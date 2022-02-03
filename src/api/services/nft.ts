@@ -62,6 +62,7 @@ export class NFTService {
       }
       return result
     } catch (err) {
+      console.log(err)
       throw new Error("Couldn't get NFTs");
     }
   }

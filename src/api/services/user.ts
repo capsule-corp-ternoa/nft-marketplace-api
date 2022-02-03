@@ -86,7 +86,7 @@ export class UserService {
       if (result && result.accountEntities && result.accountEntities.nodes && result.accountEntities.nodes.length) {
         return result.accountEntities.nodes[0];
       } else {
-        return { "capsAmount": "0", "tiimeAmount": "0" }
+        return { "capsAmount": "0" }
       }
     } catch (err) {
       throw new Error("Couldn't get caps balance");

@@ -23,8 +23,6 @@ export type NFTsQuery = {
     creator?: string
     price?: string
     priceFilter?: string
-    priceTiime?: string
-    priceTiimeFilter?: string
     seriesLocked?: boolean
     isCapsule?: boolean
   }
@@ -53,8 +51,6 @@ export const validationGetNFTs = (query: any) => {
       creator: Joi.string(),
       price: Joi.string(),
       priceFilter: Joi.string(),
-      priceTiime: Joi.string(),
-      priceTiimeFilter: Joi.string(),
       seriesLocked: Joi.boolean(),
       isCapsule: Joi.boolean(),
     }),

@@ -16,7 +16,6 @@ const nodes = `
     isCapsule
     frozenCaps
     price
-    priceTiime
     marketplaceId
   }
 `;
@@ -40,13 +39,6 @@ export class GQLQueriesBuilder {
             ${query.filter?.price !== undefined ? 
               `{price: 
                 {${query.filter?.priceFilter ? query.filter.priceFilter : "isEqual"}: "${query.filter.price}"}
-              }`
-            : 
-              ""
-            }
-            ${query.filter?.priceTiime !== undefined ? 
-              `{priceTiime: 
-                {${query.filter?.priceTiimeFilter ? query.filter.priceTiimeFilter : "isEqual"}: "${query.filter.priceTiime}"}
               }`
             : 
               ""
@@ -193,7 +185,6 @@ export class GQLQueriesBuilder {
       ) {
         nodes {
           capsAmount
-          tiimeAmount
         }
       }
     }
