@@ -8,7 +8,7 @@ export type NFTsQuery = {
     limit?: number
   }
   sort?: string
-  sortMongo?: string
+  sortOffchain?: string
   filter?: {
     ids?: string[]
     idsToExclude?: string[]
@@ -21,14 +21,16 @@ export type NFTsQuery = {
     categories?: string[]
     owner?: string
     creator?: string
-    price?: string
-    priceFilter?: string
+    priceStartRange?: string
+    priceEndRange?: string
+    timestampCreateStartRange?: string,
+    timestampCreateEndRange?: string,
     seriesLocked?: boolean
     isCapsule?: boolean
   }
 }
 export const validationGetNFTs = (query: any) => {
-  const { sort, sortMongo } = query
+  const { sort, sortOffchain } = query
   let { pagination, filter } = query;
   if (pagination) pagination = JSON.parse(pagination);
   if (filter) filter = JSON.parse(filter);
@@ -38,7 +40,7 @@ export const validationGetNFTs = (query: any) => {
       limit: Joi.number().integer().min(0).max(LIMIT_MAX_PAGINATION),
     }),
     sort: Joi.string().regex(/[a-zA-Z]{1,}:[a-zA-Z]{1,},{0,1}/),
-    sortMongo: Joi.string(),
+    sortOffchain: Joi.string(),
     filter: Joi.object({
       ids: Joi.array().items(Joi.number().integer().min(0)),
       idsToExclude: Joi.array().items(Joi.number().integer().min(0)),
@@ -49,13 +51,15 @@ export const validationGetNFTs = (query: any) => {
       categories: Joi.array().items(Joi.string()),
       owner: Joi.string(),
       creator: Joi.string(),
-      price: Joi.string(),
-      priceFilter: Joi.string(),
+      priceStartRange: Joi.string(),
+      priceEndRange: Joi.string(),
+      timestampCreateStartRange: Joi.string(),
+      timestampCreateEndRange: Joi.string(),
       seriesLocked: Joi.boolean(),
       isCapsule: Joi.boolean(),
     }),
   })
-  return validateQuery(validationSchema, { pagination, sort, sortMongo, filter }) as NFTsQuery;
+  return validateQuery(validationSchema, { pagination, sort, sortOffchain, filter }) as NFTsQuery;
 }
 
 

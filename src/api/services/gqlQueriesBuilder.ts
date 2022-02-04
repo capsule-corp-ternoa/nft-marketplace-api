@@ -36,13 +36,18 @@ export class GQLQueriesBuilder {
             ${query.filter?.series ? `{serieId: { in: ${JSON.stringify(query.filter.series)} }}` : ""}
             ${query.filter?.creator ? `{creator: {equalTo: "${query.filter.creator}"}}` : ""}
             ${query.filter?.isCapsule !== undefined ? `{isCapsule: {isEqual: ${query.filter.isCapsule}}}` : ""}
-            ${query.filter?.price !== undefined ? 
-              `{price: 
-                {${query.filter?.priceFilter ? query.filter.priceFilter : "isEqual"}: "${query.filter.price}"}
-              }`
-            : 
-              ""
-            }
+            ${query.filter?.priceStartRange !== undefined ? 
+              `{priceRounded: {greaterThanOrEqualTo: "${query.filter.priceStartRange}"}}`
+            : ""}
+            ${query.filter?.priceEndRange !== undefined ? 
+              `{priceRounded: {lessThanOrEqualTo: "${query.filter.priceEndRange}"}}`
+            : ""}
+            ${query.filter?.timestampCreateStartRange !== undefined ? 
+              `{timestampCreate: {greaterThanOrEqualTo: "${query.filter.timestampCreateStartRange}"}}`
+            : ""}
+            ${query.filter?.timestampCreateEndRange !== undefined ? 
+              `{timestampCreate: {lessThanOrEqualTo: "${query.filter.timestampCreateEndRange}"}}`
+            : ""}
           ]
         }
         ${query.filter?.owner ? `owner: "${query.filter.owner}"` : ""}
@@ -254,9 +259,7 @@ export class GQLQueriesBuilder {
         timestamp
         typeOfTransaction
         amount
-        extrinsic{
-          id
-        }
+        extrinsicId
       }
     }
   }
