@@ -25,9 +25,9 @@ export class NFTService {
     try {
       /// FILTERS
       // Categories
-      if (query.filter?.categories) this.handleFilterCategory(query)
+      if (query.filter?.categories) await this.handleFilterCategory(query)
       // Liked only
-      if (query.filter?.liked) this.handleFilterLikedOnly(query)
+      if (query.filter?.liked) await this.handleFilterLikedOnly(query)
       /// Indexer data
       const gqlQuery = QueriesBuilder.NFTs(query);
       const res: DistinctNFTListResponse = await request(indexerUrl, gqlQuery);
