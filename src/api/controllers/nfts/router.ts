@@ -3,6 +3,10 @@ import controller from "./controller";
 export default express
   .Router()
   .get("/", controller.getNFTs)
+  .get("/most-liked", controller.getMostLiked)
+  // .get("/most-viewed", controller.getMostViewed)
+  // .get("/most-sold", controller.getMostSold)
+  // .get("/most-soldSeries", controller.getMostSoldSeries)
   .get("/history", controller.getHistory)
   .get("/total-on-sale", controller.getTotalOnSale)
   .get("/:id", controller.getNFT)

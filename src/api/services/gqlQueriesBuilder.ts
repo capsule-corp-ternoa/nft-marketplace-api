@@ -35,7 +35,6 @@ export class GQLQueriesBuilder {
             ${query.filter?.idsToExcludeCategories ? `{id: { notIn: ${JSON.stringify(query.filter.idsToExcludeCategories.map(x => String(x)))} }}` : ""}
             ${query.filter?.series ? `{serieId: { in: ${JSON.stringify(query.filter.series)} }}` : ""}
             ${query.filter?.creator ? `{creator: {equalTo: "${query.filter.creator}"}}` : ""}
-            ${query.filter?.isCapsule !== undefined ? `{isCapsule: {isEqual: ${query.filter.isCapsule}}}` : ""}
             ${query.filter?.priceStartRange !== undefined ? 
               `{priceRounded: {greaterThanOrEqualTo: "${query.filter.priceStartRange}"}}`
             : ""}
@@ -53,6 +52,7 @@ export class GQLQueriesBuilder {
         ${query.filter?.owner ? `owner: "${query.filter.owner}"` : ""}
         ${query.filter?.marketplaceId!==undefined ? `marketplaceId: "${query.filter.marketplaceId}"` : ""}
         ${query.filter?.listed!==undefined ? `listed: ${!query.filter.listed ? 0 : 1}` : ""}
+        ${query.filter?.isCapsule!==undefined ? `isCapsule: ${!query.filter.isCapsule ? false : true}` : ""}
         ${query.sort ? `orderBy: [${convertSortString(query.sort)}]` : ""}
       ) {
         totalCount

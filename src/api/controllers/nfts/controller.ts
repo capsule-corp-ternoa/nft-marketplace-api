@@ -1,6 +1,6 @@
 import NFTService from "../../services/nft";
 import { NextFunction, Request, Response } from "express";
-import { validationGetNFTs, validationGetNFT, validationGetStatNFTsUser, validationNFTsBySeries, validationGetSeries, validationCanAddToSeries, validationGetHistory, validationAddCategoriesNFTs, validationGetTotalOnSale, validationLikeUnlike } from "../../validators/nftValidators";
+import { validationGetNFTs, validationGetNFT, validationGetStatNFTsUser, validationNFTsBySeries, validationGetSeries, validationCanAddToSeries, validationGetHistory, validationAddCategoriesNFTs, validationGetTotalOnSale, validationLikeUnlike, validationGetFilters } from "../../validators/nftValidators";
 import { decryptCookie } from "../../../utils";
 
 export class Controller {
@@ -148,6 +148,19 @@ export class Controller {
       }else{
         throw new Error('Unvalid authentication')
       }
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  async getMostLiked(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const queryValues = validationGetFilters(req.query)
+      res.json(await NFTService.getMostLiked(queryValues));
     } catch (err) {
       next(err)
     }

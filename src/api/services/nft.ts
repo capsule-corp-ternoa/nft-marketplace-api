@@ -8,7 +8,7 @@ import CategoryService from "./category"
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
 import { decryptCookie, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
-import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery, getTotalOnSaleQuery, likeUnlikeQuery } from "../validators/nftValidators";
+import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery, getTotalOnSaleQuery, likeUnlikeQuery, getFiltersQuery } from "../validators/nftValidators";
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
 import { INftLike } from "src/interfaces/INftLike";
@@ -23,31 +23,12 @@ export class NFTService {
    */
   async getNFTs(query: NFTsQuery): Promise<CustomResponse<INFT>> {
     try {
+      /// FILTERS
       // Categories
-      if (query.filter?.categories) {
-        const withNoCategories = query.filter.categories.includes("none")
-        const categoriesCode = query.filter.categories.filter(x => x !== "none")
-        const allCategories = await CategoryService.getCategories({})
-        const categories = allCategories.map(x => x.code).filter(x => categoriesCode.includes(x))
-        const mongoQuery = { categories: { $in: categories } }
-        const mongoNfts = await NftModel.find(mongoQuery as any)
-        const nftIds = mongoNfts.map((nft) => nft.chainId)
-        if (withNoCategories) {
-          const categoriesToExclude = allCategories.map(x => x.code).filter(x => !categoriesCode.includes(x))
-          const mongoQueryExclude = { $and: [{ categories: { $in: categoriesToExclude } }, { chainId: { $nin: nftIds } }] }
-          const mongoNFTsToExclude = await NftModel.find(mongoQueryExclude as any)
-          const nftIdsToExclude = mongoNFTsToExclude.map((nft) => nft.chainId)
-          query.filter.idsToExcludeCategories = nftIdsToExclude
-        } else {
-          query.filter.idsCategories = nftIds
-        }
-      }
+      if (query.filter?.categories) this.handleFilterCategory(query)
       // Liked only
-      if (query.filter?.liked) {
-        const likes = await NftLikeModel.find({walletId: query.filter.liked})
-        query.filter.series = likes.length > 0 ? likes.map(x => x.serieId) : []
-      }
-      // Indexer data
+      if (query.filter?.liked) this.handleFilterLikedOnly(query)
+      /// Indexer data
       const gqlQuery = QueriesBuilder.NFTs(query);
       const res: DistinctNFTListResponse = await request(indexerUrl, gqlQuery);
       const NFTs = res.distinctSerieNfts.nodes;
@@ -65,6 +46,30 @@ export class NFTService {
       console.log(err)
       throw new Error("Couldn't get NFTs");
     }
+  }
+
+  async handleFilterCategory(query: NFTsQuery) {
+    const withNoCategories = query.filter.categories.includes("none")
+    const categoriesCode = query.filter.categories.filter(x => x !== "none")
+    const allCategories = await CategoryService.getCategories({})
+    const categories = allCategories.map(x => x.code).filter(x => categoriesCode.includes(x))
+    const mongoQuery = { categories: { $in: categories } }
+    const mongoNfts = await NftModel.find(mongoQuery as any)
+    const nftIds = mongoNfts.map((nft) => nft.chainId)
+    if (withNoCategories) {
+      const categoriesToExclude = allCategories.map(x => x.code).filter(x => !categoriesCode.includes(x))
+      const mongoQueryExclude = { $and: [{ categories: { $in: categoriesToExclude } }, { chainId: { $nin: nftIds } }] }
+      const mongoNFTsToExclude = await NftModel.find(mongoQueryExclude as any)
+      const nftIdsToExclude = mongoNFTsToExclude.map((nft) => nft.chainId)
+      query.filter.idsToExcludeCategories = nftIdsToExclude
+    } else {
+      query.filter.idsCategories = nftIds
+    }
+  }
+
+  async handleFilterLikedOnly(query: NFTsQuery) {
+    const likes = await NftLikeModel.find({walletId: query.filter.liked})
+    query.filter.series = likes.length > 0 ? likes.map(x => x.serieId) : []
   }
 
   /**
@@ -384,6 +389,38 @@ export class NFTService {
       throw new Error("Couldn't unlike NFT");
     }
   }
+
+  /**
+   * Get NFTs sorted by likes
+   * @param query - see getFiltersQuery
+   * @throws Will throw an error if mongo can't be reached
+   */
+     async getMostLiked(query: getFiltersQuery): Promise<CustomResponse<INFT>> {
+      try {
+        const aggregateQuery = [{ $group: { _id: "$serieId", totalLikes: { $sum: 1 } } }]
+        const aggregate = NftLikeModel.aggregate(aggregateQuery);
+        const data = await NftLikeModel.aggregatePaginate(aggregate, {page: query.pagination.page, limit: query.pagination.limit, sort:{totalLikes: -1}})
+        const seriesSorted = data.docs.map(x => x._id)
+        const queryNfts = {filter:{series: seriesSorted}}
+        const gqlQuery = QueriesBuilder.NFTs(queryNfts);
+        const res: DistinctNFTListResponse = await request(indexerUrl, gqlQuery);
+        const NFTs = res.distinctSerieNfts.nodes;
+        res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, query)))
+        const result: CustomResponse<INFT> = {
+          totalCount: data.totalDocs,
+          data: NFTs.sort((a,b) => {
+            const aId = seriesSorted.findIndex(x => x === a.serieId)
+            const bId = seriesSorted.findIndex(x => x === b.serieId)
+            return aId - bId
+          }),
+          hasNextPage: data.hasNextPage || undefined,
+          hasPreviousPage: data.hasPrevPage || undefined
+        }
+        return result
+      } catch (err) {
+        throw new Error("Couldn't get most liked NFTs");
+      }
+    }
 }
 
 export default new NFTService();

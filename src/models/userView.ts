@@ -1,6 +1,6 @@
 import { IUserView } from "../interfaces/IUserView";
-import mongoose, { PaginateModel } from "mongoose";
-import mongoosePaginate from "mongoose-paginate-v2";
+import mongoose, { AggregatePaginateModel } from "mongoose";
+import aggregatePaginate  from "mongoose-aggregate-paginate-v2";
 
 const UserView = new mongoose.Schema({
   viewed: {
@@ -19,12 +19,12 @@ const UserView = new mongoose.Schema({
   },
 });
 
-UserView.plugin(mongoosePaginate);
+UserView.plugin(aggregatePaginate);
 
 const UserViewModel = mongoose.model<IUserView & mongoose.Document>(
   "UserView",
   UserView,
   "user-views"
-) as PaginateModel<IUserView & mongoose.Document>;
+) as unknown as AggregatePaginateModel<IUserView & mongoose.Document>;
 
 export default UserViewModel;
