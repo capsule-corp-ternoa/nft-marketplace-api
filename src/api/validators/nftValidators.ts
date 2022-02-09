@@ -21,10 +21,10 @@ export type NFTsQuery = {
     categories?: string[]
     owner?: string
     creator?: string
-    priceStartRange?: string
-    priceEndRange?: string
-    timestampCreateStartRange?: string,
-    timestampCreateEndRange?: string,
+    priceStartRange?: number
+    priceEndRange?: number
+    timestampCreateStartRange?: Date,
+    timestampCreateEndRange?: Date,
     seriesLocked?: boolean
     isCapsule?: boolean
   }
@@ -51,10 +51,10 @@ export const validationGetNFTs = (query: any) => {
       categories: Joi.array().items(Joi.string()),
       owner: Joi.string(),
       creator: Joi.string(),
-      priceStartRange: Joi.string(),
-      priceEndRange: Joi.string(),
-      timestampCreateStartRange: Joi.string(),
-      timestampCreateEndRange: Joi.string(),
+      priceStartRange: Joi.number(),
+      priceEndRange: Joi.number(),
+      timestampCreateStartRange: Joi.date(),
+      timestampCreateEndRange: Joi.date(),
       seriesLocked: Joi.boolean(),
       isCapsule: Joi.boolean(),
     }),

@@ -1,4 +1,5 @@
 import { request } from "graphql-request";
+import fetch from "node-fetch";
 import { DistinctNFTListResponse, INFT, NFTListResponse, CustomResponse, ISeries, INFTTransfer } from "../../interfaces/graphQL";
 import FollowModel from "../../models/follow";
 import NftModel from "../../models/nft";
@@ -7,11 +8,12 @@ import NftLikeModel from "../../models/nftLike";
 import CategoryService from "./category"
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
-import { decryptCookie, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
+import { decryptCookie, TERNOA_API_URL, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
 import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery, getTotalOnSaleQuery, likeUnlikeQuery, getFiltersQuery } from "../validators/nftValidators";
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
 import { INftLike } from "src/interfaces/INftLike";
+import { IUser } from "src/interfaces/IUser";
 
 const indexerUrl = process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
 
@@ -29,7 +31,7 @@ export class NFTService {
       // Liked only
       if (query.filter?.liked) await this.handleFilterLikedOnly(query)
       /// Indexer data
-      const gqlQuery = QueriesBuilder.NFTs(query);
+      const gqlQuery = QueriesBuilder.distinctNFTs(query);
       const res: DistinctNFTListResponse = await request(indexerUrl, gqlQuery);
       const NFTs = res.distinctSerieNfts.nodes;
       // Populate
@@ -38,12 +40,11 @@ export class NFTService {
       const result: CustomResponse<INFT> = {
         totalCount: res.distinctSerieNfts.totalCount,
         data: res.distinctSerieNfts.nodes,
-        hasNextPage: res.distinctSerieNfts.pageInfo?.hasNextPage || undefined,
-        hasPreviousPage: res.distinctSerieNfts.pageInfo?.hasPreviousPage || undefined
+        hasNextPage: res.distinctSerieNfts.pageInfo?.hasNextPage,
+        hasPreviousPage: res.distinctSerieNfts.pageInfo?.hasPreviousPage
       }
       return result
     } catch (err) {
-      console.log(err)
       throw new Error("Couldn't get NFTs");
     }
   }
@@ -231,8 +232,8 @@ export class NFTService {
       const result: CustomResponse<INFT> = {
         totalCount: res.nftEntities.totalCount,
         data: seriesData,
-        hasNextPage: res.nftEntities.pageInfo?.hasNextPage || undefined,
-        hasPreviousPage: res.nftEntities.pageInfo?.hasPreviousPage || undefined
+        hasNextPage: res.nftEntities.pageInfo?.hasNextPage,
+        hasPreviousPage: res.nftEntities.pageInfo?.hasPreviousPage
       }
       return result
     } catch (err) {
@@ -330,8 +331,8 @@ export class NFTService {
       const result: CustomResponse<INFTTransfer> = {
         totalCount: res.nftTransferEntities.totalCount,
         data: query.filter?.grouped ? data : res.nftTransferEntities.nodes,
-        hasNextPage: res.nftTransferEntities.pageInfo?.hasNextPage || undefined,
-        hasPreviousPage: res.nftTransferEntities.pageInfo?.hasPreviousPage || undefined
+        hasNextPage: res.nftTransferEntities.pageInfo?.hasNextPage,
+        hasPreviousPage: res.nftTransferEntities.pageInfo?.hasPreviousPage
       }
       return result
     } catch (err) {
@@ -395,32 +396,155 @@ export class NFTService {
    * @param query - see getFiltersQuery
    * @throws Will throw an error if mongo can't be reached
    */
-     async getMostLiked(query: getFiltersQuery): Promise<CustomResponse<INFT>> {
-      try {
-        const aggregateQuery = [{ $group: { _id: "$serieId", totalLikes: { $sum: 1 } } }]
-        const aggregate = NftLikeModel.aggregate(aggregateQuery);
-        const data = await NftLikeModel.aggregatePaginate(aggregate, {page: query.pagination.page, limit: query.pagination.limit, sort:{totalLikes: -1}})
-        const seriesSorted = data.docs.map(x => x._id)
-        const queryNfts = {filter:{series: seriesSorted}}
-        const gqlQuery = QueriesBuilder.NFTs(queryNfts);
-        const res: DistinctNFTListResponse = await request(indexerUrl, gqlQuery);
-        const NFTs = res.distinctSerieNfts.nodes;
-        res.distinctSerieNfts.nodes = await Promise.all(NFTs.map(async (NFT) => populateNFT(NFT, query)))
-        const result: CustomResponse<INFT> = {
-          totalCount: data.totalDocs,
-          data: NFTs.sort((a,b) => {
-            const aId = seriesSorted.findIndex(x => x === a.serieId)
-            const bId = seriesSorted.findIndex(x => x === b.serieId)
-            return aId - bId
-          }),
-          hasNextPage: data.hasNextPage || undefined,
-          hasPreviousPage: data.hasPrevPage || undefined
-        }
-        return result
-      } catch (err) {
-        throw new Error("Couldn't get most liked NFTs");
+   async getMostLiked(query: getFiltersQuery): Promise<CustomResponse<INFT>> {
+    try {
+      const aggregateQuery = [{ $group: { _id: "$serieId", totalLikes: { $sum: 1 } } }]
+      const aggregate = NftLikeModel.aggregate(aggregateQuery);
+      const data = await NftLikeModel.aggregatePaginate(aggregate, {page: query.pagination.page, limit: query.pagination.limit, sort:{totalLikes: -1}})
+      const seriesSorted = data.docs.map(x => x._id)
+      const queryNfts = {filter:{series: seriesSorted}}
+      const gqlQuery = QueriesBuilder.distinctNFTs(queryNfts);
+      const res: DistinctNFTListResponse = await request(indexerUrl, gqlQuery);
+      const NFTs = await Promise.all(res.distinctSerieNfts.nodes.map(async (NFT) => populateNFT(NFT, query)));
+      const result: CustomResponse<INFT> = {
+        totalCount: data.totalDocs,
+        data: NFTs.sort((a,b) => {
+          const aId = seriesSorted.findIndex(x => x === a.serieId)
+          const bId = seriesSorted.findIndex(x => x === b.serieId)
+          return aId - bId
+        }),
+        hasNextPage: data.hasNextPage,
+        hasPreviousPage: data.hasPrevPage
       }
+      return result
+    } catch (err) {
+      throw new Error("Couldn't get most liked NFTs");
     }
+  }
+
+  /**
+   * Get NFTs sorted by views
+   * @param query - see getFiltersQuery
+   * @throws Will throw an error if mongo can't be reached
+   */
+   async getMostViewed(query: getFiltersQuery): Promise<CustomResponse<INFT>> {
+    try {
+      const aggregateQuery = [{ $group: { _id: "$viewedSerie", totalViews: { $sum: 1 } } }]
+      const aggregate = NftViewModel.aggregate(aggregateQuery);
+      const data = await NftViewModel.aggregatePaginate(aggregate, {page: query.pagination.page, limit: query.pagination.limit, sort:{totalViews: -1}})
+      const seriesSorted = data.docs.map(x => x._id)
+      const queryNfts = {filter:{series: seriesSorted}}
+      const gqlQuery = QueriesBuilder.distinctNFTs(queryNfts);
+      const res: DistinctNFTListResponse = await request(indexerUrl, gqlQuery);
+      const NFTs = await Promise.all(res.distinctSerieNfts.nodes.map(async (NFT) => populateNFT(NFT, query)));
+      const result: CustomResponse<INFT> = {
+        totalCount: data.totalDocs,
+        data: NFTs.sort((a,b) => {
+          const aId = seriesSorted.findIndex(x => x === a.serieId)
+          const bId = seriesSorted.findIndex(x => x === b.serieId)
+          return aId - bId
+        }),
+        hasNextPage: data.hasNextPage,
+        hasPreviousPage: data.hasPrevPage
+      }
+      return result
+    } catch (err) {
+      throw new Error("Couldn't get most viewed NFTs");
+    }
+  }
+
+  /**
+   * Get NFTs sorted by most sold
+   * @param query - see getFiltersQuery
+   * @throws Will throw an error if indexer can't be reached
+   */
+   async getMostSold(query: getFiltersQuery): Promise<CustomResponse<INFT>> {
+    try {
+      const gqlQuery = QueriesBuilder.getMostSold(query);
+      const res = await request(indexerUrl, gqlQuery);
+      const mostSold: {id: string, occurences: number}[] = res.mostSold.nodes;
+      const mostSoldIdsSorted = mostSold.map(x => x.id)
+      const queryNfts = {filter:{ids: mostSoldIdsSorted}}
+      const gqlQueryFinal = QueriesBuilder.NFTs(queryNfts);
+      const resFinal: NFTListResponse = await request(indexerUrl, gqlQueryFinal);
+      const NFTs = await Promise.all(resFinal.nftEntities.nodes.map(async (NFT) => populateNFT(NFT, query)));
+      const result: CustomResponse<INFT> = {
+        totalCount: res.mostSold.totalCount,
+        data: NFTs.sort((a,b) => {
+          const aId = mostSoldIdsSorted.findIndex(x => x === a.id)
+          const bId = mostSoldIdsSorted.findIndex(x => x === b.id)
+          return aId - bId
+        }),
+        hasNextPage: res.mostSold.pageInfo.hasNextPage,
+        hasPreviousPage: res.mostSold.pageInfo.hasPreviousPage
+      }
+      return result
+    } catch (err) {
+      throw new Error("Couldn't get most sold NFTs");
+    }
+  }
+
+  /**
+   * Get NFTs sorted by most sold series
+   * @param query - see getFiltersQuery
+   * @throws Will throw an error if indexer can't be reached
+   */
+   async getMostSoldSeries(query: getFiltersQuery): Promise<CustomResponse<INFT>> {
+    try {
+      const gqlQuery = QueriesBuilder.getMostSoldSeries(query);
+      const res = await request(indexerUrl, gqlQuery);
+      const mostSoldSeries: {id: string, occurences: number}[] = res.mostSoldSeries.nodes;
+      const mostSoldSeriesSorted = mostSoldSeries.map(x => x.id)
+      const queryNfts = {filter:{series: mostSoldSeriesSorted}}
+      const gqlQueryFinal = QueriesBuilder.distinctNFTs(queryNfts);
+      const resFinal: DistinctNFTListResponse = await request(indexerUrl, gqlQueryFinal);
+      const NFTs = await Promise.all(resFinal.distinctSerieNfts.nodes.map(async (NFT) => populateNFT(NFT, query)));
+      const result: CustomResponse<INFT> = {
+        totalCount: res.mostSoldSeries.totalCount,
+        data: NFTs.sort((a,b) => {
+          const aId = mostSoldSeriesSorted.findIndex(x => x === a.serieId)
+          const bId = mostSoldSeriesSorted.findIndex(x => x === b.serieId)
+          return aId - bId
+        }),
+        hasNextPage: res.mostSoldSeries.pageInfo.hasNextPage,
+        hasPreviousPage: res.mostSoldSeries.pageInfo.hasPreviousPage
+      }
+      return result
+    } catch (err) {
+      throw new Error("Couldn't get most sold series");
+    }
+  }
+
+  /**
+   * Get top sellers account address sorted by best sellers
+   * @param query - see getFiltersQuery
+   * @throws Will throw an error if indexer or db can't be reached
+   */
+   async getTopSellers(query: getFiltersQuery): Promise<CustomResponse<IUser>> {
+    try {
+      const gqlQuery = QueriesBuilder.getTopSellers(query);
+      const res = await request(indexerUrl, gqlQuery);
+      const topSellers: {id: string, occurences: number}[] = res.topSeller.nodes;
+      const topSellersSorted = topSellers.map(x => x.id)
+      const filterDbUser = {walletIds: topSellersSorted}
+      const resDbUsers = await fetch(`${TERNOA_API_URL}/api/users/?filter=${JSON.stringify(filterDbUser)}`)
+      const dbUsers: CustomResponse<IUser> = await resDbUsers.json()
+      const data = topSellersSorted.map(x => {
+        let user = dbUsers.data.find(y => y.walletId === x)
+        if (user === undefined) user = {_id: x, walletId: x}
+        return user
+      })
+      const result: CustomResponse<IUser> = {
+        totalCount: res.topSeller.totalCount,
+        data,
+        hasNextPage: res.topSeller.pageInfo.hasNextPage,
+        hasPreviousPage: res.topSeller.pageInfo.hasPreviousPage
+      }
+      return result
+    } catch (err) {
+      throw new Error("Couldn't get top sellers");
+    }
+  }
 }
 
 export default new NFTService();

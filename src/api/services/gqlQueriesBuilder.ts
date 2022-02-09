@@ -1,6 +1,6 @@
 import { gql } from "graphql-request";
-import { convertSortString, LIMIT_MAX_PAGINATION } from "../../utils";
-import { getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
+import { convertSortString, convertSortStringDistinct, LIMIT_MAX_PAGINATION } from "../../utils";
+import { getFiltersQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
 // import L from '../../common/logger';
 
 const nodes = `
@@ -22,7 +22,7 @@ const nodes = `
 
 
 export class GQLQueriesBuilder {
-  NFTs = (query: NFTsQuery) => gql`
+  distinctNFTs = (query: NFTsQuery) => gql`
     {
       distinctSerieNfts(
         first: ${query.pagination?.limit ? query.pagination.limit : LIMIT_MAX_PAGINATION}
@@ -35,25 +35,17 @@ export class GQLQueriesBuilder {
             ${query.filter?.idsToExcludeCategories ? `{id: { notIn: ${JSON.stringify(query.filter.idsToExcludeCategories.map(x => String(x)))} }}` : ""}
             ${query.filter?.series ? `{serieId: { in: ${JSON.stringify(query.filter.series)} }}` : ""}
             ${query.filter?.creator ? `{creator: {equalTo: "${query.filter.creator}"}}` : ""}
-            ${query.filter?.priceStartRange !== undefined ? 
-              `{priceRounded: {greaterThanOrEqualTo: "${query.filter.priceStartRange}"}}`
-            : ""}
-            ${query.filter?.priceEndRange !== undefined ? 
-              `{priceRounded: {lessThanOrEqualTo: "${query.filter.priceEndRange}"}}`
-            : ""}
-            ${query.filter?.timestampCreateStartRange !== undefined ? 
-              `{timestampCreate: {greaterThanOrEqualTo: "${query.filter.timestampCreateStartRange}"}}`
-            : ""}
-            ${query.filter?.timestampCreateEndRange !== undefined ? 
-              `{timestampCreate: {lessThanOrEqualTo: "${query.filter.timestampCreateEndRange}"}}`
-            : ""}
           ]
         }
         ${query.filter?.owner ? `owner: "${query.filter.owner}"` : ""}
         ${query.filter?.marketplaceId!==undefined ? `marketplaceId: "${query.filter.marketplaceId}"` : ""}
         ${query.filter?.listed!==undefined ? `listed: ${!query.filter.listed ? 0 : 1}` : ""}
         ${query.filter?.isCapsule!==undefined ? `isCapsule: ${!query.filter.isCapsule ? false : true}` : ""}
-        ${query.sort ? `orderBy: [${convertSortString(query.sort)}]` : ""}
+        ${query.filter?.priceStartRange!==undefined ? `priceStartRange: ${query.filter.priceStartRange}` : ""}
+        ${query.filter?.priceEndRange!==undefined ? `priceEndRange: ${query.filter.priceEndRange}` : ""}
+        ${query.filter?.timestampCreateStartRange!==undefined ? `timestampCreateStartRange: ${query.filter.timestampCreateStartRange}` : ""}
+        ${query.filter?.timestampCreateEndRange!==undefined ? `timestampCreateEndRange: ${query.filter.timestampCreateEndRange}` : ""}
+        ${query.sort ? convertSortStringDistinct(query.sort) : ""}
       ) {
         totalCount
         pageInfo {
@@ -64,6 +56,41 @@ export class GQLQueriesBuilder {
       }
     }
   `;
+
+  NFTs = (query: NFTsQuery) => gql`
+  {
+    nftEntities(
+      first: ${query.pagination?.limit ? query.pagination.limit : LIMIT_MAX_PAGINATION}
+      offset: ${query.pagination?.page && query.pagination?.limit ? (query.pagination.page - 1) * query.pagination.limit : 0}
+      filter:{
+        and:[
+          ${query.filter?.ids ? `{id: { in: ${JSON.stringify(query.filter.ids.map(x => String(x)))} }}` : ""}
+          ${query.filter?.idsToExclude ? `{id: { notIn: ${JSON.stringify(query.filter.idsToExclude.map(x => String(x)))} }}` : ""}
+          ${query.filter?.idsCategories ? `{id: { in: ${JSON.stringify(query.filter.idsCategories.map(x => String(x)))} }}` : ""}
+          ${query.filter?.idsToExcludeCategories ? `{id: { notIn: ${JSON.stringify(query.filter.idsToExcludeCategories.map(x => String(x)))} }}` : ""}
+          ${query.filter?.series ? `{serieId: { in: ${JSON.stringify(query.filter.series)} }}` : ""}
+          ${query.filter?.creator ? `{creator: {equalTo: "${query.filter.creator}"}}` : ""}
+          ${query.filter?.owner ? `{owner: {equalTo: "${query.filter.owner}"}}` : ""}
+          ${query.filter?.marketplaceId ? `{marketplaceId: {equalTo: "${query.filter.marketplaceId}"}}` : ""}
+          ${query.filter?.listed ? `{listed: {equalTo: ${!query.filter.listed ? 0 : 1}}}` : ""}
+          ${query.filter?.isCapsule ? `{isCapsule: {equalTo: ${!query.filter.isCapsule ? 0 : 1}}}` : ""}
+          ${query.filter?.priceStartRange ? `{priceRounded: {greaterThanOrEqualTo: ${query.filter.priceStartRange}}}` : ""}
+          ${query.filter?.priceEndRange ? `{priceRounded: {lessThanOrEqualTo: ${query.filter.priceEndRange}}}` : ""}
+          ${query.filter?.timestampCreateStartRange ? `{timestampCreate: {greaterThanOrEqualTo: "${query.filter.priceStartRange}"}}` : ""}
+          ${query.filter?.timestampCreateEndRange ? `{timestampCreate: {lessThanOrEqualTo: "${query.filter.timestampCreateEndRange}"}}` : ""}
+        ]
+      }
+      ${query.sort ? convertSortString(query.sort) : ""}
+    ) {
+      totalCount
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+      }
+      ${nodes}
+    }
+  }
+`;
 
   NFTfromId = (query: NFTQuery) => gql`
     {
@@ -219,7 +246,7 @@ export class GQLQueriesBuilder {
             first: ${query.pagination.limit}
             offset: ${(query.pagination.page - 1) * query.pagination.limit}
         ` : ""}
-      orderBy: ${query.sort ? `[${convertSortString(query.sort)}]` : "TIMESTAMP_DESC"}
+      orderBy: ${query.sort ? `[${convertSortStringDistinct(query.sort)}]` : "TIMESTAMP_DESC"}
       filter: {and:[
         ${query.filter?.onlyNftId ? 
           `{nftId: {equalTo: "${query.filter.nftId}"}}`
@@ -399,6 +426,67 @@ countAllListedInMarketplace = (marketplaceId: number) => gql`
   }
 `;
 
+getMostSold = (query: getFiltersQuery) => gql`
+  {
+    mostSold(
+      first: ${query.pagination?.limit ? query.pagination.limit : LIMIT_MAX_PAGINATION}
+      offset: ${query.pagination?.page && query.pagination?.limit ? (query.pagination.page - 1) * query.pagination.limit : 0}
+      typeOfTransaction: "sale"
+      orderBy: OCCURENCES_DESC
+    ) {
+      totalCount
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+      }
+      nodes {
+        id
+        occurences
+      }
+    }
+  }
+`;
+
+getMostSoldSeries = (query: getFiltersQuery) => gql`
+  {
+    mostSoldSeries(
+      first: ${query.pagination?.limit ? query.pagination.limit : LIMIT_MAX_PAGINATION}
+      offset: ${query.pagination?.page && query.pagination?.limit ? (query.pagination.page - 1) * query.pagination.limit : 0}
+      typeOfTransaction: "sale"
+      orderBy: OCCURENCES_DESC
+    ) {
+      totalCount
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+      }
+      nodes {
+        id
+        occurences
+      }
+    }
+  }
+`;
+
+getTopSellers = (query: getFiltersQuery) => gql`
+  {
+    topSeller(
+      first: ${query.pagination?.limit ? query.pagination.limit : LIMIT_MAX_PAGINATION}
+      offset: ${query.pagination?.page && query.pagination?.limit ? (query.pagination.page - 1) * query.pagination.limit : 0}
+      orderBy: OCCURENCES_DESC
+    ) {
+      totalCount
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+      }
+      nodes {
+        id
+        occurences
+      }
+    }
+  }
+`;
 }
 
 export default new GQLQueriesBuilder();

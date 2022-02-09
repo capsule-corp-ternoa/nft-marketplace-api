@@ -165,6 +165,58 @@ export class Controller {
       next(err)
     }
   }
+
+  async getMostViewed(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const queryValues = validationGetFilters(req.query)
+      res.json(await NFTService.getMostViewed(queryValues));
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  async getMostSold(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const queryValues = validationGetFilters(req.query)
+      res.json(await NFTService.getMostSold(queryValues));
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  async getMostSoldSeries(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const queryValues = validationGetFilters(req.query)
+      res.json(await NFTService.getMostSoldSeries(queryValues));
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  async getTopSellers(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const queryValues = validationGetFilters(req.query)
+      res.json(await NFTService.getTopSellers(queryValues));
+    } catch (err) {
+      next(err)
+    }
+  }
 }
 
 export default new Controller();

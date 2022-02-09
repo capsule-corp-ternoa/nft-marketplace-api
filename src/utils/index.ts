@@ -60,8 +60,8 @@ export const decryptCookie = (cookie: string) => {
 
 export const convertSortString = (sortString: string) => {
   if (sortString) {
-    const sortArray = sortString.split(",");
-    let finalString = "";
+    const sortArray = sortString.split(",")
+    let finalString = ""
     sortArray.forEach((x) => {
       const fieldArray = x.split(":");
       if (fieldArray[0]) {
@@ -70,7 +70,49 @@ export const convertSortString = (sortString: string) => {
         },`;
       }
     });
-    return finalString;
+    return finalString
+  } else {
+    return "";
+  }
+};
+
+export const convertSortStringDistinct = (sortString: string) => {
+  if (sortString) {
+    const pluginFilters = ["TIMESTAMP_CREATE", "PRICE", "PRICE_ROUNDED", "LISTED", "IS_CAPSULE"]
+    const sortArray = sortString.split(",")
+    let regularFilterString = ""
+    let customFilterString = ""
+    sortArray.forEach((x) => {
+      const fieldArray = x.split(":");
+      if (fieldArray[0]) {
+        if (!pluginFilters.includes(fieldArray[0])){
+          regularFilterString += `${fieldArray[0].toUpperCase()}_${
+            fieldArray[1] ? fieldArray[1].toUpperCase() : "ASC"
+          },`;
+        }else{
+          switch(fieldArray[0]){
+            case "LISTED":
+              customFilterString += `listedSortOrder: ${fieldArray[1] ? fieldArray[1].toLowerCase() : "desc"} `;
+              break;
+            case "IS_CAPSULE":
+              customFilterString += `isCapsuleSortOrder: ${fieldArray[1] ? fieldArray[1].toLowerCase() : "asc"} `;
+              break;
+            case "TIMESTAMP_CREATE":
+              customFilterString += `timestampCreateSortOrder: ${fieldArray[1] ? fieldArray[1].toLowerCase() : "desc"} `;
+              break;
+            case "PRICE" || "PRICE_ROUNDED":
+              customFilterString += `priceSortOrder: ${fieldArray[1] ? fieldArray[1].toLowerCase() : "asc"} `;
+              break;
+            default:
+              break;
+          }
+        }
+      }
+    });
+    return `
+      ${customFilterString.length > 0 ? customFilterString : ""}
+      ${regularFilterString.length > 0 ? `orderBy: [${regularFilterString}]` : ""}
+    `;
   } else {
     return "";
   }
