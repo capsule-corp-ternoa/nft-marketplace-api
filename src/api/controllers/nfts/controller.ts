@@ -204,19 +204,6 @@ export class Controller {
       next(err)
     }
   }
-
-  async getTopSellers(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const queryValues = validationGetFilters(req.query)
-      res.json(await NFTService.getTopSellers(queryValues));
-    } catch (err) {
-      next(err)
-    }
-  }
 }
 
 export default new Controller();

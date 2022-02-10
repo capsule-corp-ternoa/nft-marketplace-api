@@ -1,5 +1,4 @@
 import { request } from "graphql-request";
-import fetch from "node-fetch";
 import { DistinctNFTListResponse, INFT, NFTListResponse, CustomResponse, ISeries, INFTTransfer } from "../../interfaces/graphQL";
 import FollowModel from "../../models/follow";
 import NftModel from "../../models/nft";
@@ -8,12 +7,11 @@ import NftLikeModel from "../../models/nftLike";
 import CategoryService from "./category"
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
-import { decryptCookie, TERNOA_API_URL, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
+import { decryptCookie, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
 import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery, getTotalOnSaleQuery, likeUnlikeQuery, getFiltersQuery } from "../validators/nftValidators";
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
-import { INftLike } from "src/interfaces/INftLike";
-import { IUser } from "src/interfaces/IUser";
+import { INftLike } from "../../interfaces/INftLike";
 
 const indexerUrl = process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
 
@@ -512,37 +510,6 @@ export class NFTService {
       return result
     } catch (err) {
       throw new Error("Couldn't get most sold series");
-    }
-  }
-
-  /**
-   * Get top sellers account address sorted by best sellers
-   * @param query - see getFiltersQuery
-   * @throws Will throw an error if indexer or db can't be reached
-   */
-   async getTopSellers(query: getFiltersQuery): Promise<CustomResponse<IUser>> {
-    try {
-      const gqlQuery = QueriesBuilder.getTopSellers(query);
-      const res = await request(indexerUrl, gqlQuery);
-      const topSellers: {id: string, occurences: number}[] = res.topSeller.nodes;
-      const topSellersSorted = topSellers.map(x => x.id)
-      const filterDbUser = {walletIds: topSellersSorted}
-      const resDbUsers = await fetch(`${TERNOA_API_URL}/api/users/?filter=${JSON.stringify(filterDbUser)}`)
-      const dbUsers: CustomResponse<IUser> = await resDbUsers.json()
-      const data = topSellersSorted.map(x => {
-        let user = dbUsers.data.find(y => y.walletId === x)
-        if (user === undefined) user = {_id: x, walletId: x}
-        return user
-      })
-      const result: CustomResponse<IUser> = {
-        totalCount: res.topSeller.totalCount,
-        data,
-        hasNextPage: res.topSeller.pageInfo.hasNextPage,
-        hasPreviousPage: res.topSeller.pageInfo.hasPreviousPage
-      }
-      return result
-    } catch (err) {
-      throw new Error("Couldn't get top sellers");
     }
   }
 }

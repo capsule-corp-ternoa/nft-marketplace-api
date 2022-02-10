@@ -1,7 +1,7 @@
 import UserService from "../../services/user";
 import { NextFunction, Request, Response } from "express";
 import { TERNOA_API_URL, decryptCookie } from "../../../utils";
-import { validationGetAccountBalance, validationGetUser, validationReviewRequested, validationGetUsers } from "../../validators/userValidators";
+import { validationGetAccountBalance, validationGetUser, validationReviewRequested, validationGetUsers, validationGetFilters } from "../../validators/userValidators";
 
 export class Controller {
   async getUsers(
@@ -96,6 +96,32 @@ export class Controller {
     try{
       res.redirect(`${TERNOA_API_URL}${req.originalUrl}`)
     }catch(err){
+      next(err)
+    }
+  }
+
+  async getTopSellers(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const queryValues = validationGetFilters(req.query)
+      res.json(await UserService.getTopSellers(queryValues));
+    } catch (err) {
+      next(err)
+    }
+  }
+
+  async getMostFollowed(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const queryValues = validationGetFilters(req.query)
+      res.json(await UserService.getMostFollowed(queryValues));
+    } catch (err) {
       next(err)
     }
   }

@@ -3,10 +3,12 @@ import fetch from "node-fetch";
 import { IUser } from "../../interfaces/IUser";
 import UserViewModel from "../../models/userView";
 import NftLikeModel from "../../models/nftLike";
+import FollowModel from "../../models/follow";
 import QueriesBuilder from "./gqlQueriesBuilder";
 import { AccountResponse, Account, CustomResponse } from "../../interfaces/graphQL";
 import { TIME_BETWEEN_SAME_USER_VIEWS, TERNOA_API_URL } from "../../utils";
 import { getAccountBalanceQuery, getUserQuery, getUsersQuery } from "../validators/userValidators";
+import { getFiltersQuery } from "../validators/nftValidators";
 
 const indexerUrl =
   process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
@@ -93,6 +95,67 @@ export class UserService {
     }
   }
 
+  /**
+   * Get top sellers account address sorted by best sellers
+   * @param query - see getFiltersQuery
+   * @throws Will throw an error if indexer or db can't be reached
+   */
+   async getTopSellers(query: getFiltersQuery): Promise<CustomResponse<IUser>> {
+    try {
+      const gqlQuery = QueriesBuilder.getTopSellers(query);
+      const res = await request(indexerUrl, gqlQuery);
+      const topSellers: {id: string, occurences: number}[] = res.topSeller.nodes;
+      const topSellersSorted = topSellers.map(x => x.id)
+      const filterDbUser = {walletIds: topSellersSorted}
+      const resDbUsers = await fetch(`${TERNOA_API_URL}/api/users/?filter=${JSON.stringify(filterDbUser)}`)
+      const dbUsers: CustomResponse<IUser> = await resDbUsers.json()
+      const data = topSellersSorted.map(x => {
+        let user = dbUsers.data.find(y => y.walletId === x)
+        if (user === undefined) user = {_id: x, walletId: x}
+        return user
+      })
+      const result: CustomResponse<IUser> = {
+        totalCount: res.topSeller.totalCount,
+        data,
+        hasNextPage: res.topSeller.pageInfo.hasNextPage,
+        hasPreviousPage: res.topSeller.pageInfo.hasPreviousPage
+      }
+      return result
+    } catch (err) {
+      throw new Error("Couldn't get top sellers");
+    }
+  }
+
+  /**
+   * get most followed users sorted by number of follows
+   * @param query - see getFiltersQuery
+   * @throws Will throw an error if db can't be reached
+   */
+   async getMostFollowed(query: getFiltersQuery): Promise<CustomResponse<IUser>> {
+    try{
+      const aggregateQuery = [{ $group: { _id: "$followed", totalViews: { $sum: 1 } } }]
+      const aggregate = FollowModel.aggregate(aggregateQuery);
+      const res = await FollowModel.aggregatePaginate(aggregate, {page: query.pagination.page, limit: query.pagination.limit, sort:{totalViews: -1}})
+      const walletIdsSorted = res.docs.map(x => x._id)
+      const filterDbUser = {walletIds: walletIdsSorted}
+      const resDbUsers = await fetch(`${TERNOA_API_URL}/api/users/?filter=${JSON.stringify(filterDbUser)}`)
+      const dbUsers: CustomResponse<IUser> = await resDbUsers.json()
+      const data = walletIdsSorted.map(x => {
+        let user = dbUsers.data.find(y => y.walletId === x)
+        if (user === undefined) user = {_id: x, walletId: x}
+        return user
+      })
+      const result: CustomResponse<IUser> = {
+        totalCount: res.totalDocs,
+        data,
+        hasNextPage: res.hasNextPage,
+        hasPreviousPage: res.hasPrevPage
+      }
+      return result
+    }catch(err){
+      throw err
+    }
+  }
 }
 
 export default new UserService();

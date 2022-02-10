@@ -76,3 +76,22 @@ export const validationGetAccountBalance = (query: any) => {
     });
     return validateQuery(validationSchema, query) as getAccountBalanceQuery;
 };
+
+
+export type getFiltersQuery = {
+  pagination: {
+    page: number;
+    limit: number;
+  };
+};
+export const validationGetFilters = (query: any) => {
+  let { pagination } = query;
+  if (pagination) pagination = JSON.parse(pagination);
+  const validationSchema = Joi.object({
+    pagination: Joi.object({
+      page: Joi.number().integer().min(0).required(),
+      limit: Joi.number().integer().min(0).max(LIMIT_MAX_PAGINATION).required(),
+    }).required(),
+  });
+  return validateQuery(validationSchema, { pagination }) as getFiltersQuery;
+};

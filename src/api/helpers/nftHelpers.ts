@@ -1,10 +1,10 @@
-import { CustomResponse, ICompleteNFT, INFT } from "../../interfaces/graphQL";
+import { ICompleteNFT, INFT } from "../../interfaces/graphQL";
 import UserService from "../services/user";
 import L from "../../common/logger";
 import NFTService from "../services/nft";
 import { ICategory } from "../../interfaces/ICategory";
 import { fetchTimeout, isURL, removeURLSlash } from "../../utils";
-import { IUser } from "src/interfaces/IUser";
+import { IUser } from "../../interfaces/IUser";
 import { NFTsQuery } from "../validators/nftValidators";
 
 const ipfsGateways = {
