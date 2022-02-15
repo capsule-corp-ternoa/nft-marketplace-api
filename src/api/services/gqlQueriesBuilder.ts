@@ -43,8 +43,8 @@ export class GQLQueriesBuilder {
         ${query.filter?.isCapsule!==undefined ? `isCapsule: ${!query.filter.isCapsule ? false : true}` : ""}
         ${query.filter?.priceStartRange!==undefined ? `priceStartRange: ${query.filter.priceStartRange}` : ""}
         ${query.filter?.priceEndRange!==undefined ? `priceEndRange: ${query.filter.priceEndRange}` : ""}
-        ${query.filter?.timestampCreateStartRange!==undefined ? `timestampCreateStartRange: ${query.filter.timestampCreateStartRange}` : ""}
-        ${query.filter?.timestampCreateEndRange!==undefined ? `timestampCreateEndRange: ${query.filter.timestampCreateEndRange}` : ""}
+        ${query.filter?.timestampCreateStartRange!==undefined ? `timestampCreateStartRange: "${query.filter.timestampCreateStartRange.toJSON().split('T')[0]}"` : ""}
+        ${query.filter?.timestampCreateEndRange!==undefined ? `timestampCreateEndRange: "${query.filter.timestampCreateEndRange.toJSON().split('T')[0]}"` : ""}
         ${query.sort ? convertSortStringDistinct(query.sort) : ""}
       ) {
         totalCount
