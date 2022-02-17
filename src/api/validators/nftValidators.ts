@@ -20,6 +20,7 @@ export type NFTsQuery = {
     listed?: boolean
     categories?: string[]
     owner?: string
+    viewer?: string
     creator?: string
     priceStartRange?: number
     priceEndRange?: number
@@ -50,6 +51,7 @@ export const validationGetNFTs = (query: any) => {
       listed: Joi.boolean(),
       categories: Joi.array().items(Joi.string()),
       owner: Joi.string(),
+      viewer: Joi.string(),
       creator: Joi.string(),
       priceStartRange: Joi.number(),
       priceEndRange: Joi.number(),

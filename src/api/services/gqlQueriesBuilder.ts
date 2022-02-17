@@ -38,6 +38,7 @@ export class GQLQueriesBuilder {
           ]
         }
         ${query.filter?.owner ? `owner: "${query.filter.owner}"` : ""}
+        ${query.filter?.viewer ? `viewer: "${query.filter.viewer}"` : ""}
         ${query.filter?.marketplaceId!==undefined ? `marketplaceId: "${query.filter.marketplaceId}"` : ""}
         ${query.filter?.listed!==undefined ? `listed: ${!query.filter.listed ? 0 : 1}` : ""}
         ${query.filter?.isCapsule!==undefined ? `isCapsule: ${!query.filter.isCapsule ? false : true}` : ""}
