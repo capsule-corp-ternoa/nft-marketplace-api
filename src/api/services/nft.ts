@@ -8,7 +8,7 @@ import CategoryService from "./category"
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
 import { decryptCookie, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
-import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery, getTotalOnSaleQuery, likeUnlikeQuery, getFiltersQuery } from "../validators/nftValidators";
+import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery, getTotalOnSaleQuery, getTotalFilteredNFTsQuery, likeUnlikeQuery, getFiltersQuery } from "../validators/nftValidators";
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
 import { INftLike } from "../../interfaces/INftLike";
@@ -351,6 +351,25 @@ export class NFTService {
       return res.nftEntities.totalCount
     } catch (err) {
       throw new Error("Count could not have been fetched");
+    }
+  }
+
+  /**
+   * Returns the totalCount for the specified filters
+   * @param query - query (see getTotalFilteredNFTsQuery)
+   * @throws Will throw an error if indexer is not reachable
+   */
+   async getTotalFilteredNFTs(query: getTotalFilteredNFTsQuery): Promise<boolean> {
+    try {
+      // Categories
+      if (query.filter?.categories) await this.handleFilterCategory(query);
+
+      const gqlQuery = QueriesBuilder.countTotalFilteredNFTs(query);
+      const res = await request(indexerUrl, gqlQuery);
+      if (!res.nftEntities.totalCount) throw new Error();
+      return res.nftEntities.totalCount;
+    } catch (err) {
+      throw new Error("Filtered count could not have been fetched");
     }
   }
 
