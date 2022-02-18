@@ -247,7 +247,7 @@ export class GQLQueriesBuilder {
             first: ${query.pagination.limit}
             offset: ${(query.pagination.page - 1) * query.pagination.limit}
         ` : ""}
-      orderBy: ${query.sort ? `[${convertSortStringDistinct(query.sort)}]` : "TIMESTAMP_DESC"}
+      ${query.sort ? convertSortStringDistinct(query.sort) : "orderBy: TIMESTAMP_DESC"}
       filter: {and:[
         ${query.filter?.onlyNftId ? 
           `{nftId: {equalTo: "${query.filter.nftId}"}}`
