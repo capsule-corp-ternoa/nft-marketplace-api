@@ -427,7 +427,7 @@ countAllListedInMarketplace = (marketplaceId: number) => gql`
   }
 `;
 
-countTotalFilteredNFTs = (query: getTotalFilteredNFTsQuery) => { 
+countTotalFilteredNFTs = (query: getTotalFilteredNFTsQuery, seriesId?: string) => { 
   const {
     idsCategories,
     idsToExcludeCategories,
@@ -445,6 +445,7 @@ countTotalFilteredNFTs = (query: getTotalFilteredNFTsQuery) => {
         filter: { 
           and: [
             { timestampBurn: { isNull: true } }
+            ${seriesId!==undefined ? `{ serieId: { equalTo: "${seriesId}" } }` : ""}
             ${listed!==undefined ? `{ listed: { equalTo: ${!listed ? 0 : 1} } }` : ""}
             ${marketplaceId!==undefined ? `{ marketplaceId: { equalTo: "${marketplaceId}" } }` : ""}
             ${idsCategories ? `{id: { in: ${JSON.stringify(idsCategories.map(x => String(x)))} }}` : ""}

@@ -147,11 +147,13 @@ export class NFTService {
    * @param seriesId - Series Id of nft to get stat for
    * @param marketplaceId - marketplace id (optional)
    * @param owner - owner (optional)
+   * @param filterOptionsQuery - filter options (optional)
    * @throws Will throw an error if can't request indexer
    */
-     async getStatNFT(seriesId:string, marketplaceId:number=null, owner:string=null): Promise<{
+     async getStatNFT(seriesId:string, marketplaceId:number=null, owner:string=null, filterOptionsQuery:getTotalFilteredNFTsQuery=null): Promise<{
       totalNft: number,
       totalListedNft: number,
+      totalFiltered: number | null,
       totalListedInMarketplace: number,
       totalOwnedByRequestingUser: number,
       totalOwnedListedByRequestingUser: number,
@@ -159,9 +161,10 @@ export class NFTService {
       smallestPrice: string
     }> {
       try {
-        const [totalRequest, totalListedRequest, totalListedInMarketplaceRequest, totalOwnedByRequestingUserRequest, totalOwnedListedByRequestingUserRequest, totalOwnedListedInMarketplaceByRequestingUserRequest, smallestPriceRequest] = await Promise.all([
+        const [totalRequest, totalListedRequest, totalFilteredRequest, totalListedInMarketplaceRequest, totalOwnedByRequestingUserRequest, totalOwnedListedByRequestingUserRequest, totalOwnedListedInMarketplaceByRequestingUserRequest, smallestPriceRequest] = await Promise.all([
           request(indexerUrl, QueriesBuilder.countTotal(seriesId)),
           request(indexerUrl, QueriesBuilder.countTotalListed(seriesId)),
+          filterOptionsQuery ? request(indexerUrl, QueriesBuilder.countTotalFilteredNFTs(filterOptionsQuery, seriesId)) : null,
           marketplaceId!==null ? request(indexerUrl, QueriesBuilder.countTotalListedInMarketplace(seriesId, marketplaceId)) : 0,
           owner ? request(indexerUrl, QueriesBuilder.countTotalOwned(seriesId, owner)) : null,
           owner ? request(indexerUrl, QueriesBuilder.countTotalOwnedListed(seriesId, owner)) : null,
@@ -171,6 +174,7 @@ export class NFTService {
         const totalNft: number = totalRequest.nftEntities.totalCount;
         const totalListedNft: number = totalListedRequest.nftEntities.totalCount;
         const totalListedInMarketplace: number = totalListedInMarketplaceRequest ? totalListedInMarketplaceRequest.nftEntities.totalCount : 0;
+        const totalFiltered: number = totalFilteredRequest ? totalFilteredRequest.nftEntities.totalCount : null;
         const totalOwnedByRequestingUser: number = totalOwnedByRequestingUserRequest ? totalOwnedByRequestingUserRequest.nftEntities.totalCount : 0;
         const totalOwnedListedByRequestingUser: number = totalOwnedListedByRequestingUserRequest ? totalOwnedListedByRequestingUserRequest.nftEntities.totalCount : 0;
         const totalOwnedListedInMarketplaceByRequestingUser: number = totalOwnedListedInMarketplaceByRequestingUserRequest ? totalOwnedListedInMarketplaceByRequestingUserRequest.nftEntities.totalCount : 0;
@@ -179,7 +183,7 @@ export class NFTService {
         : 
           "0"
         ;
-        return { totalNft, totalListedNft, totalListedInMarketplace, totalOwnedByRequestingUser, totalOwnedListedByRequestingUser, totalOwnedListedInMarketplaceByRequestingUser, smallestPrice }
+        return { totalNft, totalListedNft, totalListedInMarketplace, totalFiltered, totalOwnedByRequestingUser, totalOwnedListedByRequestingUser, totalOwnedListedInMarketplaceByRequestingUser, smallestPrice }
       } catch (err) {
         throw new Error("Couldn't get NFT stat");
       }
