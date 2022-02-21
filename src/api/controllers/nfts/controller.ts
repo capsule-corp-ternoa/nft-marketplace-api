@@ -1,6 +1,6 @@
 import NFTService from "../../services/nft";
 import { NextFunction, Request, Response } from "express";
-import { validationGetNFTs, validationGetNFT, validationGetStatNFTsUser, validationNFTsBySeries, validationGetSeries, validationCanAddToSeries, validationGetHistory, validationAddCategoriesNFTs, validationGetTotalOnSale, validationLikeUnlike, validationGetFilters } from "../../validators/nftValidators";
+import { validationGetNFTs, validationGetNFT, validationGetStatNFTsUser, validationNFTsBySeries, validationGetSeries, validationCanAddToSeries, validationGetHistory, validationAddCategoriesNFTs, validationGetTotalOnSale, validationGetTotalFilteredNFTs, validationLikeUnlike, validationGetFilters } from "../../validators/nftValidators";
 import { decryptCookie } from "../../../utils";
 
 export class Controller {
@@ -112,6 +112,19 @@ export class Controller {
     try {
       const queryValues = validationGetTotalOnSale(req.query)
       res.json(await NFTService.getTotalOnSale(queryValues));
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async getTotalFiltered(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void>{
+    try {
+      const queryValues = validationGetTotalFilteredNFTs(req.query)
+      res.json(await NFTService.getTotalFilteredNFTs(queryValues));
     } catch (err) {
       next(err);
     }

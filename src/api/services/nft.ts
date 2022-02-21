@@ -8,7 +8,7 @@ import CategoryService from "./category"
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
 import { decryptCookie, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
-import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery, getTotalOnSaleQuery, likeUnlikeQuery, getFiltersQuery } from "../validators/nftValidators";
+import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery, getTotalOnSaleQuery, getTotalFilteredNFTsQuery, likeUnlikeQuery, getFiltersQuery } from "../validators/nftValidators";
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
 import { INftLike } from "../../interfaces/INftLike";
@@ -147,30 +147,37 @@ export class NFTService {
    * @param seriesId - Series Id of nft to get stat for
    * @param marketplaceId - marketplace id (optional)
    * @param owner - owner (optional)
+   * @param filterOptionsQuery - filter options (optional)
    * @throws Will throw an error if can't request indexer
    */
-     async getStatNFT(seriesId:string, marketplaceId:number=null, owner:string=null): Promise<{
+     async getStatNFT(seriesId:string, query:NFTsQuery=null): Promise<{
       totalNft: number,
       totalListedNft: number,
+      totalFiltered: number | null,
       totalListedInMarketplace: number,
       totalOwnedByRequestingUser: number,
       totalOwnedListedByRequestingUser: number,
       totalOwnedListedInMarketplaceByRequestingUser: number,
       smallestPrice: string
     }> {
+      const marketplaceId = query.filter.marketplaceId ?? null;
+      const owner = query.filter.owner ?? null;
+
       try {
-        const [totalRequest, totalListedRequest, totalListedInMarketplaceRequest, totalOwnedByRequestingUserRequest, totalOwnedListedByRequestingUserRequest, totalOwnedListedInMarketplaceByRequestingUserRequest, smallestPriceRequest] = await Promise.all([
+        const [totalRequest, totalListedRequest, totalFilteredRequest, totalListedInMarketplaceRequest, totalOwnedByRequestingUserRequest, totalOwnedListedByRequestingUserRequest, totalOwnedListedInMarketplaceByRequestingUserRequest, smallestPriceRequest] = await Promise.all([
           request(indexerUrl, QueriesBuilder.countTotal(seriesId)),
           request(indexerUrl, QueriesBuilder.countTotalListed(seriesId)),
-          marketplaceId!==null ? request(indexerUrl, QueriesBuilder.countTotalListedInMarketplace(seriesId, marketplaceId)) : 0,
-          owner ? request(indexerUrl, QueriesBuilder.countTotalOwned(seriesId, owner)) : null,
-          owner ? request(indexerUrl, QueriesBuilder.countTotalOwnedListed(seriesId, owner)) : null,
-          owner && marketplaceId!==null ? request(indexerUrl, QueriesBuilder.countTotalOwnedListedInMarketplace(seriesId, owner, marketplaceId)) : null,
+          query ? request(indexerUrl, QueriesBuilder.countTotalFilteredNFTs(query, seriesId)) : null,
+          marketplaceId !== null ? request(indexerUrl, QueriesBuilder.countTotalListedInMarketplace(seriesId, marketplaceId)) : 0,
+          owner !== null ? request(indexerUrl, QueriesBuilder.countTotalOwned(seriesId, owner)) : null,
+          owner !== null ? request(indexerUrl, QueriesBuilder.countTotalOwnedListed(seriesId, owner)) : null,
+          owner !== null && marketplaceId !== null ? request(indexerUrl, QueriesBuilder.countTotalOwnedListedInMarketplace(seriesId, owner, marketplaceId)) : null,
           request(indexerUrl, QueriesBuilder.countSmallestPrice(seriesId, marketplaceId)),
         ])
         const totalNft: number = totalRequest.nftEntities.totalCount;
         const totalListedNft: number = totalListedRequest.nftEntities.totalCount;
         const totalListedInMarketplace: number = totalListedInMarketplaceRequest ? totalListedInMarketplaceRequest.nftEntities.totalCount : 0;
+        const totalFiltered: number = totalFilteredRequest ? totalFilteredRequest.nftEntities.totalCount : null;
         const totalOwnedByRequestingUser: number = totalOwnedByRequestingUserRequest ? totalOwnedByRequestingUserRequest.nftEntities.totalCount : 0;
         const totalOwnedListedByRequestingUser: number = totalOwnedListedByRequestingUserRequest ? totalOwnedListedByRequestingUserRequest.nftEntities.totalCount : 0;
         const totalOwnedListedInMarketplaceByRequestingUser: number = totalOwnedListedInMarketplaceByRequestingUserRequest ? totalOwnedListedInMarketplaceByRequestingUserRequest.nftEntities.totalCount : 0;
@@ -179,7 +186,7 @@ export class NFTService {
         : 
           "0"
         ;
-        return { totalNft, totalListedNft, totalListedInMarketplace, totalOwnedByRequestingUser, totalOwnedListedByRequestingUser, totalOwnedListedInMarketplaceByRequestingUser, smallestPrice }
+        return { totalNft, totalListedNft, totalListedInMarketplace, totalFiltered, totalOwnedByRequestingUser, totalOwnedListedByRequestingUser, totalOwnedListedInMarketplaceByRequestingUser, smallestPrice }
       } catch (err) {
         throw new Error("Couldn't get NFT stat");
       }
@@ -351,6 +358,25 @@ export class NFTService {
       return res.nftEntities.totalCount
     } catch (err) {
       throw new Error("Count could not have been fetched");
+    }
+  }
+
+  /**
+   * Returns the totalCount for the specified filters
+   * @param query - query (see getTotalFilteredNFTsQuery)
+   * @throws Will throw an error if indexer is not reachable
+   */
+   async getTotalFilteredNFTs(query: getTotalFilteredNFTsQuery): Promise<boolean> {
+    try {
+      // Categories
+      if (query.filter?.categories) await this.handleFilterCategory(query);
+
+      const gqlQuery = QueriesBuilder.countTotalFilteredNFTs(query);
+      const res = await request(indexerUrl, gqlQuery);
+      if (!res.nftEntities.totalCount) throw new Error();
+      return res.nftEntities.totalCount;
+    } catch (err) {
+      throw new Error("Filtered count could not have been fetched");
     }
   }
 

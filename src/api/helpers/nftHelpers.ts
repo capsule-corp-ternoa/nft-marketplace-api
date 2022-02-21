@@ -44,15 +44,14 @@ export async function populateStat(
 ): Promise<{
   totalNft: number,
   totalListedNft: number,
+  totalFiltered: number | null,
   totalListedInMarketplace: number,
   totalOwnedByRequestingUser: number,
   totalOwnedListedByRequestingUser: number,
   smallestPrice: string
 }> {
   try {
-    const marketplaceId = query.filter?.marketplaceId;
-    const owner = query.filter?.owner;
-    const stat = await NFTService.getStatNFT(NFT.serieId, marketplaceId, owner)
+    const stat = await NFTService.getStatNFT(NFT.serieId, query)
     return stat
   } catch (err) {
     L.error({ err }, "NFTs stats could not have been fetched");

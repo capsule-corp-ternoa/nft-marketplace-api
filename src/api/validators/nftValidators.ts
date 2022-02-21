@@ -274,3 +274,33 @@ export const validationGetFilters = (query: any) => {
   })
   return validateQuery(validationSchema, { pagination }) as getFiltersQuery;
 }
+
+export type getTotalFilteredNFTsQuery = {
+  filter?: {
+    idsCategories?: string[],
+    idsToExcludeCategories?: string[],
+    categories?: string[],
+    listed?: boolean,
+    marketplaceId?: number,
+    priceStartRange?: number,
+    priceEndRange?: number,
+    timestampCreateStartRange?: Date,
+    timestampCreateEndRange?: Date
+  }
+}
+export const validationGetTotalFilteredNFTs = (query: any) => {
+  let { filter } = query;
+  if (filter) filter = JSON.parse(filter);
+  const validationSchema = Joi.object({
+    filter: Joi.object({
+      categories: Joi.array().items(Joi.string()),
+      listed: Joi.boolean(),
+      marketplaceId: Joi.number().integer().min(0),
+      priceStartRange: Joi.number(),
+      priceEndRange: Joi.number(),
+      timestampCreateStartRange: Joi.date().raw(),
+      timestampCreateEndRange: Joi.date().raw(),
+    }),
+  })
+  return validateQuery(validationSchema, { filter }) as getTotalFilteredNFTsQuery;
+}

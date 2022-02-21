@@ -1,6 +1,6 @@
 import { gql } from "graphql-request";
 import { convertSortString, convertSortStringDistinct, LIMIT_MAX_PAGINATION } from "../../utils";
-import { getFiltersQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery } from "../validators/nftValidators";
+import { getFiltersQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery, getTotalFilteredNFTsQuery } from "../validators/nftValidators";
 // import L from '../../common/logger';
 
 const nodes = `
@@ -426,6 +426,55 @@ countAllListedInMarketplace = (marketplaceId: number) => gql`
     }
   }
 `;
+
+countTotalFilteredNFTs = (query: getTotalFilteredNFTsQuery, seriesId?: string) => { 
+  const {
+    idsCategories,
+    idsToExcludeCategories,
+    marketplaceId,
+    listed,
+    priceStartRange,
+    priceEndRange,
+    timestampCreateStartRange,
+    timestampCreateEndRange,
+  } = query.filter ?? {};
+
+  return gql`
+    {
+      nftEntities(
+        filter: { 
+          and: [
+            { timestampBurn: { isNull: true } }
+            ${seriesId!==undefined ? `{ serieId: { equalTo: "${seriesId}" } }` : ""}
+            ${listed!==undefined ? `{ listed: { equalTo: ${!listed ? 0 : 1} } }` : ""}
+            ${marketplaceId!==undefined ? `{ marketplaceId: { equalTo: "${marketplaceId}" } }` : ""}
+            ${idsCategories ? `{id: { in: ${JSON.stringify(idsCategories.map(x => String(x)))} }}` : ""}
+            ${idsToExcludeCategories ? `{id: { notIn: ${JSON.stringify(idsToExcludeCategories.map(x => String(x)))} }}` : ""}
+          ]
+          ${
+            priceStartRange !== undefined ||
+            priceEndRange !== undefined
+              ? `priceRounded: {
+                  ${priceStartRange!==undefined ? `greaterThanOrEqualTo: ${priceStartRange}` : ""}
+                  ${priceStartRange!==undefined ? `lessThanOrEqualTo: ${priceEndRange}` : ""}
+                }`
+              : ""
+          }
+          ${
+            timestampCreateStartRange !== undefined ||
+            timestampCreateEndRange !== undefined
+              ? `timestampCreate: {
+                  ${timestampCreateStartRange!==undefined ? `greaterThanOrEqualTo: "${timestampCreateStartRange}"` : ""}
+                  ${timestampCreateEndRange!==undefined ? `lessThanOrEqualTo: "${timestampCreateEndRange}"` : ""}
+                }`
+              : ""
+          }
+        }
+       ) {
+        totalCount
+      }
+    }`;
+};
 
 getMostSold = (query: getFiltersQuery) => gql`
   {

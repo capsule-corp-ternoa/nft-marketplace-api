@@ -9,6 +9,7 @@ export default express
   .get("/most-sold-series", controller.getMostSoldSeries)
   .get("/history", controller.getHistory)
   .get("/total-on-sale", controller.getTotalOnSale)
+  .get("/total-filtered", controller.getTotalFiltered)
   .get("/:id", controller.getNFT)
   .get("/stat/:id", controller.getStatNFTsUser)
   .get("/series/data", controller.getNFTsBySeries)
