@@ -456,7 +456,7 @@ countTotalFilteredNFTs = (query: getTotalFilteredNFTsQuery, seriesId?: string) =
             priceEndRange !== undefined
               ? `priceRounded: {
                   ${priceStartRange!==undefined ? `greaterThanOrEqualTo: ${priceStartRange}` : ""}
-                  ${priceStartRange!==undefined ? `lessThanOrEqualTo: ${priceEndRange}` : ""}
+                  ${priceEndRange!==undefined ? `lessThanOrEqualTo: ${priceEndRange}` : ""}
                 }`
               : ""
           }
