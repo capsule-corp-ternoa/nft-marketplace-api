@@ -51,9 +51,7 @@ export async function populateStat(
   smallestPrice: string
 }> {
   try {
-    const marketplaceId = query.filter?.marketplaceId;
-    const owner = query.filter?.owner;
-    const stat = await NFTService.getStatNFT(NFT.serieId, marketplaceId, owner, query)
+    const stat = await NFTService.getStatNFT(NFT.serieId, query)
     return stat
   } catch (err) {
     L.error({ err }, "NFTs stats could not have been fetched");

@@ -150,7 +150,7 @@ export class NFTService {
    * @param filterOptionsQuery - filter options (optional)
    * @throws Will throw an error if can't request indexer
    */
-     async getStatNFT(seriesId:string, marketplaceId:number=null, owner:string=null, filterOptionsQuery:getTotalFilteredNFTsQuery=null): Promise<{
+     async getStatNFT(seriesId:string, query:NFTsQuery=null): Promise<{
       totalNft: number,
       totalListedNft: number,
       totalFiltered: number | null,
@@ -160,15 +160,18 @@ export class NFTService {
       totalOwnedListedInMarketplaceByRequestingUser: number,
       smallestPrice: string
     }> {
+      const marketplaceId = query.filter.marketplaceId ?? null;
+      const owner = query.filter.owner ?? null;
+
       try {
         const [totalRequest, totalListedRequest, totalFilteredRequest, totalListedInMarketplaceRequest, totalOwnedByRequestingUserRequest, totalOwnedListedByRequestingUserRequest, totalOwnedListedInMarketplaceByRequestingUserRequest, smallestPriceRequest] = await Promise.all([
           request(indexerUrl, QueriesBuilder.countTotal(seriesId)),
           request(indexerUrl, QueriesBuilder.countTotalListed(seriesId)),
-          filterOptionsQuery ? request(indexerUrl, QueriesBuilder.countTotalFilteredNFTs(filterOptionsQuery, seriesId)) : null,
-          marketplaceId!==null ? request(indexerUrl, QueriesBuilder.countTotalListedInMarketplace(seriesId, marketplaceId)) : 0,
-          owner ? request(indexerUrl, QueriesBuilder.countTotalOwned(seriesId, owner)) : null,
-          owner ? request(indexerUrl, QueriesBuilder.countTotalOwnedListed(seriesId, owner)) : null,
-          owner && marketplaceId!==null ? request(indexerUrl, QueriesBuilder.countTotalOwnedListedInMarketplace(seriesId, owner, marketplaceId)) : null,
+          query ? request(indexerUrl, QueriesBuilder.countTotalFilteredNFTs(query, seriesId)) : null,
+          marketplaceId !== null ? request(indexerUrl, QueriesBuilder.countTotalListedInMarketplace(seriesId, marketplaceId)) : 0,
+          owner !== null ? request(indexerUrl, QueriesBuilder.countTotalOwned(seriesId, owner)) : null,
+          owner !== null ? request(indexerUrl, QueriesBuilder.countTotalOwnedListed(seriesId, owner)) : null,
+          owner !== null && marketplaceId !== null ? request(indexerUrl, QueriesBuilder.countTotalOwnedListedInMarketplace(seriesId, owner, marketplaceId)) : null,
           request(indexerUrl, QueriesBuilder.countSmallestPrice(seriesId, marketplaceId)),
         ])
         const totalNft: number = totalRequest.nftEntities.totalCount;
