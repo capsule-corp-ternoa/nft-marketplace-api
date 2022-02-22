@@ -160,8 +160,8 @@ export class NFTService {
       totalOwnedListedInMarketplaceByRequestingUser: number,
       smallestPrice: string
     }> {
-      const marketplaceId = query.filter.marketplaceId ?? null;
-      const owner = query.filter.owner ?? null;
+      const marketplaceId = query.filter?.marketplaceId ?? null;
+      const owner = query.filter?.owner ?? null;
 
       try {
         const [totalRequest, totalListedRequest, totalFilteredRequest, totalListedInMarketplaceRequest, totalOwnedByRequestingUserRequest, totalOwnedListedByRequestingUserRequest, totalOwnedListedInMarketplaceByRequestingUserRequest, smallestPriceRequest] = await Promise.all([
@@ -424,7 +424,7 @@ export class NFTService {
     try {
       const aggregateQuery = [{ $group: { _id: "$serieId", totalLikes: { $sum: 1 } } }]
       const aggregate = NftLikeModel.aggregate(aggregateQuery);
-      const data = await NftLikeModel.aggregatePaginate(aggregate, {page: query.pagination.page, limit: query.pagination.limit, sort:{totalLikes: -1}})
+      const data = await NftLikeModel.aggregatePaginate(aggregate, {page: query.pagination.page, limit: query.pagination.limit, sort:{totalLikes: -1, _id: -1}})
       const seriesSorted = data.docs.map(x => x._id)
       const queryNfts = {filter:{series: seriesSorted}}
       const gqlQuery = QueriesBuilder.distinctNFTs(queryNfts);
@@ -455,7 +455,7 @@ export class NFTService {
     try {
       const aggregateQuery = [{ $group: { _id: "$viewedSerie", totalViews: { $sum: 1 } } }]
       const aggregate = NftViewModel.aggregate(aggregateQuery);
-      const data = await NftViewModel.aggregatePaginate(aggregate, {page: query.pagination.page, limit: query.pagination.limit, sort:{totalViews: -1}})
+      const data = await NftViewModel.aggregatePaginate(aggregate, {page: query.pagination.page, limit: query.pagination.limit, sort:{totalViews: -1, _id: -1}})
       const seriesSorted = data.docs.map(x => x._id)
       const queryNfts = {filter:{series: seriesSorted}}
       const gqlQuery = QueriesBuilder.distinctNFTs(queryNfts);

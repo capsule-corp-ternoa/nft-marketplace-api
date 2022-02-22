@@ -104,9 +104,9 @@ export async function populateNFTIpfs(NFT: INFT): Promise<any> {
     const response = await fetchTimeout(
       fetchUrl,
       null,
-      Number(process.env.IPFS_REQUEST_TIMEOUT) || 8000
+      Number(process.env.IPFS_REQUEST_TIMEOUT) || 2000
     ).catch((_e) => {
-      L.error("fetch error:" + _e);
+      L.error("Fetch error:" + _e);
       throw new Error("Could not retrieve NFT data from " + NFT.nftIpfs);
     });
     if (response) {

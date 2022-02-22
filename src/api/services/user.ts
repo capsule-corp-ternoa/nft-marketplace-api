@@ -135,7 +135,7 @@ export class UserService {
     try{
       const aggregateQuery = [{ $group: { _id: "$followed", totalViews: { $sum: 1 } } }]
       const aggregate = FollowModel.aggregate(aggregateQuery);
-      const res = await FollowModel.aggregatePaginate(aggregate, {page: query.pagination.page, limit: query.pagination.limit, sort:{totalViews: -1}})
+      const res = await FollowModel.aggregatePaginate(aggregate, {page: query.pagination.page, limit: query.pagination.limit, sort:{totalViews: -1, _id: -1}})
       const walletIdsSorted = res.docs.map(x => x._id)
       const filterDbUser = {walletIds: walletIdsSorted}
       const resDbUsers = await fetch(`${TERNOA_API_URL}/api/users/?filter=${JSON.stringify(filterDbUser)}`)
