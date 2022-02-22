@@ -354,7 +354,7 @@ export class NFTService {
     try {
       const gqlQuery = QueriesBuilder.countAllListedInMarketplace(query.marketplaceId)
       const res = await request(indexerUrl, gqlQuery);
-      if (!res.nftEntities.totalCount) throw new Error()
+      if (res.nftEntities.totalCount === undefined) throw new Error()
       return res.nftEntities.totalCount
     } catch (err) {
       throw new Error("Count could not have been fetched");
@@ -373,7 +373,7 @@ export class NFTService {
 
       const gqlQuery = QueriesBuilder.countTotalFilteredNFTs(query);
       const res = await request(indexerUrl, gqlQuery);
-      if (!res.nftEntities.totalCount) throw new Error();
+      if (res.nftEntities.totalCount === undefined) throw new Error();
       return res.nftEntities.totalCount;
     } catch (err) {
       throw new Error("Filtered count could not have been fetched");
