@@ -1,5 +1,39 @@
 import Joi from "joi";
+import { LIMIT_MAX_PAGINATION } from "../../utils";
 import { validateQuery } from ".";
+
+export type getUsersQuery = {
+    populateLikes?: boolean
+    filter?: {
+        walletIds?: string[]
+        artist?: boolean
+        verified?: boolean
+        searchText?: string
+    },
+    pagination?: {
+        page?: number
+        limit?: number
+    }
+}
+export const validationGetUsers = (query: any) => {
+    let { pagination, filter } = query;
+    if (pagination) pagination = JSON.parse(pagination)
+    if (filter) filter = JSON.parse(filter)
+    const validationSchema = Joi.object({
+        populateLikes: Joi.boolean(),
+        filter: Joi.object({
+            walletIds: Joi.array().items(Joi.string()),
+            artist: Joi.boolean(),
+            verified: Joi.boolean(),
+            searchText: Joi.string()
+        }),
+        pagination: Joi.object({
+            page: Joi.number().integer().min(0),
+            limit: Joi.number().integer().min(0).max(LIMIT_MAX_PAGINATION),
+        }),
+    });
+    return validateQuery(validationSchema, { pagination, filter }) as getUsersQuery;
+};
 
 export type getUserQuery = {
     id: string,
@@ -44,17 +78,20 @@ export const validationGetAccountBalance = (query: any) => {
 };
 
 
-export type likeUnlikeQuery = {
-    walletId: string,
-    cookie: string,
-}
-export const validationLikeUnlike = (query: any) => {
-    const validationSchema = Joi.object({
-        walletId: Joi.string().required(),
-        cookie: Joi.string().required(),
-    });
-    return validateQuery(validationSchema, query) as likeUnlikeQuery;
+export type getFiltersQuery = {
+  pagination: {
+    page: number;
+    limit: number;
+  };
 };
-
-
-
+export const validationGetFilters = (query: any) => {
+  let { pagination } = query;
+  if (pagination) pagination = JSON.parse(pagination);
+  const validationSchema = Joi.object({
+    pagination: Joi.object({
+      page: Joi.number().integer().min(0).required(),
+      limit: Joi.number().integer().min(0).max(LIMIT_MAX_PAGINATION).required(),
+    }).required(),
+  });
+  return validateQuery(validationSchema, { pagination }) as getFiltersQuery;
+};

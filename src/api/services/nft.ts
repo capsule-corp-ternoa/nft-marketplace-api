@@ -1,20 +1,17 @@
 import { request } from "graphql-request";
-import { AggregatePaginateResult } from 'mongoose'
 import { DistinctNFTListResponse, INFT, NFTListResponse, CustomResponse, ISeries, INFTTransfer } from "../../interfaces/graphQL";
-import fetch from "node-fetch";
 import FollowModel from "../../models/follow";
 import NftModel from "../../models/nft";
 import NftViewModel from "../../models/nftView";
+import NftLikeModel from "../../models/nftLike";
 import CategoryService from "./category"
 import { populateNFT } from "../helpers/nftHelpers";
 import QueriesBuilder from "./gqlQueriesBuilder";
-import { decryptCookie, TERNOA_API_URL, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
-import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery, getTotalOnSaleQuery } from "../validators/nftValidators";
-import { IUser } from "../../interfaces/IUser";
+import { decryptCookie, TIME_BETWEEN_SAME_USER_VIEWS } from "../../utils";
+import { canAddToSeriesQuery, addCategoriesNFTsQuery, getHistoryQuery, getSeriesStatusQuery, NFTBySeriesQuery, NFTQuery, NFTsQuery, statNFTsUserQuery, getTotalOnSaleQuery, getTotalFilteredNFTsQuery, likeUnlikeQuery, getFiltersQuery } from "../validators/nftValidators";
 import CategoryModel from "../../models/category";
 import { ICategory } from "../../interfaces/ICategory";
-// import { INFTLike } from "../../interfaces/INFTLike";
-import L from "../../common/logger";
+import { INftLike } from "../../interfaces/INftLike";
 
 const indexerUrl = process.env.INDEXER_URL || "https://indexer.chaos.ternoa.com";
 
@@ -26,53 +23,13 @@ export class NFTService {
    */
   async getNFTs(query: NFTsQuery): Promise<CustomResponse<INFT>> {
     try {
+      /// FILTERS
       // Categories
-      if (query.filter?.categories) {
-        const withNoCategories = query.filter.categories.includes("none")
-        const categoriesCode = query.filter.categories.filter(x => x !== "none")
-        const allCategories = await CategoryService.getCategories({})
-        const categories = allCategories.map(x => x.code).filter(x => categoriesCode.includes(x))
-        const mongoQuery = { categories: { $in: categories } }
-        const mongoNfts = await NftModel.find(mongoQuery as any)
-        const nftIds = mongoNfts.map((nft) => nft.chainId)
-        if (withNoCategories) {
-          const categoriesToExclude = allCategories.map(x => x.code).filter(x => !categoriesCode.includes(x))
-          const mongoQueryExclude = { $and: [{ categories: { $in: categoriesToExclude } }, { chainId: { $nin: nftIds } }] }
-          const mongoNFTsToExclude = await NftModel.find(mongoQueryExclude as any)
-          const nftIdsToExclude = mongoNFTsToExclude.map((nft) => nft.chainId)
-          query.filter.idsToExcludeCategories = nftIdsToExclude
-        } else {
-          query.filter.idsCategories = nftIds
-        }
-      }
+      if (query.filter?.categories) await this.handleFilterCategory(query)
       // Liked only
-      if (query.filter?.liked) {
-        const data = await fetch(`${TERNOA_API_URL}/api/users/${query.filter.liked}?populateLikes=${true}`)
-        const user = await data.json() as IUser
-        query.filter.series = user.likedNFTs.length > 0 ? user.likedNFTs.map(x => x.serieId) : []
-      }
-
-      // Sort mongo -> BLOCKED CAUSE OF DATASTRUCTURE
-      // const likesData: AggregatePaginateResult<{_id: string, count: number}> | null = null
-      /*if (query.sortMongo){
-        const sortArray = query.sortMongo.split(',')
-        const sortByLikes = sortArray.find(x => x.split(':')[0] === "likes")
-        if (sortByLikes){
-          const likesSort = sortByLikes.split(':')[1]
-          const likesResult = await fetch(`${TERNOA_API_URL}/api/nftLikes/&sort=${likesSort}`)
-          likesData = (await likesResult.json()).likesRanking
-          NFTs = NFTs.map(x => {
-            const likeAggregatedObject = likesData.docs.find(y => y._id === x.serieId)
-            const likesNumber = likeAggregatedObject ? likeAggregatedObject.count : 0
-            console.log(likesNumber)
-            return {...x, likesNumber}
-          })
-          .sort((a, b) => b.likesNumber - a.likesNumber)
-        }
-      }*/
-
-      // Indexer data
-      const gqlQuery = QueriesBuilder.NFTs(query);
+      if (query.filter?.liked) await this.handleFilterLikedOnly(query)
+      /// Indexer data
+      const gqlQuery = QueriesBuilder.distinctNFTs(query);
       const res: DistinctNFTListResponse = await request(indexerUrl, gqlQuery);
       const NFTs = res.distinctSerieNfts.nodes;
       // Populate
@@ -81,13 +38,37 @@ export class NFTService {
       const result: CustomResponse<INFT> = {
         totalCount: res.distinctSerieNfts.totalCount,
         data: res.distinctSerieNfts.nodes,
-        hasNextPage: res.distinctSerieNfts.pageInfo?.hasNextPage || undefined,
-        hasPreviousPage: res.distinctSerieNfts.pageInfo?.hasPreviousPage || undefined
+        hasNextPage: res.distinctSerieNfts.pageInfo?.hasNextPage,
+        hasPreviousPage: res.distinctSerieNfts.pageInfo?.hasPreviousPage
       }
       return result
     } catch (err) {
       throw new Error("Couldn't get NFTs");
     }
+  }
+
+  async handleFilterCategory(query: NFTsQuery) {
+    const withNoCategories = query.filter.categories.includes("none")
+    const categoriesCode = query.filter.categories.filter(x => x !== "none")
+    const allCategories = await CategoryService.getCategories({})
+    const categories = allCategories.map(x => x.code).filter(x => categoriesCode.includes(x))
+    const mongoQuery = { categories: { $in: categories } }
+    const mongoNfts = await NftModel.find(mongoQuery as any)
+    const nftIds = mongoNfts.map((nft) => nft.chainId)
+    if (withNoCategories) {
+      const categoriesToExclude = allCategories.map(x => x.code).filter(x => !categoriesCode.includes(x))
+      const mongoQueryExclude = { $and: [{ categories: { $in: categoriesToExclude } }, { chainId: { $nin: nftIds } }] }
+      const mongoNFTsToExclude = await NftModel.find(mongoQueryExclude as any)
+      const nftIdsToExclude = mongoNFTsToExclude.map((nft) => nft.chainId)
+      query.filter.idsToExcludeCategories = nftIdsToExclude
+    } else {
+      query.filter.idsCategories = nftIds
+    }
+  }
+
+  async handleFilterLikedOnly(query: NFTsQuery) {
+    const likes = await NftLikeModel.find({walletId: query.filter.liked})
+    query.filter.series = likes.length > 0 ? likes.map(x => x.serieId) : []
   }
 
   /**
@@ -166,30 +147,37 @@ export class NFTService {
    * @param seriesId - Series Id of nft to get stat for
    * @param marketplaceId - marketplace id (optional)
    * @param owner - owner (optional)
+   * @param filterOptionsQuery - filter options (optional)
    * @throws Will throw an error if can't request indexer
    */
-     async getStatNFT(seriesId:string, marketplaceId:number=null, owner:string=null): Promise<{
+     async getStatNFT(seriesId:string, query:NFTsQuery=null): Promise<{
       totalNft: number,
       totalListedNft: number,
+      totalFiltered: number | null,
       totalListedInMarketplace: number,
       totalOwnedByRequestingUser: number,
       totalOwnedListedByRequestingUser: number,
       totalOwnedListedInMarketplaceByRequestingUser: number,
       smallestPrice: string
     }> {
+      const marketplaceId = query.filter?.marketplaceId ?? null;
+      const owner = query.filter?.owner ?? null;
+
       try {
-        const [totalRequest, totalListedRequest, totalListedInMarketplaceRequest, totalOwnedByRequestingUserRequest, totalOwnedListedByRequestingUserRequest, totalOwnedListedInMarketplaceByRequestingUserRequest, smallestPriceRequest] = await Promise.all([
+        const [totalRequest, totalListedRequest, totalFilteredRequest, totalListedInMarketplaceRequest, totalOwnedByRequestingUserRequest, totalOwnedListedByRequestingUserRequest, totalOwnedListedInMarketplaceByRequestingUserRequest, smallestPriceRequest] = await Promise.all([
           request(indexerUrl, QueriesBuilder.countTotal(seriesId)),
           request(indexerUrl, QueriesBuilder.countTotalListed(seriesId)),
-          marketplaceId!==null ? request(indexerUrl, QueriesBuilder.countTotalListedInMarketplace(seriesId, marketplaceId)) : 0,
-          owner ? request(indexerUrl, QueriesBuilder.countTotalOwned(seriesId, owner)) : null,
-          owner ? request(indexerUrl, QueriesBuilder.countTotalOwnedListed(seriesId, owner)) : null,
-          owner && marketplaceId!==null ? request(indexerUrl, QueriesBuilder.countTotalOwnedListedInMarketplace(seriesId, owner, marketplaceId)) : null,
+          query ? request(indexerUrl, QueriesBuilder.countTotalFilteredNFTs(query, seriesId)) : null,
+          marketplaceId !== null ? request(indexerUrl, QueriesBuilder.countTotalListedInMarketplace(seriesId, marketplaceId)) : 0,
+          owner !== null ? request(indexerUrl, QueriesBuilder.countTotalOwned(seriesId, owner)) : null,
+          owner !== null ? request(indexerUrl, QueriesBuilder.countTotalOwnedListed(seriesId, owner)) : null,
+          owner !== null && marketplaceId !== null ? request(indexerUrl, QueriesBuilder.countTotalOwnedListedInMarketplace(seriesId, owner, marketplaceId)) : null,
           request(indexerUrl, QueriesBuilder.countSmallestPrice(seriesId, marketplaceId)),
         ])
         const totalNft: number = totalRequest.nftEntities.totalCount;
         const totalListedNft: number = totalListedRequest.nftEntities.totalCount;
         const totalListedInMarketplace: number = totalListedInMarketplaceRequest ? totalListedInMarketplaceRequest.nftEntities.totalCount : 0;
+        const totalFiltered: number = totalFilteredRequest ? totalFilteredRequest.nftEntities.totalCount : null;
         const totalOwnedByRequestingUser: number = totalOwnedByRequestingUserRequest ? totalOwnedByRequestingUserRequest.nftEntities.totalCount : 0;
         const totalOwnedListedByRequestingUser: number = totalOwnedListedByRequestingUserRequest ? totalOwnedListedByRequestingUserRequest.nftEntities.totalCount : 0;
         const totalOwnedListedInMarketplaceByRequestingUser: number = totalOwnedListedInMarketplaceByRequestingUserRequest ? totalOwnedListedInMarketplaceByRequestingUserRequest.nftEntities.totalCount : 0;
@@ -198,7 +186,7 @@ export class NFTService {
         : 
           "0"
         ;
-        return { totalNft, totalListedNft, totalListedInMarketplace, totalOwnedByRequestingUser, totalOwnedListedByRequestingUser, totalOwnedListedInMarketplaceByRequestingUser, smallestPrice }
+        return { totalNft, totalListedNft, totalListedInMarketplace, totalFiltered, totalOwnedByRequestingUser, totalOwnedListedByRequestingUser, totalOwnedListedInMarketplaceByRequestingUser, smallestPrice }
       } catch (err) {
         throw new Error("Couldn't get NFT stat");
       }
@@ -249,8 +237,8 @@ export class NFTService {
       const result: CustomResponse<INFT> = {
         totalCount: res.nftEntities.totalCount,
         data: seriesData,
-        hasNextPage: res.nftEntities.pageInfo?.hasNextPage || undefined,
-        hasPreviousPage: res.nftEntities.pageInfo?.hasPreviousPage || undefined
+        hasNextPage: res.nftEntities.pageInfo?.hasNextPage,
+        hasPreviousPage: res.nftEntities.pageInfo?.hasPreviousPage
       }
       return result
     } catch (err) {
@@ -348,8 +336,8 @@ export class NFTService {
       const result: CustomResponse<INFTTransfer> = {
         totalCount: res.nftTransferEntities.totalCount,
         data: query.filter?.grouped ? data : res.nftTransferEntities.nodes,
-        hasNextPage: res.nftTransferEntities.pageInfo?.hasNextPage || undefined,
-        hasPreviousPage: res.nftTransferEntities.pageInfo?.hasPreviousPage || undefined
+        hasNextPage: res.nftTransferEntities.pageInfo?.hasNextPage,
+        hasPreviousPage: res.nftTransferEntities.pageInfo?.hasPreviousPage
       }
       return result
     } catch (err) {
@@ -366,10 +354,188 @@ export class NFTService {
     try {
       const gqlQuery = QueriesBuilder.countAllListedInMarketplace(query.marketplaceId)
       const res = await request(indexerUrl, gqlQuery);
-      if (!res.nftEntities.totalCount) throw new Error()
+      if (res.nftEntities.totalCount === undefined) throw new Error()
       return res.nftEntities.totalCount
     } catch (err) {
       throw new Error("Count could not have been fetched");
+    }
+  }
+
+  /**
+   * Returns the totalCount for the specified filters
+   * @param query - query (see getTotalFilteredNFTsQuery)
+   * @throws Will throw an error if indexer is not reachable
+   */
+   async getTotalFilteredNFTs(query: getTotalFilteredNFTsQuery): Promise<boolean> {
+    try {
+      // Categories
+      if (query.filter?.categories) await this.handleFilterCategory(query);
+
+      const gqlQuery = QueriesBuilder.countTotalFilteredNFTs(query);
+      const res = await request(indexerUrl, gqlQuery);
+      if (res.nftEntities.totalCount === undefined) throw new Error();
+      return res.nftEntities.totalCount;
+    } catch (err) {
+      throw new Error("Filtered count could not have been fetched");
+    }
+  }
+
+  /**
+   * Like an NFT
+   * @param query - see likeUnlikeQuery
+   * @throws Will throw an error if already liked or if db can't be reached
+   */
+   async likeNft(query: likeUnlikeQuery): Promise<INftLike> {
+    try {
+      const data = {serieId: query.seriesId, walletId: query.walletId}
+      const nftLike  = await NftLikeModel.findOne(data);
+      if (nftLike) throw new Error("NFT already liked")
+      const newLike = new NftLikeModel({nftId: query.nftId, serieId: query.seriesId, walletId: query.walletId})
+      await newLike.save()
+      return newLike
+    } catch (err) {
+      throw new Error("Couldn't like NFT");
+    }
+  }
+
+  /**
+   * Unlike an NFT
+   * @param query - see likeUnlikeQuery
+   * @throws Will throw an error if already liked or if db can't be reached
+   */
+   async unlikeNft(query: likeUnlikeQuery): Promise<INftLike> {
+    try {
+      const data = {serieId: query.seriesId, walletId: query.walletId}
+      const nftLike  = await NftLikeModel.findOne(data);
+      if (!nftLike) throw new Error("NFT already not liked")
+      await NftLikeModel.deleteOne(data)
+      return nftLike
+    } catch (err) {
+      throw new Error("Couldn't unlike NFT");
+    }
+  }
+
+  /**
+   * Get NFTs sorted by likes
+   * @param query - see getFiltersQuery
+   * @throws Will throw an error if mongo can't be reached
+   */
+   async getMostLiked(query: getFiltersQuery): Promise<CustomResponse<INFT>> {
+    try {
+      const aggregateQuery = [{ $group: { _id: "$serieId", totalLikes: { $sum: 1 } } }]
+      const aggregate = NftLikeModel.aggregate(aggregateQuery);
+      const data = await NftLikeModel.aggregatePaginate(aggregate, {page: query.pagination.page, limit: query.pagination.limit, sort:{totalLikes: -1, _id: -1}})
+      const seriesSorted = data.docs.map(x => x._id)
+      const queryNfts = {filter:{series: seriesSorted}}
+      const gqlQuery = QueriesBuilder.distinctNFTs(queryNfts);
+      const res: DistinctNFTListResponse = await request(indexerUrl, gqlQuery);
+      const NFTs = await Promise.all(res.distinctSerieNfts.nodes.map(async (NFT) => populateNFT(NFT, query)));
+      const result: CustomResponse<INFT> = {
+        totalCount: data.totalDocs,
+        data: NFTs.sort((a,b) => {
+          const aId = seriesSorted.findIndex(x => x === a.serieId)
+          const bId = seriesSorted.findIndex(x => x === b.serieId)
+          return aId - bId
+        }),
+        hasNextPage: data.hasNextPage,
+        hasPreviousPage: data.hasPrevPage
+      }
+      return result
+    } catch (err) {
+      throw new Error("Couldn't get most liked NFTs");
+    }
+  }
+
+  /**
+   * Get NFTs sorted by views
+   * @param query - see getFiltersQuery
+   * @throws Will throw an error if mongo can't be reached
+   */
+   async getMostViewed(query: getFiltersQuery): Promise<CustomResponse<INFT>> {
+    try {
+      const aggregateQuery = [{ $group: { _id: "$viewedSerie", totalViews: { $sum: 1 } } }]
+      const aggregate = NftViewModel.aggregate(aggregateQuery);
+      const data = await NftViewModel.aggregatePaginate(aggregate, {page: query.pagination.page, limit: query.pagination.limit, sort:{totalViews: -1, _id: -1}})
+      const seriesSorted = data.docs.map(x => x._id)
+      const queryNfts = {filter:{series: seriesSorted}}
+      const gqlQuery = QueriesBuilder.distinctNFTs(queryNfts);
+      const res: DistinctNFTListResponse = await request(indexerUrl, gqlQuery);
+      const NFTs = await Promise.all(res.distinctSerieNfts.nodes.map(async (NFT) => populateNFT(NFT, query)));
+      const result: CustomResponse<INFT> = {
+        totalCount: data.totalDocs,
+        data: NFTs.sort((a,b) => {
+          const aId = seriesSorted.findIndex(x => x === a.serieId)
+          const bId = seriesSorted.findIndex(x => x === b.serieId)
+          return aId - bId
+        }),
+        hasNextPage: data.hasNextPage,
+        hasPreviousPage: data.hasPrevPage
+      }
+      return result
+    } catch (err) {
+      throw new Error("Couldn't get most viewed NFTs");
+    }
+  }
+
+  /**
+   * Get NFTs sorted by most sold
+   * @param query - see getFiltersQuery
+   * @throws Will throw an error if indexer can't be reached
+   */
+   async getMostSold(query: getFiltersQuery): Promise<CustomResponse<INFT>> {
+    try {
+      const gqlQuery = QueriesBuilder.getMostSold(query);
+      const res = await request(indexerUrl, gqlQuery);
+      const mostSold: {id: string, occurences: number}[] = res.mostSold.nodes;
+      const mostSoldIdsSorted = mostSold.map(x => x.id)
+      const queryNfts = {filter:{ids: mostSoldIdsSorted}}
+      const gqlQueryFinal = QueriesBuilder.NFTs(queryNfts);
+      const resFinal: NFTListResponse = await request(indexerUrl, gqlQueryFinal);
+      const NFTs = await Promise.all(resFinal.nftEntities.nodes.map(async (NFT) => populateNFT(NFT, query)));
+      const result: CustomResponse<INFT> = {
+        totalCount: res.mostSold.totalCount,
+        data: NFTs.sort((a,b) => {
+          const aId = mostSoldIdsSorted.findIndex(x => x === a.id)
+          const bId = mostSoldIdsSorted.findIndex(x => x === b.id)
+          return aId - bId
+        }),
+        hasNextPage: res.mostSold.pageInfo.hasNextPage,
+        hasPreviousPage: res.mostSold.pageInfo.hasPreviousPage
+      }
+      return result
+    } catch (err) {
+      throw new Error("Couldn't get most sold NFTs");
+    }
+  }
+
+  /**
+   * Get NFTs sorted by most sold series
+   * @param query - see getFiltersQuery
+   * @throws Will throw an error if indexer can't be reached
+   */
+   async getMostSoldSeries(query: getFiltersQuery): Promise<CustomResponse<INFT>> {
+    try {
+      const gqlQuery = QueriesBuilder.getMostSoldSeries(query);
+      const res = await request(indexerUrl, gqlQuery);
+      const mostSoldSeries: {id: string, occurences: number}[] = res.mostSoldSeries.nodes;
+      const mostSoldSeriesSorted = mostSoldSeries.map(x => x.id)
+      const queryNfts = {filter:{series: mostSoldSeriesSorted}}
+      const gqlQueryFinal = QueriesBuilder.distinctNFTs(queryNfts);
+      const resFinal: DistinctNFTListResponse = await request(indexerUrl, gqlQueryFinal);
+      const NFTs = await Promise.all(resFinal.distinctSerieNfts.nodes.map(async (NFT) => populateNFT(NFT, query)));
+      const result: CustomResponse<INFT> = {
+        totalCount: res.mostSoldSeries.totalCount,
+        data: NFTs.sort((a,b) => {
+          const aId = mostSoldSeriesSorted.findIndex(x => x === a.serieId)
+          const bId = mostSoldSeriesSorted.findIndex(x => x === b.serieId)
+          return aId - bId
+        }),
+        hasNextPage: res.mostSoldSeries.pageInfo.hasNextPage,
+        hasPreviousPage: res.mostSoldSeries.pageInfo.hasPreviousPage
+      }
+      return result
+    } catch (err) {
+      throw new Error("Couldn't get most sold series");
     }
   }
 }

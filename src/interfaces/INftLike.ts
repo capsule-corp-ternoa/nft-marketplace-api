@@ -1,4 +1,4 @@
-export interface INFTLike {
+export interface INftLike {
     nftId: string;
     serieId: string;
     walletId: string;

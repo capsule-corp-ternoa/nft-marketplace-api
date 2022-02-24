@@ -1,6 +1,6 @@
 {
   "name": "nft-marketplace-api",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "ternoa nft marketplace server",
   "main": "dist/index.js",
   "scripts": {
