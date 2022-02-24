@@ -1,10 +1,10 @@
-import { CustomResponse, ICompleteNFT, INFT } from "../../interfaces/graphQL";
+import { ICompleteNFT, INFT } from "../../interfaces/graphQL";
 import UserService from "../services/user";
 import L from "../../common/logger";
 import NFTService from "../services/nft";
 import { ICategory } from "../../interfaces/ICategory";
 import { fetchTimeout, isURL, removeURLSlash } from "../../utils";
-import { IUser } from "src/interfaces/IUser";
+import { IUser } from "../../interfaces/IUser";
 import { NFTsQuery } from "../validators/nftValidators";
 
 const ipfsGateways = {
@@ -44,15 +44,14 @@ export async function populateStat(
 ): Promise<{
   totalNft: number,
   totalListedNft: number,
+  totalFiltered: number | null,
   totalListedInMarketplace: number,
   totalOwnedByRequestingUser: number,
   totalOwnedListedByRequestingUser: number,
   smallestPrice: string
 }> {
   try {
-    const marketplaceId = query.filter?.marketplaceId;
-    const owner = query.filter?.owner;
-    const stat = await NFTService.getStatNFT(NFT.serieId, marketplaceId, owner)
+    const stat = await NFTService.getStatNFT(NFT.serieId, query)
     return stat
   } catch (err) {
     L.error({ err }, "NFTs stats could not have been fetched");
@@ -105,9 +104,9 @@ export async function populateNFTIpfs(NFT: INFT): Promise<any> {
     const response = await fetchTimeout(
       fetchUrl,
       null,
-      Number(process.env.IPFS_REQUEST_TIMEOUT) || 8000
+      Number(process.env.IPFS_REQUEST_TIMEOUT) || 2000
     ).catch((_e) => {
-      L.error("fetch error:" + _e);
+      L.error("Fetch error:" + _e);
       throw new Error("Could not retrieve NFT data from " + NFT.nftIpfs);
     });
     if (response) {

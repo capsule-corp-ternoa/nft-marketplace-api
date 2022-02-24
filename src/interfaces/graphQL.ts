@@ -11,7 +11,6 @@ export interface INFT {
   isCapsule?: boolean;
   frozenCaps?: string;
   price: string;
-  priceTiime?: string;
   serieId?: string;
   totalNft?: number;
   totalListedNft?: number;
@@ -71,7 +70,6 @@ export interface DistinctNFTListResponse {
 
 export interface Account {
   capsAmount: string;
-  tiimeAmount: string;
   id?: string;
 }
 
