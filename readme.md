@@ -4,7 +4,7 @@
 
 
 "SecretNFT API" is the server used by the "SecretNFT" application. 
-This API's purpose is to get data related to NFTs (from blockahin to offchain Data), users, follows, likes, ...
+This API's purpose is to get data related to NFTs (from blockahin to offchain Data), users ...
 
 Visit [SecretNFT](https://www.secret-nft.com/)
 

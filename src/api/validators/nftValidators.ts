@@ -8,7 +8,7 @@ export type NFTsQuery = {
     limit?: number
   }
   sort?: string
-  sortMongo?: string
+  sortOffchain?: string
   filter?: {
     ids?: string[]
     idsToExclude?: string[]
@@ -20,17 +20,18 @@ export type NFTsQuery = {
     listed?: boolean
     categories?: string[]
     owner?: string
+    viewer?: string
     creator?: string
-    price?: string
-    priceFilter?: string
-    priceTiime?: string
-    priceTiimeFilter?: string
+    priceStartRange?: number
+    priceEndRange?: number
+    timestampCreateStartRange?: Date,
+    timestampCreateEndRange?: Date,
     seriesLocked?: boolean
     isCapsule?: boolean
   }
 }
 export const validationGetNFTs = (query: any) => {
-  const { sort, sortMongo } = query
+  const { sort, sortOffchain } = query
   let { pagination, filter } = query;
   if (pagination) pagination = JSON.parse(pagination);
   if (filter) filter = JSON.parse(filter);
@@ -40,7 +41,7 @@ export const validationGetNFTs = (query: any) => {
       limit: Joi.number().integer().min(0).max(LIMIT_MAX_PAGINATION),
     }),
     sort: Joi.string().regex(/[a-zA-Z]{1,}:[a-zA-Z]{1,},{0,1}/),
-    sortMongo: Joi.string(),
+    sortOffchain: Joi.string(),
     filter: Joi.object({
       ids: Joi.array().items(Joi.number().integer().min(0)),
       idsToExclude: Joi.array().items(Joi.number().integer().min(0)),
@@ -50,16 +51,17 @@ export const validationGetNFTs = (query: any) => {
       listed: Joi.boolean(),
       categories: Joi.array().items(Joi.string()),
       owner: Joi.string(),
+      viewer: Joi.string(),
       creator: Joi.string(),
-      price: Joi.string(),
-      priceFilter: Joi.string(),
-      priceTiime: Joi.string(),
-      priceTiimeFilter: Joi.string(),
+      priceStartRange: Joi.number(),
+      priceEndRange: Joi.number(),
+      timestampCreateStartRange: Joi.date().raw(),
+      timestampCreateEndRange: Joi.date().raw(),
       seriesLocked: Joi.boolean(),
       isCapsule: Joi.boolean(),
     }),
   })
-  return validateQuery(validationSchema, { pagination, sort, sortMongo, filter }) as NFTsQuery;
+  return validateQuery(validationSchema, { pagination, sort, sortOffchain, filter }) as NFTsQuery;
 }
 
 
@@ -220,7 +222,7 @@ export const validationGetHistory = (query: any) => {
       from: Joi.string(),
       to: Joi.string(),
       typeOfTransaction: Joi.string(),
-      timestamp: Joi.date(),
+      timestamp: Joi.date().raw(),
       timestampFilter: Joi.string(),
       amount: Joi.number(),
       amountFilter: Joi.string(),
@@ -237,4 +239,68 @@ export const validationGetTotalOnSale = (query: any) => {
     marketplaceId: Joi.number().required(),
   })
   return validateQuery(validationSchema, query) as getTotalOnSaleQuery;
+}
+
+export type likeUnlikeQuery = {
+  walletId: string,
+  cookie: string,
+  nftId: string, 
+  seriesId: string,
+}
+export const validationLikeUnlike = (query: any) => {
+  const validationSchema = Joi.object({
+      walletId: Joi.string().required(),
+      cookie: Joi.string().required(),
+      nftId: Joi.string().required(),
+      seriesId: Joi.string().required(),
+  });
+  return validateQuery(validationSchema, query) as likeUnlikeQuery;
+};
+
+export type getFiltersQuery = {
+  pagination: {
+    page: number
+    limit: number
+  }
+}
+export const validationGetFilters = (query: any) => {
+  let { pagination } = query;
+  if (pagination) pagination = JSON.parse(pagination);
+  const validationSchema = Joi.object({
+    pagination: Joi.object({
+      page: Joi.number().integer().min(0).required(),
+      limit: Joi.number().integer().min(0).max(LIMIT_MAX_PAGINATION).required(),
+    }).required()
+  })
+  return validateQuery(validationSchema, { pagination }) as getFiltersQuery;
+}
+
+export type getTotalFilteredNFTsQuery = {
+  filter?: {
+    idsCategories?: string[],
+    idsToExcludeCategories?: string[],
+    categories?: string[],
+    listed?: boolean,
+    marketplaceId?: number,
+    priceStartRange?: number,
+    priceEndRange?: number,
+    timestampCreateStartRange?: Date,
+    timestampCreateEndRange?: Date
+  }
+}
+export const validationGetTotalFilteredNFTs = (query: any) => {
+  let { filter } = query;
+  if (filter) filter = JSON.parse(filter);
+  const validationSchema = Joi.object({
+    filter: Joi.object({
+      categories: Joi.array().items(Joi.string()),
+      listed: Joi.boolean(),
+      marketplaceId: Joi.number().integer().min(0),
+      priceStartRange: Joi.number(),
+      priceEndRange: Joi.number(),
+      timestampCreateStartRange: Joi.date().raw(),
+      timestampCreateEndRange: Joi.date().raw(),
+    }),
+  })
+  return validateQuery(validationSchema, { filter }) as getTotalFilteredNFTsQuery;
 }

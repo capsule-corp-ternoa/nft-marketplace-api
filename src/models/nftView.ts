@@ -1,6 +1,6 @@
 import { INftView } from "../interfaces/INftView";
-import mongoose, { PaginateModel } from "mongoose";
-import mongoosePaginate from "mongoose-paginate-v2";
+import mongoose, { AggregatePaginateModel } from "mongoose";
+import aggregatePaginate  from "mongoose-aggregate-paginate-v2";
 
 const NftView = new mongoose.Schema({
   viewedSerie: {
@@ -23,12 +23,12 @@ const NftView = new mongoose.Schema({
   },
 });
 
-NftView.plugin(mongoosePaginate);
+NftView.plugin(aggregatePaginate);
 
 const NftViewModel = mongoose.model<INftView & mongoose.Document>(
   "NftView",
   NftView,
-  "nft-view"
-) as PaginateModel<INftView & mongoose.Document>;
+  "nft-views"
+) as unknown as AggregatePaginateModel<INftView & mongoose.Document>;
 
 export default NftViewModel;

@@ -1,6 +1,6 @@
-import mongoose, { PaginateModel } from "mongoose";
+import mongoose, {AggregatePaginateModel} from "mongoose";
 import { IFollow } from "../interfaces/IFollow";
-import mongoosePaginate from "mongoose-paginate-v2";
+import aggregatePaginate  from "mongoose-aggregate-paginate-v2";
 
 /* based on socialite implementation https://github.com/mongodb-labs/socialite/blob/master/docs/graph.md */
 
@@ -15,11 +15,11 @@ const Follow = new mongoose.Schema({
   },
 });
 
-Follow.plugin(mongoosePaginate);
+Follow.plugin(aggregatePaginate);
 
 const FollowModel = mongoose.model<IFollow & mongoose.Document>(
   "Follow",
   Follow
-) as PaginateModel<IFollow & mongoose.Document>;
+) as unknown as AggregatePaginateModel<IFollow & mongoose.Document>;
 
 export default FollowModel;
