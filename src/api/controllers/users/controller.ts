@@ -125,5 +125,17 @@ export class Controller {
       next(err)
     }
   }
+
+  async getArtistHighLight(
+    _req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      res.json(await UserService.getArtistHighLight());
+    } catch (err) {
+      next(err)
+    }
+  }
 }
 export default new Controller();
