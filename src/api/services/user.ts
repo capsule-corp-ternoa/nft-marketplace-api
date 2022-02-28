@@ -171,7 +171,7 @@ export class UserService {
       // get last timestamp from db
       const lastArtistHighlight = await ArtistHighlightModel.findOne({}, {}, {sort: {timestamp: -1}});
       // if timestamp is less than 7 days ago, return artist
-      if (lastArtistHighlight && (+new Date() - +lastArtistHighlight.timestamp < /*7 * 24 * 3600 * 1000*/20000)){
+      if (lastArtistHighlight && (+new Date() - +lastArtistHighlight.timestamp < 7 * 24 * 3600 * 1000)){
         return await this.findUser({id: lastArtistHighlight.walletId});
       }else{
         let artist = null
