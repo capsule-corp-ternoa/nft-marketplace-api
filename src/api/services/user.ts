@@ -4,6 +4,7 @@ import { IUser } from "../../interfaces/IUser";
 import UserViewModel from "../../models/userView";
 import NftLikeModel from "../../models/nftLike";
 import FollowModel from "../../models/follow";
+import ArtistHighlightModel from "../../models/artistHighlight";
 import QueriesBuilder from "./gqlQueriesBuilder";
 import { AccountResponse, Account, CustomResponse } from "../../interfaces/graphQL";
 import { TIME_BETWEEN_SAME_USER_VIEWS, TERNOA_API_URL } from "../../utils";
@@ -152,6 +153,64 @@ export class UserService {
         hasPreviousPage: res.hasPrevPage
       }
       return result
+    }catch(err){
+      throw err
+    }
+  }
+
+  /**
+   * get artist highlight / artist of the week
+   * artist with most number of follower
+   * stays for 1 week
+   * go to next one
+   * if no artist, purge artist-highlight table
+   * @throws Will throw an error if db / indexer can't be reached
+   */
+   async getArtistHighLight(): Promise<IUser> {
+    try{
+      // get last timestamp from db
+      const lastArtistHighlight = await ArtistHighlightModel.findOne({}, {}, {sort: {timestamp: -1}});
+      // if timestamp is less than 7 days ago, return artist
+      if (lastArtistHighlight && (+new Date() - +lastArtistHighlight.timestamp < 7 * 24 * 3600 * 1000)){
+        return await this.findUser({id: lastArtistHighlight.walletId});
+      }else{
+        let artist = null
+        let isError = false
+        while(!artist && !isError){
+          // get 50 first rankings of artist
+          const mostFollowed = await this.getMostFollowed({pagination:{page:1, limit: 50}});
+          let i = 0
+          for (const user of mostFollowed.data){
+            i +=1
+            // check in db that it's not used else go to next
+            const tmpArtistHighlight = await ArtistHighlightModel.findOne({walletId: user.walletId});
+            if (tmpArtistHighlight) continue;
+            // check that he has at least 6 nfts else go to next
+            const gqlQuery = QueriesBuilder.countCreated({id: user.walletId});
+            const indexerResponse = await request(indexerUrl, gqlQuery);
+            if (indexerResponse.nftEntities.totalCount < 6) continue;
+            // if ok, push in db and return artist
+            artist = user
+            break;
+          }
+          if (artist) break;
+          const count = await ArtistHighlightModel.count()
+          if (count > 0){
+            // we purge db to start the process again
+            await ArtistHighlightModel.deleteMany()
+          }else{
+            // no artist found, throw error
+            isError = true
+          }
+        }
+        if (artist){
+          const newArtistHighlight = new ArtistHighlightModel({walletId: artist.walletId, timestamp: new Date()})
+          await newArtistHighlight.save()
+          return artist
+        }else{
+          throw new Error("No suitable artist to highlight was found")
+        }
+      }
     }catch(err){
       throw err
     }
