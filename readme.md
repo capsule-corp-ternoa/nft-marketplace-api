@@ -1,7 +1,7 @@
 # Ternoa Markeplace NFT API
 
 > ⚠️ This project is archived, it is no longer maintained.
-> If you want to create your own Marketplace consider using our [SDK ternoa-js](https://www.npmjs.com/package/ternoa-js) o
+> If you want to create your own Marketplace consider using our [SDK ternoa-js](https://www.npmjs.com/package/ternoa-js) on Alphanet & Mainnet environements
 
 "Ternoa Markeplace NFT API" is the server used by the "SecretNFT" dApp developed by Ternoa.
 
